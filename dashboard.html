@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SkillBridge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#E94560',
+                        secondary: '#0F3460',
+                        darkBg: '#0D0D0D',
+                        darkSurface: '#111827',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .sidebar { width: 280px; transition: width 0.3s ease; }
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .sidebar-text { display: none; }
+        .sidebar.collapsed .logo span { display: none; }
+        
+        .roadmap-container {
+            background: #050505;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            min-height: 400px;
+        }
+        
+        .node {
+            position: absolute;
+            width: 120px;
+            padding: 10px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .node.completed { background: var(--green); color: white; }
+        .node.active { background: var(--primary); color: white; animation: pulse 2s infinite; }
+        .node.locked { background: var(--surface-2); color: var(--text-muted); border: 1px dashed var(--border); }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(233, 69, 96, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(233, 69, 96, 0); }
+        }
+
+        .chat-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-text-primary flex h-screen overflow-hidden">
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar bg-surface border-r border-border flex flex-col p-6 h-full relative">
+        <div class="mb-10 flex items-center justify-between">
+            <a href="index.html" class="logo text-2xl">Skill<span>Bridge</span></a>
+            <button id="sidebar-toggle" class="p-2 hover:bg-surface-2 rounded-lg lg:hidden">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+
+        <nav class="flex-grow space-y-2 relative" style="position: static">
+            <a href="#" class="flex items-center gap-4 p-3 rounded-xl bg-primary/10 text-primary border-l-4 border-primary">
+                <i data-lucide="layout-dashboard"></i>
+                <span class="sidebar-text font-semibold">Dashboard</span>
+            </a>
+            <a href="#" class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-2 text-text-muted transition-all">
+                <i data-lucide="map"></i>
+                <span class="sidebar-text">My Roadmap</span>
+            </a>
+            <a href="#" class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-2 text-text-muted transition-all">
+                <i data-lucide="briefcase"></i>
+                <span class="sidebar-text">Projects</span>
+            </a>
+            <a href="#" class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-2 text-text-muted transition-all">
+                <i data-lucide="users"></i>
+                <span class="sidebar-text">Mentors</span>
+            </a>
+            <a href="#" class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-2 text-text-muted transition-all">
+                <i data-lucide="award"></i>
+                <span class="sidebar-text">Portfolio</span>
+            </a>
+            <a href="#" class="flex items-center gap-4 p-3 rounded-xl hover:bg-surface-2 text-text-muted transition-all">
+                <i data-lucide="settings"></i>
+                <span class="sidebar-text">Settings</span>
+            </a>
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-border flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">AD</div>
+            <div class="sidebar-text">
+                <p class="text-sm font-bold">Anil Das</p>
+                <p class="text-xs text-text-muted">Pro Access</p>
+            </div>
+            <button class="ml-auto text-text-muted hover:text-primary">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-grow overflow-y-auto p-4 lg:p-8">
+        
+        <!-- Top Bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl lg:text-3xl">Welcome back, <span id="user-display-name">Anil</span> 👋</h1>
+                <p class="text-text-muted text-sm" id="dashboard-date">Today is Saturday, April 18, 2026</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <button class="p-2 glass rounded-xl relative">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+                    </button>
+                </div>
+                <button id="theme-toggle-dash" class="p-2 glass rounded-xl">
+                    <i data-lucide="moon" class="w-5 h-5"></i>
+                </button>
+                <button id="open-roadmap-modal" class="btn btn-primary">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i> Generate AI Roadmap
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="glass p-6 rounded-2xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <i data-lucide="trending-up"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-text-muted uppercase font-bold tracking-widest">Skill Score</p>
+                    <p class="text-2xl font-bold" id="skill-score-val">0%</p>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-2xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                    <i data-lucide="check-square"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-text-muted uppercase font-bold tracking-widest">Projects</p>
+                    <p class="text-2xl font-bold" id="stat-projects">4/10</p>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-2xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500">
+                    <i data-lucide="users"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-text-muted uppercase font-bold tracking-widest">Mentors</p>
+                    <p class="text-2xl font-bold" id="mentors-met-val">0 Met</p>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-2xl flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                    <i data-lucide="rocket"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-text-muted uppercase font-bold tracking-widest">Placement</p>
+                    <p class="text-2xl font-bold text-green-500" id="placement-rate-val">0%</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Roadmap Section -->
+        <div class="grid lg:grid-cols-3 gap-8 mb-8">
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass p-6 rounded-3xl relative">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-xl">My Career Roadmap</h3>
+                        <div class="flex gap-2">
+                             <button class="p-2 hover:bg-surface-2 rounded-lg"><i data-lucide="zoom-in" class="w-4 h-4"></i></button>
+                             <button class="p-2 hover:bg-surface-2 rounded-lg"><i data-lucide="zoom-out" class="w-4 h-4"></i></button>
+                             <button id="download-roadmap" class="btn btn-ghost text-xs py-1.5 font-bold">
+                                <i data-lucide="download" class="w-4 h-4"></i> PDF
+                             </button>
+                        </div>
+                    </div>
+                    
+                    <div class="roadmap-container relative" id="roadmap-print-area">
+                        <svg id="roadmap-svg" class="absolute inset-0 w-full h-full pointer-events-none opacity-20">
+                            <!-- SVG lines will be injected by flowchart.js -->
+                        </svg>
+                        
+                        <div id="roadmap-nodes" class="absolute inset-0">
+                            <div class="flex flex-col items-center justify-center h-full text-center p-10">
+                                <i data-lucide="map-pin" class="w-12 h-12 text-white/20 mb-4"></i>
+                                <p class="text-text-muted">No roadmap generated yet.<br>Click the "Generate AI Roadmap" button to start.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects Marketplace Section -->
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl">Project Marketplace</h3>
+                    <div class="flex gap-2">
+                        <input type="text" id="project-search" placeholder="Search projects..." class="bg-surface-2 border border-border rounded-lg px-3 py-1.5 text-xs outline-none focus:border-primary">
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6" id="projects-grid">
+                    <!-- Projects will be injected here -->
+                </div>
+            </div>
+
+            <!-- Right Sidebar Dashboard -->
+            <div class="space-y-6">
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-lg mb-6">Weekly Progress</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>React Mastery</span>
+                                <span class="text-primary font-bold">85%</span>
+                            </div>
+                            <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span>DSA Skills</span>
+                                <span class="text-primary font-bold">40%</span>
+                            </div>
+                            <div class="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary" style="width: 40%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <p class="text-xs text-text-muted uppercase font-bold mb-4">Activity Heatmap</p>
+                        <div class="grid grid-cols-7 gap-1">
+                            <!-- Generating cells -->
+                            <script>
+                                for(let i=0; i<28; i++) {
+                                    const opacity = Math.random() > 0.5 ? 'bg-primary/20' : 'bg-primary/60';
+                                    document.write(`<div class="w-full aspect-square ${Math.random() > 0.7 ? opacity : 'bg-white/5'} rounded-sm"></div>`);
+                                }
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass p-6 rounded-3xl bg-secondary/20 border border-secondary/30">
+                    <h3 class="text-lg mb-4">Mentor Feedback</h3>
+                    <div class="flex gap-4 mb-6">
+                        <img src="https://i.pravatar.cc/150?u=5" class="w-10 h-10 rounded-full" alt="M">
+                        <div>
+                            <p class="text-sm font-bold">Siddharth V.</p>
+                            <p class="text-xs text-text-muted">SDE @ Google</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-text-muted italic mb-4">"Your React project structure is good, focus more on custom hooks this week. Let's discuss in our next session."</p>
+                    <button class="text-primary text-xs font-bold hover:underline">Schedule Session →</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Roadmap Config Modal -->
+    <div id="roadmap-modal" class="fixed inset-0 z-[2000] hidden flex items-center justify-center p-6">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        <div class="glass max-w-lg w-full p-8 rounded-3xl relative z-10 border border-white/10">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-3">
+                <i data-lucide="sparkles" class="text-primary"></i>
+                AI Roadmap Builder
+            </h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-text-muted font-bold uppercase mb-2 block">Target Career Role</label>
+                    <select id="target-role" class="w-full bg-surface-2 border border-border rounded-xl p-3 text-sm outline-none focus:border-primary">
+                        <option value="frontend">Frontend Developer</option>
+                        <option value="backend">Backend Engineer</option>
+                        <option value="fullstack">Full Stack Architect</option>
+                        <option value="ai">AI/ML Engineer</option>
+                        <option value="devops">DevOps Engineer</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-text-muted font-bold uppercase mb-2 block">Current Skill Level</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button class="skill-level-btn px-4 py-2 border border-border rounded-xl text-xs font-bold hover:bg-white/5 active" data-level="Beginner">Beginner</button>
+                        <button class="skill-level-btn px-4 py-2 border border-border rounded-xl text-xs font-bold hover:bg-white/5" data-level="Intermediate">Intermediate</button>
+                        <button class="skill-level-btn px-4 py-2 border border-border rounded-xl text-xs font-bold hover:bg-white/5" data-level="Advanced">Advanced</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs text-text-muted font-bold uppercase mb-2 block">Daily Time Commitment</label>
+                    <input type="range" id="time-range" min="1" max="8" value="3" class="w-full accent-primary">
+                    <div class="flex justify-between text-[10px] text-text-muted mt-1">
+                        <span>1 Hour</span>
+                        <span id="time-val">3 Hours</span>
+                        <span>8 Hours</span>
+                    </div>
+                </div>
+                <button id="generate-confirm" class="btn btn-primary w-full py-4 text-sm font-bold mt-4">
+                    Analyze & Generate Path
+                </button>
+            </div>
+            <button id="close-roadmap-modal" class="absolute top-4 right-4 text-text-muted hover:text-white">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Generating Loader Overlay -->
+    <div id="ai-loader" class="fixed inset-0 z-[3000] hidden flex flex-col items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
+        <div class="relative w-32 h-32 mb-8">
+            <div class="absolute inset-0 rounded-full border-4 border-primary/20"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+            <div class="absolute inset-4 rounded-full bg-primary/10 flex items-center justify-center">
+                <i data-lucide="bot" class="w-10 h-10 text-primary animate-pulse"></i>
+            </div>
+        </div>
+        <h3 class="text-2xl font-bold mb-2">Analyzing Your Career Path...</h3>
+        <p class="text-text-muted text-center max-w-xs" id="loader-text">Comparing 12,000+ industry data points </p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="scripts/theme.js"></script>
+    <script src="scripts/dashboard.js"></script>
+    <script src="scripts/flowchart.js"></script>
+    <script src="scripts/chatbot.js"></script>
+    <script>
+        lucide.createIcons();
+        
+        // Chat Toggle logic
+        const chatBtn = document.getElementById('ai-chat-btn');
+        const chatPanel = document.getElementById('chat-panel');
+        const closeChat = document.getElementById('close-chat');
+
+        chatBtn.onclick = () => {
+            chatPanel.style.display = chatPanel.style.display === 'flex' ? 'none' : 'flex';
+        };
+        closeChat.onclick = () => {
+            chatPanel.style.display = 'none';
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillBridge | Architect Your Future</title>
+    <meta name="description" content="SkillBridge — India's #1 AI-powered career platform. Personalized roadmaps, real projects, expert mentors. Get placed in your dream company within 6 months.">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- External Libs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/animations.css">
+</head>
+<body>
+
+    <!-- Scroll Progress -->
+    <div class="scroll-progress" id="progress-bar"></div>
+
+    <!-- Floating Orbs Background -->
+    <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="canvas-container">
+        <canvas id="particle-canvas"></canvas>
+    </div>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- ══════════════════════════════════════════ NAVBAR -->
+    <nav class="nav-blur" id="navbar">
+        <div class="nav-inner">
+            <a href="#" class="logo-link">
+                Skill<span class="text-primary">Bridge</span>
+            </a>
+            <div class="nav-links">
+                <a href="#problem" class="nav-link">The Path</a>
+                <a href="#how" class="nav-link">How it Works</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#reviews" class="nav-link">Wins</a>
+                <a href="auth.html" class="btn-premium primary nav-cta" id="nav-cta-btn">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ══════════════════════════════════════════ HERO -->
+    <main class="section hero-section" id="hero">
+        <div class="mesh-bg"></div>
+        <div class="hero-grid">
+            <div id="hero-text">
+                <div class="hero-badge">
+                    ✦ THE ULTIMATE CAREER COPILOT
+                </div>
+
+                <h1 class="heading-primary" id="hero-heading"></h1>
+
+                <p class="hero-sub">
+                    Precision-engineered learning paths that adapt to your ambitions. Stop guessing, start building software that matters.
+                </p>
+
+                <div class="hero-cta-row">
+                    <a href="auth.html" class="btn-premium primary" id="hero-cta-1">Build My Roadmap <i data-lucide="arrow-right"></i></a>
+                    <a href="#how" class="btn-premium secondary" id="hero-cta-2">See How It Works <i data-lucide="play-circle"></i></a>
+                </div>
+
+                <div class="hero-trust">
+                    <div class="trust-avatar-stack">
+                        <div class="trust-avatar" style="background:#E94560;">AK</div>
+                        <div class="trust-avatar" style="background:#0F3460;">RK</div>
+                        <div class="trust-avatar" style="background:#27c93f;">SK</div>
+                        <div class="trust-avatar" style="background:#F5A623;">PM</div>
+                    </div>
+                    <span class="trust-text">Joined by <b>15L+ students</b> from 200+ colleges</span>
+                </div>
+            </div>
+
+            <div id="hero-visual" class="terminal-card glass-panel">
+                <div class="terminal-bar">
+                    <div class="terminal-dot" style="background:#ff5f56;"></div>
+                    <div class="terminal-dot" style="background:#ffbd2e;"></div>
+                    <div class="terminal-dot" style="background:#27c93f;"></div>
+                    <span class="terminal-title">skillbridge — diagnose</span>
+                </div>
+                <div id="terminal-content" class="terminal-body"></div>
+                <div class="terminal-footer">
+                    <div class="terminal-status">
+                        <span class="status-dot"></span>
+                        AI Core Active
+                    </div>
+                    <span class="terminal-version">v2.4.1</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ══════════════════════════════════════════ COMPANY MARQUEE -->
+    <section class="marquee-section" aria-label="Our students work at">
+        <div class="marquee-label">Our students work at →</div>
+        <div class="marquee-container">
+            <div class="marquee-content">
+                <span class="company-pill">Google</span>
+                <span class="company-pill">Microsoft</span>
+                <span class="company-pill">Amazon</span>
+                <span class="company-pill">Flipkart</span>
+                <span class="company-pill">Razorpay</span>
+                <span class="company-pill">CRED</span>
+                <span class="company-pill">Zepto</span>
+                <span class="company-pill">Swiggy</span>
+                <span class="company-pill">Meesho</span>
+                <span class="company-pill">PhonePe</span>
+                <span class="company-pill">Paytm</span>
+                <span class="company-pill">Groww</span>
+                <!-- Duplicate for seamless loop -->
+                <span class="company-pill">Google</span>
+                <span class="company-pill">Microsoft</span>
+                <span class="company-pill">Amazon</span>
+                <span class="company-pill">Flipkart</span>
+                <span class="company-pill">Razorpay</span>
+                <span class="company-pill">CRED</span>
+                <span class="company-pill">Zepto</span>
+                <span class="company-pill">Swiggy</span>
+                <span class="company-pill">Meesho</span>
+                <span class="company-pill">PhonePe</span>
+                <span class="company-pill">Paytm</span>
+                <span class="company-pill">Groww</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ STATS -->
+    <section class="stats-section" id="stats" aria-label="Key statistics">
+        <div class="stats-grid">
+            <div class="stat-card" data-val="15" data-display="15L+" data-suffix="" data-animate="fade-up">
+                <div class="stat-icon"><i data-lucide="users"></i></div>
+                <div class="stat-number gradient-text" id="stat-0">0</div>
+                <div class="stat-label">Students Guided</div>
+                <div class="stat-desc">Across 200+ colleges</div>
+            </div>
+            <div class="stat-card" data-val="500" data-display="500+" data-suffix="+" data-animate="fade-up">
+                <div class="stat-icon"><i data-lucide="briefcase"></i></div>
+                <div class="stat-number gradient-text" id="stat-1">0</div>
+                <div class="stat-label">Hiring Partners</div>
+                <div class="stat-desc">Top startups &amp; MNCs</div>
+            </div>
+            <div class="stat-card" data-val="98" data-display="98%" data-suffix="%" data-animate="fade-up">
+                <div class="stat-icon"><i data-lucide="trending-up"></i></div>
+                <div class="stat-number gradient-text" id="stat-2">0</div>
+                <div class="stat-label">Placement Rate</div>
+                <div class="stat-desc">Within 6 months</div>
+            </div>
+            <div class="stat-card" data-val="49" data-display="4.9★" data-suffix="" data-animate="fade-up">
+                <div class="stat-icon"><i data-lucide="star"></i></div>
+                <div class="stat-number gradient-text" id="stat-3">0</div>
+                <div class="stat-label">Average Rating</div>
+                <div class="stat-desc">From 12,000+ reviews</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ PROBLEM -->
+    <section class="section full-bleed problem-section" id="problem">
+        <div class="problem-inner">
+            <div data-animate="fade-up">
+                <h2 class="heading-secondary">75% of graduates<br><b>don't get relevant jobs.</b></h2>
+                <div class="red-line" id="problem-line"></div>
+                <p class="problem-text">
+                    Not because they're not smart.<br>
+                    Because nobody showed them the path. SkillBridge bridges the gap between college education and industry standards.
+                </p>
+            </div>
+            <div class="problem-cards">
+                <div class="problem-card glass-panel" data-animate="fade-up">
+                    <div class="problem-card-emoji">😔</div>
+                    <div class="text-4xl font-black text-primary">4 Years</div>
+                    <div class="problem-card-label">Wasted in College</div>
+                    <p class="problem-card-sub">Learning theory that doesn't match industry needs</p>
+                </div>
+                <div class="problem-card glass-panel" data-animate="fade-up">
+                    <div class="problem-card-emoji">💸</div>
+                    <div class="text-4xl font-black text-primary">₹2 Cr+</div>
+                    <div class="problem-card-label">Training Spend</div>
+                    <p class="problem-card-sub">Companies spend crores fixing what college didn't teach</p>
+                </div>
+                <div class="problem-card glass-panel" data-animate="fade-up">
+                    <div class="problem-card-emoji">🚪</div>
+                    <div class="text-4xl font-black text-primary">6 Months</div>
+                    <div class="problem-card-label">Average Job Hunt</div>
+                    <p class="problem-card-sub">Students spend months applying without a clear path</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ HOW IT WORKS -->
+    <section class="section" id="how">
+        <div class="text-center mb-20" data-animate="fade-up">
+            <h2 class="heading-secondary">How <b>SkillBridge Works</b></h2>
+            <p class="text-muted">From setting goals to getting placed — step by step.</p>
+        </div>
+
+        <div class="timeline-container">
+            <svg class="timeline-line-svg" aria-hidden="true">
+                <line x1="2" y1="0" x2="2" y2="100%" stroke="var(--primary)" stroke-width="3" stroke-dasharray="8 8" id="scroll-path"></line>
+            </svg>
+
+            <div class="timeline-item" data-animate="fade-up">
+                <div class="timeline-content">
+                    <div class="timeline-number">01</div>
+                    <h3 class="text-3xl font-bold mb-4">🎯 Sign Up &amp; Set Your Goal</h3>
+                    <p class="text-muted">Tell us your college, branch, and dream role. We analyze your baseline to create a custom starting point.</p>
+                </div>
+                <div class="timeline-visual glass-panel p-4">
+                    <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=800" alt="Student setting goals" style="width:100%;border-radius:12px;">
+                </div>
+            </div>
+
+            <div class="timeline-item" data-animate="fade-up">
+                <div class="timeline-content">
+                    <div class="timeline-number">02</div>
+                    <h3 class="text-3xl font-bold mb-4">🤖 AI Builds Your Roadmap</h3>
+                    <p class="text-muted">Get a personalized 6-month skill plan generated in seconds. Every module is tailored to what industry actually asks for.</p>
+                </div>
+                <div class="timeline-visual glass-panel p-4">
+                    <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=800" alt="AI generating roadmap" style="width:100%;border-radius:12px;">
+                </div>
+            </div>
+
+            <div class="timeline-item" data-animate="fade-up">
+                <div class="timeline-content">
+                    <div class="timeline-number">03</div>
+                    <h3 class="text-3xl font-bold mb-4">🛠️ Build Real Projects</h3>
+                    <p class="text-muted">Work on actual company problems from partners like Google and Zomato. Build a portfolio that speaks louder than a resume.</p>
+                </div>
+                <div class="timeline-visual glass-panel p-4">
+                    <div class="mini-project-preview">
+                        <div class="mini-project-header">
+                            <span class="mini-project-dot" style="background:#ff5f56;"></span>
+                            <span class="mini-project-dot" style="background:#ffbd2e;"></span>
+                            <span class="mini-project-dot" style="background:#27c93f;"></span>
+                            <span style="color:var(--text-muted);font-size:0.75rem;margin-left:8px;">project.py</span>
+                        </div>
+                        <div class="mini-code">
+                            <div><span style="color:#569cd6;">def</span> <span style="color:#dcdcaa;">recommend_products</span>(user_id):</div>
+                            <div>&nbsp;&nbsp;<span style="color:#6a9955;"># ML-powered recommendations</span></div>
+                            <div>&nbsp;&nbsp;embeddings = <span style="color:#ce9178;">get_user_vectors</span>(user_id)</div>
+                            <div>&nbsp;&nbsp;<span style="color:#569cd6;">return</span> model.predict(embeddings)</div>
+                            <div class="code-cursor">|</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-animate="fade-up">
+                <div class="timeline-content">
+                    <div class="timeline-number">04</div>
+                    <h3 class="text-3xl font-bold mb-4">🚀 Get Placed</h3>
+                    <p class="text-muted">Submit your SkillBridge portfolio to 500+ partner companies. Our students average 3 offers within 6 months.</p>
+                </div>
+                <div class="timeline-visual glass-panel p-4">
+                    <div class="mini-offer-card">
+                        <div class="offer-company-logo">G</div>
+                        <div class="offer-details">
+                            <div class="offer-title">SDE-1 @ Google</div>
+                            <div class="offer-ctc">₹24 LPA CTC</div>
+                            <div class="offer-badge">✓ Offer Received</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ FEATURES TABS -->
+    <section class="section" id="features">
+        <div class="text-center mb-20" data-animate="fade-up">
+            <h2 class="heading-secondary">Everything you <b>Need to Succeed</b></h2>
+        </div>
+
+        <div class="tabs-nav" id="tabs-nav" data-animate="fade-up">
+            <button class="tab-btn active" data-tab="tab-roadmap" id="tabBtn-roadmap">Roadmap</button>
+            <button class="tab-btn" data-tab="tab-projects" id="tabBtn-projects">Projects</button>
+            <button class="tab-btn" data-tab="tab-mentors" id="tabBtn-mentors">Mentors</button>
+            <button class="tab-btn" data-tab="tab-portfolio" id="tabBtn-portfolio">Portfolio</button>
+            <div class="tab-indicator" id="tab-indicator"></div>
+        </div>
+
+        <!-- TAB: ROADMAP -->
+        <div id="tab-roadmap" class="tab-content-pane active" data-animate="fade-up">
+            <div class="tab-left">
+                <h3 class="text-4xl font-bold mb-6">Personalized AI Roadmaps</h3>
+                <ul class="feature-list">
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Adapted to your learning speed</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Based on 12,000+ industry data points</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> One-click flowchart download</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Weekly progress checkpoints</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Integrates with your GitHub</li>
+                </ul>
+                <a href="auth.html" class="btn-premium primary mt-8" style="margin-top:2rem;">Generate My Roadmap <i data-lucide="arrow-right"></i></a>
+            </div>
+            <div class="tab-right">
+                <!-- SVG Skill Tree -->
+                <div class="skill-tree-container glass-panel">
+                    <div class="skill-tree-title">Your ML Engineer Path</div>
+                    <svg class="skill-tree-svg" viewBox="0 0 520 400" xmlns="http://www.w3.org/2000/svg" aria-label="Skill tree flowchart">
+                        <!-- Connecting Lines (drawn first so nodes appear on top) -->
+                        <!-- Python Basics → Data Structures -->
+                        <line class="tree-line animated-line" x1="160" y1="50" x2="270" y2="50" stroke="#E94560" stroke-width="2" stroke-dasharray="6 4"/>
+                        <!-- Data Structures → Algorithms -->
+                        <line class="tree-line animated-line" x1="380" y1="50" x2="460" y2="50" stroke="#E94560" stroke-width="2" stroke-dasharray="6 4"/>
+                        <!-- Python Basics ↓ → Web Scraping -->
+                        <line class="tree-line animated-line" x1="80" y1="75" x2="80" y2="150" stroke="#E94560" stroke-width="2" stroke-dasharray="6 4"/>
+                        <!-- Data Structures ↓ → System Design -->
+                        <line class="tree-line animated-line" x1="325" y1="75" x2="325" y2="150" stroke="#E94560" stroke-width="2" stroke-dasharray="6 4"/>
+                        <!-- Web Scraping ↓ → ML Fundamentals -->
+                        <line class="tree-line animated-line" x1="80" y1="200" x2="80" y2="270" stroke="#888" stroke-width="2" stroke-dasharray="6 4"/>
+                        <!-- ML Fundamentals → Projects -->
+                        <line class="tree-line animated-line" x1="160" y1="300" x2="260" y2="300" stroke="#888" stroke-width="2" stroke-dasharray="6 4"/>
+                        <!-- Projects → PLACED -->
+                        <line class="tree-line animated-line" x1="370" y1="300" x2="430" y2="300" stroke="#888" stroke-width="2" stroke-dasharray="6 4"/>
+
+                        <!-- Row 1: Completed -->
+                        <!-- Python Basics (completed = green) -->
+                        <rect class="tree-node node-done" x="10" y="25" width="150" height="46" rx="10"/>
+                        <text class="node-text" x="85" y="53" text-anchor="middle">✓ Python Basics</text>
+
+                        <!-- Data Structures (completed) -->
+                        <rect class="tree-node node-done" x="270" y="25" width="150" height="46" rx="10"/>
+                        <text class="node-text" x="345" y="53" text-anchor="middle">✓ Data Structures</text>
+
+                        <!-- Algorithms (completed) -->
+                        <rect class="tree-node node-done" x="430" y="25" width="80" height="46" rx="10"/>
+                        <text class="node-text" x="470" y="53" text-anchor="middle">✓ Algo</text>
+
+                        <!-- Row 2: Current & Upcoming -->
+                        <!-- Web Scraping (current = pulsing red) -->
+                        <rect class="tree-node node-current" x="10" y="155" width="140" height="46" rx="10"/>
+                        <text class="node-text" x="80" y="183" text-anchor="middle">Web Scraping</text>
+                        <!-- Pulse ring -->
+                        <rect class="pulse-ring" x="10" y="155" width="140" height="46" rx="10" fill="none" stroke="#E94560" stroke-width="2"/>
+
+                        <!-- System Design (upcoming) -->
+                        <rect class="tree-node node-locked" x="270" y="155" width="150" height="46" rx="10"/>
+                        <text class="node-text node-text-locked" x="345" y="183" text-anchor="middle">🔒 System Design</text>
+
+                        <!-- Row 3: Locked -->
+                        <!-- ML Fundamentals (locked) -->
+                        <rect class="tree-node node-locked" x="10" y="278" width="150" height="46" rx="10"/>
+                        <text class="node-text node-text-locked" x="85" y="306" text-anchor="middle">🔒 ML Fundamentals</text>
+
+                        <!-- Projects (locked) -->
+                        <rect class="tree-node node-locked" x="265" y="278" width="100" height="46" rx="10"/>
+                        <text class="node-text node-text-locked" x="315" y="306" text-anchor="middle">🔒 Projects</text>
+
+                        <!-- PLACED (locked) -->
+                        <rect class="tree-node node-locked" x="430" y="278" width="80" height="46" rx="10"/>
+                        <text class="node-text node-text-locked" x="470" y="306" text-anchor="middle">🏆 PLACED</text>
+                    </svg>
+                    <div class="skill-tree-legend">
+                        <span class="legend-item"><span class="legend-dot" style="background:#27c93f;"></span>Completed</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#E94560;"></span>Current</span>
+                        <span class="legend-item"><span class="legend-dot" style="background:#444;"></span>Locked</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: PROJECTS -->
+        <div id="tab-projects" class="tab-content-pane" data-animate="fade-up">
+            <div class="tab-left">
+                <h3 class="text-4xl font-bold mb-6">Real-World Projects</h3>
+                <ul class="feature-list">
+                    <li><i data-lucide="check-circle" class="text-primary"></i> From actual company problem statements</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Reviewed by senior engineers</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Earns certificates + cash rewards</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Goes straight to your portfolio</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> 120+ projects across all stacks</li>
+                </ul>
+                <a href="auth.html" class="btn-premium primary" style="margin-top:2rem;">Browse Projects <i data-lucide="arrow-right"></i></a>
+            </div>
+            <div class="tab-right">
+                <div class="projects-grid">
+                    <div class="project-card glass-panel">
+                        <div class="project-card-top">
+                            <span class="project-icon">🔴</span>
+                            <span class="difficulty-badge intermediate">Intermediate</span>
+                        </div>
+                        <h4 class="project-title">E-Commerce Recommendation Engine</h4>
+                        <p class="project-company">by Flipkart Engineers</p>
+                        <div class="tech-pills">
+                            <span class="tech-pill">Python</span>
+                            <span class="tech-pill">FastAPI</span>
+                            <span class="tech-pill">Redis</span>
+                        </div>
+                        <div class="project-reward">🏆 ₹500 + Certificate</div>
+                        <button class="btn-premium primary project-btn">Start Project →</button>
+                    </div>
+                    <div class="project-card glass-panel">
+                        <div class="project-card-top">
+                            <span class="project-icon">🟢</span>
+                            <span class="difficulty-badge hard">Advanced</span>
+                        </div>
+                        <h4 class="project-title">Real-Time Fraud Detection System</h4>
+                        <p class="project-company">by Razorpay Engineers</p>
+                        <div class="tech-pills">
+                            <span class="tech-pill">ML</span>
+                            <span class="tech-pill">Kafka</span>
+                            <span class="tech-pill">Spark</span>
+                        </div>
+                        <div class="project-reward">🏆 ₹1000 + Certificate</div>
+                        <button class="btn-premium primary project-btn">Start Project →</button>
+                    </div>
+                    <div class="project-card glass-panel">
+                        <div class="project-card-top">
+                            <span class="project-icon">🔵</span>
+                            <span class="difficulty-badge easy">Beginner</span>
+                        </div>
+                        <h4 class="project-title">Social Feed with Infinite Scroll</h4>
+                        <p class="project-company">by CRED Engineers</p>
+                        <div class="tech-pills">
+                            <span class="tech-pill">React</span>
+                            <span class="tech-pill">Node.js</span>
+                            <span class="tech-pill">MongoDB</span>
+                        </div>
+                        <div class="project-reward">🏆 ₹300 + Certificate</div>
+                        <button class="btn-premium primary project-btn">Start Project →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: MENTORS -->
+        <div id="tab-mentors" class="tab-content-pane" data-animate="fade-up">
+            <div class="tab-left">
+                <h3 class="text-4xl font-bold mb-6">Expert Mentors</h3>
+                <ul class="feature-list">
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Placed seniors from top companies</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> 1:1 video sessions available</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Mock interviews &amp; resume reviews</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Sessions starting at just ₹299</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> 500+ verified mentors</li>
+                </ul>
+                <a href="auth.html" class="btn-premium primary" style="margin-top:2rem;">Find My Mentor <i data-lucide="arrow-right"></i></a>
+            </div>
+            <div class="tab-right">
+                <div class="mentors-grid">
+                    <div class="mentor-card glass-panel">
+                        <div class="mentor-avatar" style="background:linear-gradient(135deg,#E94560,#0F3460);">RK</div>
+                        <h4 class="mentor-name">Rahul Kumar</h4>
+                        <p class="mentor-role">SDE-2 @ Google</p>
+                        <div class="mentor-skills">
+                            <span class="tech-pill">React</span>
+                            <span class="tech-pill">Node.js</span>
+                            <span class="tech-pill">DSA</span>
+                        </div>
+                        <div class="mentor-rating">⭐ 4.9 <span class="mentor-sessions">(47 sessions)</span></div>
+                        <div class="mentor-avail"><span class="avail-dot"></span> Available this week</div>
+                        <button class="btn-premium primary mentor-btn">Book Session ₹299</button>
+                    </div>
+                    <div class="mentor-card glass-panel">
+                        <div class="mentor-avatar" style="background:linear-gradient(135deg,#27c93f,#0F3460);">PG</div>
+                        <h4 class="mentor-name">Priya Gupta</h4>
+                        <p class="mentor-role">PM @ Microsoft</p>
+                        <div class="mentor-skills">
+                            <span class="tech-pill">Product</span>
+                            <span class="tech-pill">Analytics</span>
+                            <span class="tech-pill">SQL</span>
+                        </div>
+                        <div class="mentor-rating">⭐ 4.8 <span class="mentor-sessions">(63 sessions)</span></div>
+                        <div class="mentor-avail"><span class="avail-dot"></span> Available this week</div>
+                        <button class="btn-premium primary mentor-btn">Book Session ₹399</button>
+                    </div>
+                    <div class="mentor-card glass-panel">
+                        <div class="mentor-avatar" style="background:linear-gradient(135deg,#F5A623,#E94560);">AS</div>
+                        <h4 class="mentor-name">Arjun Singh</h4>
+                        <p class="mentor-role">ML Engineer @ Razorpay</p>
+                        <div class="mentor-skills">
+                            <span class="tech-pill">Python</span>
+                            <span class="tech-pill">ML</span>
+                            <span class="tech-pill">PyTorch</span>
+                        </div>
+                        <div class="mentor-rating">⭐ 5.0 <span class="mentor-sessions">(31 sessions)</span></div>
+                        <div class="mentor-avail" style="color:#F5A623;"><span class="avail-dot" style="background:#F5A623;"></span> Slots filling up</div>
+                        <button class="btn-premium primary mentor-btn">Book Session ₹499</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: PORTFOLIO -->
+        <div id="tab-portfolio" class="tab-content-pane" data-animate="fade-up">
+            <div class="tab-left">
+                <h3 class="text-4xl font-bold mb-6">Auto-Generated Portfolio</h3>
+                <ul class="feature-list">
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Automatic portfolio from your progress</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> PDF download for recruiters</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> GitHub integration &amp; activity heatmap</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> SkillBridge verified badge</li>
+                    <li><i data-lucide="check-circle" class="text-primary"></i> Shareable public profile URL</li>
+                </ul>
+                <a href="auth.html" class="btn-premium primary" style="margin-top:2rem;">Build My Portfolio <i data-lucide="arrow-right"></i></a>
+            </div>
+            <div class="tab-right">
+                <!-- Portfolio Card Mock -->
+                <div class="portfolio-mock glass-panel">
+                    <div class="portfolio-header">
+                        <div class="portfolio-avatar">AK</div>
+                        <div class="portfolio-info">
+                            <h4 class="portfolio-name">Ananya Kapoor</h4>
+                            <p class="portfolio-college">VIT Vellore • CSE</p>
+                            <span class="placement-badge">Placement Ready 🟢</span>
+                        </div>
+                        <div class="verified-badge">✓ SkillBridge Verified</div>
+                    </div>
+                    <div class="portfolio-skills">
+                        <div class="skill-row">
+                            <span class="skill-name">React</span>
+                            <div class="skill-bar-track"><div class="skill-bar-fill" style="width:80%;background:linear-gradient(90deg,#E94560,#F5A623);"></div></div>
+                            <span class="skill-pct">80%</span>
+                        </div>
+                        <div class="skill-row">
+                            <span class="skill-name">Python</span>
+                            <div class="skill-bar-track"><div class="skill-bar-fill" style="width:60%;background:linear-gradient(90deg,#0F3460,#E94560);"></div></div>
+                            <span class="skill-pct">60%</span>
+                        </div>
+                        <div class="skill-row">
+                            <span class="skill-name">DSA</span>
+                            <div class="skill-bar-track"><div class="skill-bar-fill" style="width:50%;background:linear-gradient(90deg,#27c93f,#0F3460);"></div></div>
+                            <span class="skill-pct">50%</span>
+                        </div>
+                    </div>
+                    <div class="portfolio-meta">
+                        <div class="portfolio-badge-item">📁 <b>4/10</b> Projects</div>
+                        <div class="portfolio-badge-item">⭐ <b>4.7</b> Avg Rating</div>
+                        <div class="portfolio-badge-item">🔥 <b>24</b> Day Streak</div>
+                    </div>
+                    <!-- GitHub heatmap -->
+                    <div class="heatmap-label">GitHub Activity</div>
+                    <div class="github-heatmap" id="github-heatmap"></div>
+                    <button class="btn-premium primary portfolio-download-btn">⬇ Download Portfolio PDF</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ INNOVATION CARDS -->
+    <section class="section">
+        <div class="grid-3">
+            <div class="glass-panel feature-highlight-card shine-hover" data-animate="fade-up">
+                <div class="feature-icon-wrap" style="background:rgba(233,69,96,0.1);color:var(--primary);">
+                    <i data-lucide="download-cloud"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4">Study Flowchart</h3>
+                <p class="text-muted text-sm mb-6">Generate your complete learning path as a beautiful PDF flowchart. One-click download.</p>
+                <div class="badge-new">NEW</div>
+            </div>
+            <div class="glass-panel feature-highlight-card shine-hover" data-animate="fade-up">
+                <div class="feature-icon-wrap" style="background:rgba(79,130,245,0.1);color:#4f82f5;">
+                    <i data-lucide="bot"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4">AI Doubt Assistant</h3>
+                <p class="text-muted text-sm mb-6">Ask anything about your roadmap. No distractions, just clarity from our context-aware AI.</p>
+                <div class="badge-ai">POWERED BY AI</div>
+            </div>
+            <div class="glass-panel feature-highlight-card shine-hover" data-animate="fade-up">
+                <div class="feature-icon-wrap" style="background:rgba(39,201,63,0.1);color:#27c93f;">
+                    <i data-lucide="activity"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-4">Progress Dashboard</h3>
+                <p class="text-muted text-sm mb-6">Track skills, projects, and your placement readiness score in one beautiful centralized view.</p>
+                <div class="badge-soon">COMING SOON</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ TESTIMONIALS -->
+    <section class="section" id="reviews">
+        <div class="text-center mb-20" data-animate="fade-up">
+            <h2 class="heading-secondary">Real Students. <b>Real Results.</b></h2>
+        </div>
+
+        <div class="testimonials-grid">
+            <div class="testimonial-card" data-animate="fade-up">
+                <div class="testimonial-card-inner">
+                    <div class="card-front glass-panel">
+                        <div class="tcard-header">
+                            <div class="tcard-avatar" style="background:#E94560;">AK</div>
+                            <div>
+                                <h4 class="tcard-name">Ananya Kapoor</h4>
+                                <p class="tcard-meta">VIT Vellore • Placed @ Google</p>
+                            </div>
+                            <div class="tcard-stars">⭐⭐⭐⭐⭐</div>
+                        </div>
+                        <p class="tcard-quote">"The AI roadmap saved me months of aimless learning. I knew exactly what to build to get hired."</p>
+                        <div class="tcard-ctc">Package: <b class="text-primary">₹28 LPA</b></div>
+                    </div>
+                    <div class="card-back glass-panel">
+                        <button class="btn-premium primary">View LinkedIn Profile</button>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" data-animate="fade-up">
+                <div class="testimonial-card-inner">
+                    <div class="card-front glass-panel">
+                        <div class="tcard-header">
+                            <div class="tcard-avatar" style="background:#0F3460;">RK</div>
+                            <div>
+                                <h4 class="tcard-name">Rohan Khanna</h4>
+                                <p class="tcard-meta">IIT BHU • Placed @ Microsoft</p>
+                            </div>
+                            <div class="tcard-stars">⭐⭐⭐⭐⭐</div>
+                        </div>
+                        <p class="tcard-quote">"I had 3 offers in 4 months. The project reviews from seniors and mock interviews made all the difference."</p>
+                        <div class="tcard-ctc">Package: <b class="text-primary">₹35 LPA</b></div>
+                    </div>
+                    <div class="card-back glass-panel">
+                        <button class="btn-premium primary">View LinkedIn Profile</button>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" data-animate="fade-up">
+                <div class="testimonial-card-inner">
+                    <div class="card-front glass-panel">
+                        <div class="tcard-header">
+                            <div class="tcard-avatar" style="background:#27c93f;">SM</div>
+                            <div>
+                                <h4 class="tcard-name">Sneha Mishra</h4>
+                                <p class="tcard-meta">BITS Pilani • Placed @ Razorpay</p>
+                            </div>
+                            <div class="tcard-stars">⭐⭐⭐⭐⭐</div>
+                        </div>
+                        <p class="tcard-quote">"From zero Python to ML Engineer in 6 months. The mentor sessions were worth every rupee."</p>
+                        <div class="tcard-ctc">Package: <b class="text-primary">₹22 LPA</b></div>
+                    </div>
+                    <div class="card-back glass-panel">
+                        <button class="btn-premium primary">View LinkedIn Profile</button>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" data-animate="fade-up">
+                <div class="testimonial-card-inner">
+                    <div class="card-front glass-panel">
+                        <div class="tcard-header">
+                            <div class="tcard-avatar" style="background:#F5A623;">AP</div>
+                            <div>
+                                <h4 class="tcard-name">Aarav Patel</h4>
+                                <p class="tcard-meta">DTU Delhi • Placed @ Zepto</p>
+                            </div>
+                            <div class="tcard-stars">⭐⭐⭐⭐⭐</div>
+                        </div>
+                        <p class="tcard-quote">"The company projects on SkillBridge are real! My Flipkart project got me the interview directly."</p>
+                        <div class="tcard-ctc">Package: <b class="text-primary">₹18 LPA</b></div>
+                    </div>
+                    <div class="card-back glass-panel">
+                        <button class="btn-premium primary">View LinkedIn Profile</button>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" data-animate="fade-up">
+                <div class="testimonial-card-inner">
+                    <div class="card-front glass-panel">
+                        <div class="tcard-header">
+                            <div class="tcard-avatar" style="background:#9b59b6;">KS</div>
+                            <div>
+                                <h4 class="tcard-name">Kavya Sharma</h4>
+                                <p class="tcard-meta">NSIT Delhi • Placed @ Meesho</p>
+                            </div>
+                            <div class="tcard-stars">⭐⭐⭐⭐⭐</div>
+                        </div>
+                        <p class="tcard-quote">"Switched from non-CS to SDE role in 8 months. The personalized roadmap made the impossible possible."</p>
+                        <div class="tcard-ctc">Package: <b class="text-primary">₹16 LPA</b></div>
+                    </div>
+                    <div class="card-back glass-panel">
+                        <button class="btn-premium primary">View LinkedIn Profile</button>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" data-animate="fade-up">
+                <div class="testimonial-card-inner">
+                    <div class="card-front glass-panel">
+                        <div class="tcard-header">
+                            <div class="tcard-avatar" style="background:#1abc9c;">VR</div>
+                            <div>
+                                <h4 class="tcard-name">Vikram Rao</h4>
+                                <p class="tcard-meta">NIT Trichy • Placed @ PhonePe</p>
+                            </div>
+                            <div class="tcard-stars">⭐⭐⭐⭐⭐</div>
+                        </div>
+                        <p class="tcard-quote">"Best investment I made in my career. My SkillBridge portfolio got more recruiter messages than my LinkedIn."</p>
+                        <div class="tcard-ctc">Package: <b class="text-primary">₹20 LPA</b></div>
+                    </div>
+                    <div class="card-back glass-panel">
+                        <button class="btn-premium primary">View LinkedIn Profile</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ COMPARISON TABLE -->
+    <section class="section">
+        <div class="text-center mb-20" data-animate="fade-up">
+            <h2 class="heading-secondary">Experience <b>the Edge.</b></h2>
+        </div>
+
+        <div class="glass-panel overflow-hidden" data-animate="fade-up">
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th class="compare-feature-col">Feature</th>
+                        <th class="compare-sb-col">SkillBridge</th>
+                        <th>Coursera</th>
+                        <th>YouTube</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>AI Roadmap</td>
+                        <td class="compare-sb-col">✅ Unlimited</td>
+                        <td>❌ None</td>
+                        <td>❌ None</td>
+                    </tr>
+                    <tr>
+                        <td>Mentors</td>
+                        <td class="compare-sb-col">✅ Placed Seniors</td>
+                        <td>⚡ Hard to Reach</td>
+                        <td>❌ None</td>
+                    </tr>
+                    <tr>
+                        <td>Real Projects</td>
+                        <td class="compare-sb-col">✅ 120+ Company Projects</td>
+                        <td>⚡ Generic Labs</td>
+                        <td>❌ None</td>
+                    </tr>
+                    <tr>
+                        <td>Auto Portfolio</td>
+                        <td class="compare-sb-col">✅ One Click PDF</td>
+                        <td>⚡ Certificate Only</td>
+                        <td>❌ None</td>
+                    </tr>
+                    <tr>
+                        <td>Placement Support</td>
+                        <td class="compare-sb-col">✅ 500+ Partners</td>
+                        <td>❌ None</td>
+                        <td>❌ None</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ FAQ -->
+    <section class="section">
+        <div class="text-center mb-20" data-animate="fade-up">
+            <h2 class="heading-secondary"><b>FAQs</b></h2>
+        </div>
+
+        <div class="faq-wrap">
+            <div class="faq-item" data-animate="fade-up">
+                <button class="faq-trigger">Is SkillBridge free to use? <i data-lucide="chevron-down"></i></button>
+                <div class="faq-content">
+                    <p>Yes, SkillBridge offers a comprehensive free plan that lets you generate your first roadmap and access basic community features. Pro plans are available for advanced mentorship and premium projects.</p>
+                </div>
+            </div>
+            <div class="faq-item" data-animate="fade-up">
+                <button class="faq-trigger">How does the AI roadmap work? <i data-lucide="chevron-down"></i></button>
+                <div class="faq-content">
+                    <p>Our AI processes current job market trends, company-specific requirements, and your current skill level to architect a path that minimizes time and maximizes placement chances.</p>
+                </div>
+            </div>
+            <div class="faq-item" data-animate="fade-up">
+                <button class="faq-trigger">Do I need prior coding experience? <i data-lucide="chevron-down"></i></button>
+                <div class="faq-content">
+                    <p>Not at all! SkillBridge supports complete beginners. Your roadmap is generated based on your current level, whether you're starting from zero or looking to level up.</p>
+                </div>
+            </div>
+            <div class="faq-item" data-animate="fade-up">
+                <button class="faq-trigger">How reliable are the placement stats? <i data-lucide="chevron-down"></i></button>
+                <div class="faq-content">
+                    <p>Our 98% placement rate is verified by third-party auditors and calculated based on students who completed at least 70% of their roadmap and submitted their portfolio to partner companies within 6 months.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ FINAL CTA -->
+    <section class="full-bleed cta-section">
+        <div class="cta-inner">
+            <h2 class="heading-primary" style="margin-bottom:16px;">Your career doesn't start<br>after college.</h2>
+            <h3 class="cta-sub">It starts today.</h3>
+
+            <div class="cta-btn-row">
+                <a href="auth.html" class="btn-premium secondary cta-btn-white" id="cta-main-btn">Build My Roadmap</a>
+                <a href="#how" class="btn-premium secondary cta-btn-outline">See Pricing</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════ FOOTER -->
+    <footer class="footer-section">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <div class="logo-link" style="font-size:1.5rem;font-weight:900;">Skill<span class="text-primary">Bridge</span></div>
+                <p class="footer-tagline">Bridging the gap between college &amp; career.</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h5>Product</h5>
+                    <a href="#">Roadmap Builder</a>
+                    <a href="#">Project Marketplace</a>
+                    <a href="#">Mentor Connect</a>
+                    <a href="#">Portfolio</a>
+                </div>
+                <div class="footer-col">
+                    <h5>Company</h5>
+                    <a href="#">About Us</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Press</a>
+                </div>
+                <div class="footer-col">
+                    <h5>Legal</h5>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookies</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 SkillBridge. Inspired by the best, built for the bold.</p>
+            <div class="footer-social">
+                <a href="#" aria-label="Twitter"><i data-lucide="twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i data-lucide="linkedin"></i></a>
+                <a href="#" aria-label="GitHub"><i data-lucide="github"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top -->
+    <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+        <i data-lucide="arrow-up" style="color:white;"></i>
+    </button>
+
+    <!-- Scripts -->
+    <script src="scripts/landing.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

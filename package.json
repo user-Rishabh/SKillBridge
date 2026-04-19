@@ -1,0 +1,14 @@
+{
+  "name": "skillbridge",
+  "version": "1.0.0",
+  "name": "skillbridge",
+  "description": "India's AI-Powered Career Readiness Co-pilot",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}
