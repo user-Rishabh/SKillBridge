@@ -1,180 +1,146 @@
 /* ══════════════════════════════════════════════════════════════
-   SKILLBRIDGE — ANIMATIONS STYLESHEET
+   SKILLBRIDGE — ANIMATIONS
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Hero word slide-up ───────────────────────────────────── */
-.word-slide-up {
-    display: inline-block;
-    overflow: hidden;
-    vertical-align: bottom;
+/* ── Stagger children reveal ──────────────────────────────── */
+[data-stagger] > * {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+[data-stagger].revealed > *:nth-child(1) { opacity: 1; transform: none; transition-delay: 0ms; }
+[data-stagger].revealed > *:nth-child(2) { opacity: 1; transform: none; transition-delay: 80ms; }
+[data-stagger].revealed > *:nth-child(3) { opacity: 1; transform: none; transition-delay: 160ms; }
+[data-stagger].revealed > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 240ms; }
+[data-stagger].revealed > *:nth-child(5) { opacity: 1; transform: none; transition-delay: 320ms; }
+[data-stagger].revealed > *:nth-child(6) { opacity: 1; transform: none; transition-delay: 400ms; }
+
+/* ── Timeline line draw animation ────────────────────────── */
+#tl-line {
+  transition: y2 1.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.word-slide-up span {
-    display: inline-block;
-    transform: translateY(110%);
-    animation: slideUpWord 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* ── Tab indicator slide ──────────────────────────────────── */
+.tab-ink {
+  position: absolute;
+  bottom: -1px;
+  height: 3px;
+  background: #059669;
+  border-radius: 2px 2px 0 0;
+  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
 }
 
-@keyframes slideUpWord {
-    to { transform: translateY(0); }
+/* ── Card hover lift ──────────────────────────────────────── */
+.inno-card,
+.testi-card,
+.mentor-card,
+.project-card,
+.stat-card {
+  will-change: transform;
 }
 
-/* ── Ripple on buttons ────────────────────────────────────── */
-.ripple {
-    position: absolute;
-    border-radius: 50%;
-    transform: scale(0);
-    animation: rippleEffect 0.55s linear;
-    background-color: rgba(255, 255, 255, 0.3);
-    pointer-events: none;
+/* ── Button ripple ────────────────────────────────────────── */
+.btn {
+  position: relative;
+  overflow: hidden;
 }
 
-@keyframes rippleEffect {
-    to { transform: scale(6); opacity: 0; }
+/* ── Glow pulse for CTA ───────────────────────────────────── */
+.btn-primary {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+.btn-primary:hover { animation: none; }
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(5,150,105,0.25); }
+  50%       { box-shadow: 0 8px 32px rgba(5,150,105,0.45); }
 }
 
-/* ── Stat pop in ──────────────────────────────────────────── */
-@keyframes popIn {
-    0% { transform: scale(0.6); opacity: 0; }
-    70% { transform: scale(1.06); }
-    100% { transform: scale(1); opacity: 1; }
+/* ── Floating badge animations (hero) ────────────────────── */
+.hero-badge-top {
+  animation: badgeBounce 2.5s ease-in-out infinite;
+}
+.hero-badge-bottom {
+  animation: badgeBounce 3s ease-in-out infinite reverse;
+}
+@keyframes badgeBounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
 }
 
-.animate-pop-in { animation: popIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-/* ── Mesh gradient animation ──────────────────────────────── */
-@keyframes meshRotate {
-    0% { filter: hue-rotate(0deg); }
-    100% { filter: hue-rotate(20deg); }
+/* ── Skill bars animated fill on reveal ──────────────────── */
+.bar-fill {
+  width: 0 !important;
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bar-fill.animated {
+  width: var(--w) !important;
 }
 
-/* ── Testimonial flip card ────────────────────────────────── */
-.testimonial-card-inner {
-    position: relative; width: 100%; height: 100%;
-    transition: transform 0.7s;
-    transform-style: preserve-3d;
+/* ── Heatmap cell entrance ────────────────────────────────── */
+.heat-cell {
+  animation: heatIn 0.3s ease both;
 }
-.testimonial-card:hover .testimonial-card-inner { transform: rotateY(180deg); }
-.card-front, .card-back {
-    position: absolute; width: 100%; height: 100%;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-}
-.card-back { transform: rotateY(180deg); }
-
-/* ── Cursor click pulse ───────────────────────────────────── */
-@keyframes cursorPulse {
-    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+@keyframes heatIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
-.cursor-pulse-ring {
-    position: fixed;
-    width: 44px; height: 44px;
-    border: 2px solid var(--primary);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9998;
-    transform: translate(-50%, -50%);
-    animation: cursorPulse 0.5s ease-out forwards;
+/* ── Counter numbers ──────────────────────────────────────── */
+.stat-num {
+  font-variant-numeric: tabular-nums;
 }
 
-/* ── Code cursor blink ────────────────────────────────────── */
-@keyframes blink-cursor {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+/* ── SVG pulse ring (skill tree active node) ─────────────── */
+@keyframes pulseRing {
+  0%, 100% { rx: 12; ry: 12; opacity: 0.25; }
+  50%       { rx: 14; ry: 14; opacity: 0.6; }
 }
 
-/* ── Avail dot pulse ──────────────────────────────────────── */
-@keyframes availPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(39, 201, 63, 0.5); }
-    70% { box-shadow: 0 0 0 6px rgba(39, 201, 63, 0); }
-}
-.avail-dot { animation: availPulse 1.8s infinite; }
-
-/* ── Skill bar fill animation ─────────────────────────────── */
-.skill-bar-fill {
-    animation: fillBar 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+/* ── Marquee speed ────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
-@keyframes fillBar {
-    from { width: 0 !important; }
+/* ── FAQ open/close ───────────────────────────────────────── */
+.faq-a {
+  transition: max-height 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ── GitHub heatmap cell hover ────────────────────────────── */
-.hm-cell {
-    cursor: none;
-    transition: transform 0.15s ease, filter 0.15s ease;
+/* ── Scroll-triggered row stagger (table) ────────────────── */
+.trow {
+  opacity: 0;
+  transform: translateX(-12px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
-.hm-cell:hover {
-    transform: scale(1.6) !important;
-    filter: brightness(1.6);
-    z-index: 10;
-    position: relative;
-}
-
-/* ── Roadmap node pulse ───────────────────────────────────── */
-@keyframes nodePulse {
-    0%, 100% { opacity: 0.7; transform-box: fill-box; transform: scale(1); }
-    50% { opacity: 0.2; transform: scale(1.08); }
-}
-.pulse-ring { animation: nodePulse 1.8s ease-in-out infinite; }
-
-/* ── Animated dashed line ─────────────────────────────────── */
-@keyframes dashFlow {
-    from { stroke-dashoffset: 30; }
-    to { stroke-dashoffset: 0; }
-}
-.animated-line { animation: dashFlow 1.4s linear infinite; }
-
-/* ── Tab slide transition ─────────────────────────────────── */
-@keyframes tabSlideIn {
-    from { opacity: 0; transform: translateX(24px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-.tab-slide-in { animation: tabSlideIn 0.35s ease-out forwards; }
-
-/* ── Section fade-up stagger ──────────────────────────────── */
-[data-animate="fade-up"] { opacity: 0; transform: translateY(50px); }
-[data-animate="fade-up"].reveal { opacity: 1; transform: translateY(0); transition: opacity 0.65s ease-out, transform 0.65s ease-out; }
-
-/* Stagger children */
-[data-animate="fade-up"]:nth-child(1) { transition-delay: 0ms; }
-[data-animate="fade-up"]:nth-child(2) { transition-delay: 80ms; }
-[data-animate="fade-up"]:nth-child(3) { transition-delay: 160ms; }
-[data-animate="fade-up"]:nth-child(4) { transition-delay: 240ms; }
-[data-animate="fade-up"]:nth-child(5) { transition-delay: 320ms; }
-[data-animate="fade-up"]:nth-child(6) { transition-delay: 400ms; }
-
-/* ── Terminal typing cursor ───────────────────────────────── */
-.terminal-cursor {
-    display: inline-block;
-    width: 8px; height: 15px;
-    background: #27c93f;
-    animation: blink-cursor 0.9s step-end infinite;
-    vertical-align: bottom;
-    margin-left: 2px;
-    border-radius: 1px;
+.trow.revealed {
+  opacity: 1;
+  transform: translateX(0);
 }
 
-/* ── Company pill hover ───────────────────────────────────── */
-.company-pill {
-    transition: transform 0.2s ease, background 0.2s, color 0.2s, border-color 0.2s;
+/* ── Orb slow drift ───────────────────────────────────────── */
+@keyframes orbDrift1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(40px, 60px) scale(1.12); }
 }
-.company-pill:hover { transform: scale(1.05) translateY(-2px); }
-
-/* ── Stat card count-up glow ──────────────────────────────── */
-.stat-card.counting .stat-number {
-    animation: numberGlow 1.5s ease-in-out;
-}
-@keyframes numberGlow {
-    0%, 100% { text-shadow: none; }
-    50% { text-shadow: 0 0 20px rgba(233,69,96,0.5); }
+@keyframes orbDrift2 {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(30px, -40px); }
 }
 
-/* ── Offer badge pulse ────────────────────────────────────── */
-.offer-badge { animation: offerBadgePulse 2s ease-in-out infinite; }
-@keyframes offerBadgePulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(39,201,63,0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(39,201,63,0); }
+/* ── Typewriter cursor blink ──────────────────────────────── */
+.cursor-blink {
+  animation: blink 1s step-end infinite;
 }
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Scrollbar emerald thumb ──────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: #F8FAFC; }
+::-webkit-scrollbar-thumb  { background: #059669; border-radius: 10px; }

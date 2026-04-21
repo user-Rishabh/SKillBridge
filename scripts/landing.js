@@ -1,359 +1,301 @@
 /* ══════════════════════════════════════════════════════════════
    SKILLBRIDGE — LANDING PAGE JAVASCRIPT
-   All interactions: cursor, particles, tabs, stats, ripple,
-   scroll progress, reveal, heatmap, FAQ, terminal
+   Emerald & Slate Design System
    ══════════════════════════════════════════════════════════════ */
 
-// ── 1. CUSTOM CURSOR ────────────────────────────────────────
-const cursorDot = document.getElementById('cursor-dot');
-const cursorOutline = document.getElementById('cursor-outline');
+/* ── Custom Cursor ─────────────────────────────────────────── */
+(function initCursor() {
+  const dot  = document.getElementById('cursor-dot');
+  const ring = document.getElementById('cursor-ring');
+  if (!dot || !ring) return;
 
-let mouseX = 0, mouseY = 0;
-let outlineX = 0, outlineY = 0;
+  let rX = 0, rY = 0, mX = 0, mY = 0;
 
-window.addEventListener('mousemove', e => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    // Dot follows exactly
-    cursorDot.style.left = mouseX + 'px';
-    cursorDot.style.top  = mouseY + 'px';
-});
+  document.addEventListener('mousemove', e => {
+    mX = e.clientX;
+    mY = e.clientY;
+    dot.style.left  = mX + 'px';
+    dot.style.top   = mY + 'px';
+  });
 
-// Outline follows with smooth lag (lerp 0.12)
-function animateCursorOutline() {
-    outlineX += (mouseX - outlineX) * 0.12;
-    outlineY += (mouseY - outlineY) * 0.12;
-    cursorOutline.style.left = outlineX + 'px';
-    cursorOutline.style.top  = outlineY + 'px';
-    requestAnimationFrame(animateCursorOutline);
-}
-animateCursorOutline();
+  function animRing() {
+    rX += (mX - rX) * 0.12;
+    rY += (mY - rY) * 0.12;
+    ring.style.left = rX + 'px';
+    ring.style.top  = rY + 'px';
+    requestAnimationFrame(animRing);
+  }
+  animRing();
 
-// Hover enlargement
-function addCursorHover(selector) {
-    document.querySelectorAll(selector).forEach(el => {
-        el.addEventListener('mouseenter', () => cursorOutline.classList.add('hovered'));
-        el.addEventListener('mouseleave', () => cursorOutline.classList.remove('hovered'));
-    });
-}
-addCursorHover('a, button, .glass-panel, .company-pill, .project-card, .mentor-card, .stat-card, .faq-trigger, .tab-btn');
+  document.querySelectorAll('a, button, .inno-card, .testi-card, .mentor-card, .project-card, .faq-q').forEach(el => {
+    el.addEventListener('mouseenter', () => ring.classList.add('hovered'));
+    el.addEventListener('mouseleave', () => ring.classList.remove('hovered'));
+  });
+})();
 
-// Click pulse
-document.addEventListener('mousedown', e => {
-    const ring = document.createElement('div');
-    ring.className = 'cursor-pulse-ring';
-    ring.style.left = e.clientX + 'px';
-    ring.style.top  = e.clientY + 'px';
-    document.body.appendChild(ring);
-    setTimeout(() => ring.remove(), 500);
-});
-
-// ── 2. BUTTON CLICK RIPPLE ──────────────────────────────────
-document.addEventListener('click', e => {
-    const btn = e.target.classList.contains('btn-premium')
-        ? e.target
-        : e.target.closest('.btn-premium');
-    if (!btn) return;
-
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    const rect = btn.getBoundingClientRect();
-    const size = Math.max(rect.width, rect.height);
-    ripple.style.width  = size + 'px';
-    ripple.style.height = size + 'px';
-    ripple.style.left   = (e.clientX - rect.left - size / 2) + 'px';
-    ripple.style.top    = (e.clientY - rect.top  - size / 2) + 'px';
-    btn.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
-});
-
-// ── 3. SCROLL PROGRESS BAR ──────────────────────────────────
-const progressBar = document.getElementById('progress-bar');
-const backToTop   = document.getElementById('back-to-top');
-
-window.addEventListener('scroll', () => {
+/* ── Scroll Progress Bar ───────────────────────────────────── */
+(function initScrollProgress() {
+  const bar = document.getElementById('progress-bar');
+  if (!bar) return;
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
     const total    = document.documentElement.scrollHeight - window.innerHeight;
-    const progress = (window.scrollY / total) * 100;
-    progressBar.style.width = progress + '%';
+    bar.style.width = (total > 0 ? (scrolled / total) * 100 : 0) + '%';
+  }, { passive: true });
+})();
 
-    // Back-to-top visibility
-    if (window.scrollY > 500) backToTop.classList.add('visible');
-    else backToTop.classList.remove('visible');
+/* ── Navbar Scroll State ───────────────────────────────────── */
+(function initNavbar() {
+  const nav = document.getElementById('navbar');
+  if (!nav) return;
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+})();
 
-    // Navbar shadow on scroll
-    const navbar = document.getElementById('navbar');
-    if (window.scrollY > 60) navbar.classList.add('scrolled');
-    else navbar.classList.remove('scrolled');
-});
+/* ── Scroll Reveal ─────────────────────────────────────────── */
+(function initScrollReveal() {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const delay = el.dataset.delay || 0;
+        setTimeout(() => {
+          el.classList.add('revealed');
+        }, +delay);
+        io.unobserve(el);
+      }
+    });
+  }, { threshold: 0.12 });
 
-backToTop.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+  document.querySelectorAll('[data-stagger]').forEach(el => io.observe(el));
+})();
 
-// ── 4. SECTION REVEAL (IntersectionObserver) ────────────────
-const revealObserver = new IntersectionObserver(entries => {
+/* ── Skill Bars Animated Fill ──────────────────────────────── */
+(function initSkillBars() {
+  const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('reveal');
-            revealObserver.unobserve(entry.target);
-        }
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.bar-fill').forEach(bar => {
+          bar.classList.add('animated');
+        });
+        io.unobserve(entry.target);
+      }
     });
-}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.3 });
 
-document.querySelectorAll('[data-animate="fade-up"]').forEach(el => revealObserver.observe(el));
+  document.querySelectorAll('.skill-bars, .port-bars').forEach(el => io.observe(el));
+})();
 
-// ── 5. TAB SWITCHING ────────────────────────────────────────
-const tabButtons  = document.querySelectorAll('.tab-btn');
-const tabPanes    = document.querySelectorAll('.tab-content-pane');
-const tabIndicator = document.getElementById('tab-indicator');
+/* ── Feature Tabs ──────────────────────────────────────────── */
+(function initTabs() {
+  const btns   = document.querySelectorAll('.tab-btn');
+  const panes  = document.querySelectorAll('.tab-pane');
+  const ink    = document.getElementById('tab-ink');
 
-function updateIndicator(activeBtn) {
-    const btnRect  = activeBtn.getBoundingClientRect();
-    const navRect  = document.getElementById('tabs-nav').getBoundingClientRect();
-    tabIndicator.style.left  = (btnRect.left - navRect.left) + 'px';
-    tabIndicator.style.width = btnRect.width + 'px';
+  function setActive(btn) {
+    btns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // move ink
+    if (ink) {
+      ink.style.left  = btn.offsetLeft + 'px';
+      ink.style.width = btn.offsetWidth + 'px';
+    }
+    // switch pane
+    const targetId = btn.dataset.tab;
+    panes.forEach(p => {
+      p.classList.remove('active', 'tab-visible');
+    });
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.classList.add('active');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        target.classList.add('tab-visible');
+        // animate skill bars inside newly visible tab
+        target.querySelectorAll('.bar-fill').forEach(bar => bar.classList.add('animated'));
+        // build heatmap if portfolio tab
+        if (targetId === 'tab-portfolio') buildHeatmap();
+      });
+    });
+  }
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => setActive(btn));
+  });
+
+  // init ink position
+  const activeBtn = document.querySelector('.tab-btn.active');
+  if (activeBtn && ink) {
+    setTimeout(() => {
+      ink.style.left  = activeBtn.offsetLeft + 'px';
+      ink.style.width = activeBtn.offsetWidth + 'px';
+    }, 100);
+  }
+  // animate first tab bars immediately
+  document.querySelectorAll('#tab-roadmap .bar-fill').forEach(b => b.classList.add('animated'));
+})();
+
+/* ── GitHub Heatmap Builder ────────────────────────────────── */
+function buildHeatmap() {
+  const grid = document.getElementById('github-heatmap');
+  if (!grid || grid.children.length > 0) return;
+  const levels = [0,0,0,1,1,2,2,3,3,4,2,1,0,0,1,2,3,4,3,2,1,0,0,0,
+                  1,2,2,3,4,4,3,2,1,0,0,1,1,2,3,3,4,2,1,0,0,0,1,2,
+                  3,4,4,3,2,1,0,0,1,2,3,4,3,2,1,0,0,0,1,2,3,4,3,2,
+                  1,0,0,1,2,3,4,3,2,1,0];
+  levels.slice(0, 84).forEach((lvl, i) => {
+    const cell = document.createElement('div');
+    cell.className = `heat-cell heat-${lvl}`;
+    cell.style.animationDelay = (i * 8) + 'ms';
+    grid.appendChild(cell);
+  });
 }
 
-// Init indicator position
-window.addEventListener('load', () => {
-    const activeBtn = document.querySelector('.tab-btn.active');
-    if (activeBtn) updateIndicator(activeBtn);
-    // Make first tab visible
-    const firstPane = document.querySelector('.tab-content-pane.active');
-    if (firstPane) {
-        setTimeout(() => firstPane.classList.add('tab-visible'), 50);
-    }
-});
+/* ── Counter Animation ─────────────────────────────────────── */
+(function initCounters() {
+  const DISPLAYS = {
+    'sn-0': '15L+',
+    'sn-1': '500+',
+    'sn-2': '98%',
+    'sn-3': '4.9★'
+  };
+  const ENDS = { 'sn-0': 15, 'sn-1': 500, 'sn-2': 98, 'sn-3': 49 };
 
-tabButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        const tabId = btn.dataset.tab;
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
-        // Deactivate all
-        tabButtons.forEach(b => b.classList.remove('active'));
-        tabPanes.forEach(p => {
-            p.classList.remove('active', 'tab-visible');
-        });
+  function animCounter(el) {
+    const id   = el.id;
+    const end  = ENDS[id] || 0;
+    const disp = DISPLAYS[id] || end + '';
+    const dur  = 2000;
+    const start = performance.now();
 
-        // Activate clicked
-        btn.classList.add('active');
-        updateIndicator(btn);
+    // Determine suffix for intermediate counts
+    const suffix = disp.replace(/[0-9.]/g, '');
 
-        const targetPane = document.getElementById(tabId);
-        targetPane.classList.add('active');
-        // Trigger slide-in after display:grid is set
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                targetPane.classList.add('tab-visible');
-            });
-        });
-    });
-});
-
-// ── 6. STATS COUNT-UP (on scroll) ───────────────────────────
-const statDefs = [
-    { id: 'stat-0', end: 15,  display: '15L+', duration: 1800 },
-    { id: 'stat-1', end: 500, display: '500+', duration: 2000 },
-    { id: 'stat-2', end: 98,  display: '98%',  duration: 1600 },
-    { id: 'stat-3', end: 49,  display: '4.9★', duration: 1500 },
-];
-
-// Special formatting for stat-3 (4.9★)
-function formatStatValue(id, value, max) {
-    if (id === 'stat-3') {
-        return (4 + (value / max) * 0.9).toFixed(1) + '★';
-    }
-    if (id === 'stat-0') {
-        return value + 'L+';
-    }
-    if (id === 'stat-1') {
-        return value + '+';
-    }
-    if (id === 'stat-2') {
-        return value + '%';
-    }
-    return value;
-}
-
-function animateCountUp(el, end, duration, id) {
-    let start = null;
-    function step(ts) {
-        if (!start) start = ts;
-        const progress = Math.min((ts - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
-        const current = Math.round(eased * end);
-        el.textContent = formatStatValue(id, current, end);
-        if (progress < 1) requestAnimationFrame(step);
-        else el.textContent = statDefs.find(s => s.id === id)?.display || el.textContent;
+    function step(now) {
+      const t = Math.min((now - start) / dur, 1);
+      const val = Math.floor(easeOutCubic(t) * end);
+      // Use formatted display on completion
+      if (t >= 1) {
+        el.textContent = disp;
+      } else {
+        el.textContent = val + (suffix || '');
+      }
+      if (t < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
-}
+  }
 
-const statsObserver = new IntersectionObserver(entries => {
+  const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const card = entry.target;
-            card.classList.add('counting');
-            const id    = card.querySelector('.stat-number')?.id;
-            const def   = statDefs.find(s => s.id === id);
-            const el    = document.getElementById(id);
-            if (def && el) {
-                animateCountUp(el, def.end, def.duration, def.id);
-            }
-            statsObserver.unobserve(card);
-        }
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.stat-num').forEach(animCounter);
+        io.unobserve(entry.target);
+      }
     });
-}, { threshold: 0.5 });
+  }, { threshold: 0.3 });
 
-document.querySelectorAll('.stat-card').forEach(card => statsObserver.observe(card));
+  const statsSection = document.getElementById('stats');
+  if (statsSection) io.observe(statsSection);
+})();
 
-// ── 7. HERO HEADLINE STAGGER ─────────────────────────────────
-const heroHeading = document.getElementById('hero-heading');
-const heroText    = 'Architect\u00A0Your Future.';
-heroHeading.innerHTML = heroText.split(' ').map((word, i) =>
-    `<span class="word-slide-up" style="animation-delay:${i * 0.12}s"><span>${word}&nbsp;</span></span>`
-).join('');
+/* ── FAQ Accordion ─────────────────────────────────────────── */
+(function initFAQ() {
+  const items = document.querySelectorAll('.faq-item');
+  items.forEach(item => {
+    const btn = item.querySelector('.faq-q');
+    const ans = item.querySelector('.faq-a');
+    if (!btn || !ans) return;
 
-// ── 8. TERMINAL TYPEWRITER ───────────────────────────────────
-const terminalContent = document.getElementById('terminal-content');
-const termLines = [
-    { text: '$ skillbridge diagnose --user="you"',        color: '#E94560', delay: 0 },
-    { text: '>> INITIALIZING AI CORE...',                  color: '#555',    delay: 800 },
-    { text: '>> SCANNING 12,402 CAREER PATHS...',          color: '#555',    delay: 1600 },
-    { text: '>> ANALYZING SKILL GAPS...',                   color: '#555',    delay: 2400 },
-    { text: '>> GENERATING OPTIMAL ROADMAP...',             color: '#27C93F', delay: 3200 },
-    { text: '>> PATH READY: FULL STACK ARCHITECT ✓',        color: '#27C93F', delay: 4000 },
-    { text: '>> MATCHING 23 HIRING PARTNERS...',            color: '#F5A623', delay: 4800 },
-    { text: '>> 3 COMPANIES INTERESTED IN YOUR PROFILE',    color: '#F5A623', delay: 5600 },
-];
-
-let lineIdx = 0;
-function typeNextLine() {
-    if (lineIdx >= termLines.length) return;
-    const spec = termLines[lineIdx];
-    const line = document.createElement('div');
-    line.style.color = spec.color;
-    line.style.marginBottom = '10px';
-    line.style.opacity = '0';
-    terminalContent.appendChild(line);
-    line.style.opacity = '1';
-    let charIdx = 0;
-    const speed = 28;
-    const interval = setInterval(() => {
-        if (charIdx < spec.text.length) {
-            line.textContent += spec.text[charIdx++];
-        } else {
-            clearInterval(interval);
-            lineIdx++;
-            setTimeout(typeNextLine, 400);
-        }
-    }, speed);
-}
-setTimeout(typeNextLine, 700);
-
-// ── 9. FAQ ACCORDION ─────────────────────────────────────────
-document.querySelectorAll('.faq-trigger').forEach(trigger => {
-    trigger.addEventListener('click', () => {
-        const item = trigger.parentElement;
-        const isOpen = item.classList.contains('open');
-        // Close all
-        document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-        if (!isOpen) item.classList.add('open');
+    btn.addEventListener('click', () => {
+      const isOpen = item.classList.contains('open');
+      // close all
+      items.forEach(i => {
+        i.classList.remove('open');
+        const a = i.querySelector('.faq-a');
+        if (a) a.style.maxHeight = '0';
+      });
+      // open clicked if it was closed
+      if (!isOpen) {
+        item.classList.add('open');
+        ans.style.maxHeight = ans.scrollHeight + 'px';
+      }
     });
-});
+  });
+})();
 
-// ── 10. GITHUB HEATMAP ───────────────────────────────────────
-function buildHeatmap() {
-    const heatmap = document.getElementById('github-heatmap');
-    if (!heatmap) return;
-    const weeks = 26, days = 7;
-    const colors = ['#0d0d0d', '#1a1a1a', 'rgba(233,69,96,0.25)', 'rgba(233,69,96,0.5)', 'rgba(233,69,96,0.8)', '#E94560'];
-    for (let w = 0; w < weeks; w++) {
-        for (let d = 0; d < days; d++) {
-            const cell = document.createElement('div');
-            cell.className = 'hm-cell';
-            // Weighted random: more low values = realistic
-            const rand = Math.pow(Math.random(), 2.2);
-            const level = Math.floor(rand * colors.length);
-            cell.style.background = colors[Math.min(level, colors.length - 1)];
-            cell.style.borderRadius = '2px';
-            cell.title = `${Math.floor(rand * 12)} contributions`;
-            heatmap.appendChild(cell);
-        }
-    }
-}
-buildHeatmap();
-
-// ── 11. PARTICLE CANVAS ──────────────────────────────────────
-const canvas = document.getElementById('particle-canvas');
-if (canvas) {
-    const ctx = canvas.getContext('2d');
-    let W = canvas.width  = window.innerWidth;
-    let H = canvas.height = window.innerHeight;
-
-    window.addEventListener('resize', () => {
-        W = canvas.width  = window.innerWidth;
-        H = canvas.height = window.innerHeight;
+/* ── Button Ripple Effect ──────────────────────────────────── */
+(function initRipple() {
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const rect   = btn.getBoundingClientRect();
+      const size   = Math.max(rect.width, rect.height);
+      const x      = e.clientX - rect.left - size / 2;
+      const y      = e.clientY - rect.top  - size / 2;
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      ripple.style.cssText = `
+        width: ${size}px; height: ${size}px;
+        left: ${x}px; top: ${y}px;
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.25);
+        transform: scale(0);
+        animation: ripple-anim 0.45s linear;
+        pointer-events: none;
+      `;
+      btn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 500);
     });
+  });
+})();
 
-    class Particle {
-        constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * W;
-            this.y = Math.random() * H;
-            this.size = Math.random() * 1.5 + 0.3;
-            this.speedX = (Math.random() - 0.5) * 0.3;
-            this.speedY = -(Math.random() * 0.4 + 0.1);
-            this.opacity = Math.random() * 0.5 + 0.1;
-        }
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            if (this.y < -5) this.reset();
-        }
-        draw() {
-            ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
+/* ── Timeline SVG Line Draw on Scroll ─────────────────────── */
+(function initTimelineLine() {
+  const tl   = document.getElementById('timeline');
+  const line = document.getElementById('tl-line');
+  if (!tl || !line) return;
+
+  const io = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) {
+      const totalH = tl.offsetHeight;
+      line.setAttribute('y2', totalH);
+      io.disconnect();
     }
+  }, { threshold: 0.1 });
 
-    const particles = Array.from({ length: 70 }, () => new Particle());
+  io.observe(tl);
+})();
 
-    function animateParticles() {
-        ctx.clearRect(0, 0, W, H);
-        particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animateParticles);
-    }
-    animateParticles();
-}
+/* ── Comparison Table Row Reveal ───────────────────────────── */
+(function initTableRows() {
+  const rows = document.querySelectorAll('.trow');
+  if (!rows.length) return;
 
-// ── 12. SKILL BAR ANIMATE ON PORTFOLIO TAB ───────────────────
-function animateSkillBars() {
-    document.querySelectorAll('.skill-bar-fill').forEach(bar => {
-        const width = bar.style.width;
-        bar.style.width = '0';
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                bar.style.width = width;
-            });
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        rows.forEach((row, i) => {
+          setTimeout(() => row.classList.add('revealed'), i * 100);
         });
+        io.disconnect();
+      }
     });
-}
+  }, { threshold: 0.15 });
 
-// Trigger skill bars when portfolio tab is shown
-document.querySelector('[data-tab="tab-portfolio"]')?.addEventListener('click', () => {
-    setTimeout(animateSkillBars, 100);
-});
+  const table = document.querySelector('.table-wrap');
+  if (table) io.observe(table);
+})();
 
-// ── 13. NAVBAR HIDE ON SCROLL DOWN ───────────────────────────
-let lastScrollY = 0;
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-    const currentScrollY = window.scrollY;
-    if (currentScrollY > lastScrollY && currentScrollY > 150) {
-        navbar.style.transform = 'translateY(-100%)';
-    } else {
-        navbar.style.transform = 'translateY(0)';
-    }
-    lastScrollY = currentScrollY;
+/* ── Initialize Heatmap on page load (portfolio tab hidden) ── */
+document.addEventListener('DOMContentLoaded', () => {
+  // pre-build heatmap so it's ready when portfolio tab opens
+  // (buildHeatmap guards against double build)
+  // trigger bar animations for visible tab
+  document.querySelectorAll('#tab-roadmap .bar-fill').forEach(b => {
+    setTimeout(() => b.classList.add('animated'), 400);
+  });
 });
