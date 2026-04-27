@@ -1,226 +1,843 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join SkillBridge | Access Your Career Path</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#E94560',
-                        secondary: '#0F3460',
-                        darkBg: '#0D0D0D',
-                        darkSurface: '#111827',
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/animations.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join SkillBridge | Access Your Career Path</title>
+  
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/animations.css">
+
+  <style>
+    :root {
+      --panel-left-bg: #0A1628;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100vh;
+      background: #fff;
+    }
+
+    .auth-layout {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ── LEFT PANEL ────────────────────────────────────────── */
+    .left-panel {
+      flex: 1;
+      background: linear-gradient(135deg, #0A1628 0%, #0F172A 50%, #0D1F2D 100%);
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+      .left-panel { display: none; }
+    }
+
+    /* Background Orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .orb-1 {
+      top: -100px; left: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(5,150,105,0.2) 0%, transparent 70%);
+      animation: orbFloat 15s infinite alternate ease-in-out;
+    }
+    .orb-2 {
+      bottom: -100px; right: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%);
+      animation: orbFloat 20s infinite alternate-reverse ease-in-out;
+    }
+    @keyframes orbFloat {
+      0% { transform: scale(1) translate(0,0); opacity: 0.6; }
+      100% { transform: scale(1.2) translate(40px, 40px); opacity: 0.9; }
+    }
+
+    /* Dot Grid */
+    .dot-grid-overlay {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle, rgba(52,211,153,0.08) 1px, transparent 1px);
+      background-size: 32px 32px;
+      z-index: 1;
+      pointer-events: none;
+      animation: gridShift 60s linear infinite;
+    }
+    @keyframes gridShift {
+      from { background-position: 0 0; }
+      to { background-position: 100% 100%; }
+    }
+
+    .panel-inner {
+      position: relative;
+      z-index: 10;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .brand-logo {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      text-decoration: none;
+    }
+    .brand-logo span { color: var(--emerald); }
+    .brand-tagline {
+      color: var(--slate-400);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    /* Floating Cards */
+    .floating-containers {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .f-card {
+      position: absolute;
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 16px;
+      width: 240px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      color: #fff;
+    }
+
+    .card-a { top: 15%; left: 10%; border-left: 4px solid var(--emerald); animation: float-a 6s infinite ease-in-out; }
+    .card-b { top: 40%; right: 5%; animation: float-b 8s infinite ease-in-out; }
+    .card-c { bottom: 20%; left: 8%; animation: float-c 7s infinite ease-in-out; }
+    .card-d { top: 10%; right: 15%; width: auto; animation: float-a 5s infinite ease-in-out; }
+
+    @keyframes float-a { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    @keyframes float-b { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+    @keyframes float-c { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+    .pulse-dot {
+      width: 8px; height: 8px;
+      background: var(--emerald);
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 8px;
+      box-shadow: 0 0 10px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+
+    /* Skill Badges */
+    .skill-badge {
+      position: absolute;
+      padding: 6px 14px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      border-radius: 100px;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .sb-1 { top: 30%; left: 40%; animation: float-b 10s infinite; }
+    .sb-2 { top: 60%; right: 35%; animation: float-a 12s infinite; }
+    .sb-3 { bottom: 40%; left: 45%; animation: float-c 9s infinite; }
+    .sb-4 { top: 15%; left: 60%; animation: float-b 11s infinite; }
+
+    /* Terminal */
+    .terminal-widget {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 0 auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+    .term-header {
+      background: rgba(255,255,255,0.05);
+      padding: 10px 16px;
+      display: flex;
+      gap: 6px;
+    }
+    .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .term-body {
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--emerald);
+      min-height: 180px;
+    }
+    .cursor-blink { display: inline-block; width: 8px; height: 16px; background: var(--emerald); margin-left: 4px; animation: blink 1s step-end infinite; vertical-align: middle; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .stat-item {
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stat-sep { width: 4px; height: 4px; background: var(--emerald); border-radius: 50%; }
+
+    /* ── RIGHT PANEL ────────────────────────────────────────── */
+    .right-panel {
+      flex: 1;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 768px) {
+      .right-panel { flex: 1; width: 100%; padding: 24px; }
+    }
+
+    .form-container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .welcome-text { margin-bottom: 32px; }
+    .welcome-text h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--slate-900); margin-bottom: 8px; }
+    .welcome-text p { color: var(--slate-500); font-size: 0.95rem; }
+
+    /* Tab Switcher */
+    .tab-switcher {
+      display: flex;
+      background: #F1F5F9;
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--slate-500);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.25s;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--emerald);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* Form Styles */
+    .auth-form { display: none; }
+    .auth-form.active { display: block; }
+
+    .input-group { margin-bottom: 18px; position: relative; }
+    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--slate-900); margin-bottom: 6px; }
+    .input-wrapper { position: relative; }
+    .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--slate-400); width: 18px; height: 18px; }
+    
+    input, select {
+      width: 100%;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 12px 16px 12px 42px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--slate-900);
+      outline: none;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: var(--emerald);
+      box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08);
+      background: #fff;
+    }
+
+    .eye-toggle {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--slate-400);
+      cursor: pointer;
+      background: none;
+      display: flex;
+      align-items: center;
+      padding: 0;
+    }
+    .eye-toggle:hover { color: var(--emerald); }
+
+    /* Strength Bar */
+    .strength-meter { height: 4px; border-radius: 10px; background: #E2E8F0; margin-top: 8px; overflow: hidden; }
+    .strength-bar { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
+    .strength-text { font-size: 10px; font-weight: 700; text-transform: uppercase; margin-top: 4px; display: block; }
+
+    /* Button Styles */
+    .submit-btn {
+      width: 100%;
+      height: 48px;
+      background: var(--emerald);
+      color: #fff;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .submit-btn:hover { background: var(--emerald-dark); transform: translateY(-1px); box-shadow: var(--shadow-emerald); }
+    .submit-btn:active { transform: scale(0.98); }
+
+    /* Auth Providers */
+    .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; color: var(--slate-400); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #E2E8F0; }
+
+    .oauth-row { display: flex; gap: 12px; }
+    .oauth-btn {
+      flex: 1;
+      height: 46px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .google-btn { background: #fff; border: 1px solid #E2E8F0; color: var(--slate-900); }
+    .google-btn:hover { background: #F8FAFC; border-color: var(--slate-300); }
+    .github-btn { background: #0F172A; color: #fff; }
+    .github-btn:hover { background: #1E293B; }
+
+    /* Checkbox */
+    .checkbox-group { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; }
+    .checkbox-group input { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; accent-color: var(--emerald); padding: 0; }
+    .checkbox-group label { font-size: 0.85rem; color: var(--slate-500); line-height: 1.4; }
+
+    /* Messages */
+    #auth-message { margin-top: 16px; min-height: 48px; }
+    .msg { padding: 12px 16px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+    .msg.loading { background: #F0FDF4; color: #059669; }
+    .msg.error { background: #FEF2F2; color: #DC2626; }
+    .msg.success { background: #F0FDF4; color: #059669; }
+
+    /* Custom scrollbar for college dropdown */
+    #college-dropdown::-webkit-scrollbar { width: 4px; }
+    #college-dropdown::-webkit-scrollbar-track { background: #f1f1f1; }
+    #college-dropdown::-webkit-scrollbar-thumb { background: var(--emerald); border-radius: 10px; }
+  </style>
 </head>
-<body class="bg-darkBg overflow-hidden h-screen">
-    <div class="flex h-full">
-        <!-- Left Panel (Dark - Branding) -->
-        <div class="hidden lg:flex lg:w-1/2 bg-[#050505] p-12 flex-col justify-between relative overflow-hidden">
-            <div class="mesh-bg opacity-30"></div>
-            
-            <div class="relative z-10">
-                <a href="index.html" class="logo text-3xl">Skill<span>Bridge</span></a>
-                <p class="text-text-muted mt-2">India's AI-Powered Career Co-pilot</p>
-            </div>
+<body>
 
-            <div class="relative z-10">
-                <div class="terminal glass border border-white/10 w-full mb-8">
-                    <div class="terminal-header border-b border-white/5">
-                        <div class="dot red"></div>
-                        <div class="dot yellow"></div>
-                        <div class="dot green"></div>
-                    </div>
-                    <div class="terminal-body font-mono text-sm leading-relaxed p-6" id="auth-terminal">
-                        <div class="text-primary mb-2">$ Welcome back to SkillBridge</div>
-                        <div class="text-white/60 mb-2">> Loading your career path...</div>
-                        <div class="text-green-500 mb-2">> 3 new project matches found ✓</div>
-                        <div class="text-yellow-500 mb-2">> Mentor session reminder: Tomorrow 3PM</div>
-                    </div>
-                </div>
+  <div class="auth-layout">
+    <!-- ── LEFT PANEL ────────────────────────────────────────── -->
+    <div class="left-panel">
+      <!-- Background Effects -->
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="dot-grid-overlay"></div>
 
-                <div class="space-y-6">
-                    <div class="flex items-center gap-4 bg-white/5 p-4 rounded-xl backdrop-blur-sm">
-                        <img src="https://i.pravatar.cc/150?u=4" class="w-10 h-10 rounded-full border border-primary" alt="A">
-                        <div>
-                            <p class="text-sm font-medium">"Finally a platform that understands exactly what I need to learn."</p>
-                            <p class="text-xs text-text-muted">— Rohan M., VIT Valore</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="relative z-10 text-xs text-text-muted opacity-50">
-                © 2024 SkillBridge Technologies. All rights reserved.
-            </div>
-            
-            <!-- Animated Skills -->
-            <div class="absolute top-1/2 right-10 translate-y-[-50%] space-y-4 opacity-20 pointer-events-none">
-                <div class="px-4 py-2 bg-primary rounded-full text-white text-xs font-bold animate-bounce" style="animation-delay: 0.2s">React.js</div>
-                <div class="px-4 py-2 bg-secondary rounded-full text-white text-xs font-bold animate-pulse" style="animation-delay: 0.5s">Python</div>
-                <div class="px-4 py-2 bg-green-500 rounded-full text-white text-xs font-bold animate-bounce" style="animation-delay: 0.8s">AWS</div>
-            </div>
+      <!-- Floating Elements -->
+      <div class="floating-containers">
+        <div class="f-card card-a">
+          <div style="display:flex; align-items:center; margin-bottom:8px;">
+            <div class="pulse-dot"></div>
+            <span style="font-weight:700; font-size:0.8rem; color:var(--emerald);">Placement Alert</span>
+          </div>
+          <p style="font-size:0.85rem; margin-bottom:4px;">Arjun just got placed at Google 🎉</p>
+          <p style="font-size:0.75rem; color:var(--slate-400);">SDE Role · ₹32 LPA</p>
         </div>
 
-        <!-- Right Panel (Auth Form) -->
-        <div class="w-full lg:w-1/2 bg-white dark:bg-darkSurface flex items-center justify-center p-8 overflow-y-auto">
-            <div class="w-full max-w-md">
-                <div class="flex gap-8 mb-10 border-b border-border">
-                    <button id="tab-signin" class="pb-4 text-lg font-bold border-b-2 border-primary text-primary transition-all">Sign In</button>
-                    <button id="tab-signup" class="pb-4 text-lg font-bold border-b-2 border-transparent text-text-muted transition-all">Sign Up</button>
-                </div>
-
-                <!-- Sign In Form -->
-                <form id="form-signin" class="space-y-5">
-                    <div class="space-y-2">
-                        <label class="text-sm font-semibold text-text-primary">Email Address</label>
-                        <div class="relative">
-                            <i data-lucide="mail" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted"></i>
-                            <input type="email" placeholder="name@college.edu" class="w-full pl-10 pr-4 py-3 bg-surface-2 border border-border rounded-xl outline-none focus:border-primary transition-all text-text-primary">
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between">
-                            <label class="text-sm font-semibold text-text-primary">Password</label>
-                            <a href="#" class="text-xs text-primary hover:underline">Forgot password?</a>
-                        </div>
-                        <div class="relative">
-                            <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted"></i>
-                            <input type="password" placeholder="••••••••" class="w-full pl-10 pr-12 py-3 bg-surface-2 border border-border rounded-xl outline-none focus:border-primary transition-all text-text-primary">
-                            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary">
-                                <i data-lucide="eye" class="w-5 h-5"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-full py-4 text-lg justify-center shadow-lg">Sign In</button>
-                    
-                    <div class="relative py-4 flex items-center gap-4">
-                        <div class="flex-grow h-[1px] bg-border"></div>
-                        <span class="text-xs text-text-muted uppercase tracking-widest">or continue with</span>
-                        <div class="flex-grow h-[1px] bg-border"></div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <button type="button" class="btn btn-ghost py-3 justify-center border-border">
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5 mr-2" alt="G"> Google
-                        </button>
-                        <button type="button" class="btn btn-ghost py-3 justify-center border-border">
-                            <i data-lucide="github" class="w-5 h-5 mr-2"></i> GitHub
-                        </button>
-                    </div>
-
-                    <p class="text-center text-sm text-text-muted mt-8">
-                        Don't have an account? <a href="#" class="text-primary font-bold hover:underline" onclick="toggleTabs('signup')">Sign Up</a>
-                    </p>
-                </form>
-
-                <!-- Sign Up Form (hidden by default) -->
-                <form id="form-signup" class="space-y-4 hidden">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-xs font-semibold text-text-primary">Full Name</label>
-                            <input type="text" placeholder="John Doe" class="w-full px-4 py-2 bg-surface-2 border border-border rounded-lg outline-none focus:border-primary transition-all text-text-primary">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-semibold text-text-primary">Email</label>
-                            <input type="email" placeholder="john@vit.edu" class="w-full px-4 py-2 bg-surface-2 border border-border rounded-lg outline-none focus:border-primary transition-all text-text-primary">
-                        </div>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-semibold text-text-primary">College Name</label>
-                        <input type="text" placeholder="Select your college" class="w-full px-4 py-2 bg-surface-2 border border-border rounded-lg outline-none focus:border-primary transition-all text-text-primary">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-xs font-semibold text-text-primary">Branch</label>
-                            <select class="w-full px-4 py-2 bg-surface-2 border border-border rounded-lg outline-none focus:border-primary transition-all text-text-primary appearance-none">
-                                <option>CSE / IT</option>
-                                <option>ECE</option>
-                                <option>Mech</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-semibold text-text-primary">Dream Job</label>
-                            <input type="text" placeholder="Full Stack Dev" class="w-full px-4 py-2 bg-surface-2 border border-border rounded-lg outline-none focus:border-primary transition-all text-text-primary">
-                        </div>
-                    </div>
-                    <div class="space-y-1 text-center">
-                        <label class="text-xs font-semibold text-text-primary block text-left">Set Password</label>
-                        <input type="password" placeholder="••••••••" class="w-full px-4 py-2 bg-surface-2 border border-border rounded-lg outline-none focus:border-primary transition-all text-text-primary">
-                        <div class="h-1 w-full bg-border rounded-full mt-2 overflow-hidden">
-                            <div class="h-full bg-primary w-1/3"></div>
-                        </div>
-                        <span class="text-[10px] text-primary uppercase font-bold">Weak</span>
-                    </div>
-
-                    <div class="flex items-center gap-2 mt-4">
-                        <input type="checkbox" id="terms" class="accent-primary">
-                        <label for="terms" class="text-xs text-text-muted">I agree to Terms & Privacy Policy</label>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-full py-4 text-lg justify-center shadow-lg mt-4">Create Account</button>
-                    
-                    <p class="text-center text-sm text-text-muted mt-6">
-                        Already have an account? <a href="#" class="text-primary font-bold hover:underline" onclick="toggleTabs('signin')">Sign In</a>
-                    </p>
-                </form>
-            </div>
+        <div class="f-card card-b">
+          <p style="font-weight:700; font-size:0.8rem; margin-bottom:12px;">📊 Your Progress</p>
+          <div style="font-size:0.7rem; color:var(--slate-300);">
+            <div style="margin-bottom:8px;">React.js <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:4px;"><div style="width:80%; height:100%; background:var(--emerald); border-radius:10px;"></div></div></div>
+            <div style="margin-bottom:8px;">Python <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:4px;"><div style="width:60%; height:100%; background:var(--emerald); border-radius:10px;"></div></div></div>
+            <p style="font-weight:600; color:#fff; margin-top:10px;">67% complete</p>
+          </div>
         </div>
+
+        <div class="f-card card-c">
+          <p style="font-weight:700; font-size:0.8rem; margin-bottom:12px;">🤝 Mentor Session</p>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:32px; height:32px; background:linear-gradient(135deg,#059669,#0F172A); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800;">RK</div>
+            <div>
+              <p style="font-size:0.8rem; font-weight:700;">Rahul Kumar</p>
+              <p style="font-size:0.65rem; color:var(--slate-400);">Google SDE-2</p>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.7rem;">Tomorrow 3:00 PM</span>
+            <span style="font-size:0.7rem; color:var(--emerald); font-weight:700;">Join →</span>
+          </div>
+        </div>
+
+        <div class="f-card card-d" style="background:var(--emerald); border:none;">
+          <p style="font-weight:800; font-size:0.75rem; color:#fff;">🚀 3 new project matches!</p>
+        </div>
+
+        <div class="skill-badge sb-1">React.js</div>
+        <div class="skill-badge sb-2">Python</div>
+        <div class="skill-badge sb-3">System Design</div>
+        <div class="skill-badge sb-4">ML</div>
+      </div>
+
+      <div class="panel-inner">
+        <div>
+          <a href="index.html" class="brand-logo">Skill<span>Bridge</span></a>
+          <p class="brand-tagline">India's AI Career Co-pilot</p>
+        </div>
+
+        <div class="terminal-widget">
+          <div class="term-header">
+            <div class="term-dot" style="background:#FF5F56;"></div>
+            <div class="term-dot" style="background:#FFBD2E;"></div>
+            <div class="term-dot" style="background:#27C93F;"></div>
+          </div>
+          <div class="term-body" id="term-content">
+            <!-- Typewriter content will go here -->
+          </div>
+        </div>
+
+        <div>
+          <div class="stats-row">
+            <div class="stat-item">15L+ Students</div>
+            <div class="stat-sep"></div>
+            <div class="stat-item">500+ Companies</div>
+            <div class="stat-sep"></div>
+            <div class="stat-item">98% Placed</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- SUPABASE_URL = https://jmogxwejdrkqsrmpxxya.supabase.co -->
-    <!-- SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs-->
+    <!-- ── RIGHT PANEL ────────────────────────────────────────── -->
+    <div class="right-panel">
+      <div class="form-container">
+        <div class="welcome-text">
+          <h1 id="form-title">Welcome back 👋</h1>
+          <p id="form-subtitle">Sign in to continue your journey</p>
+        </div>
 
-    <script src="scripts/auth.js"></script>
-    <script>
-        lucide.createIcons();
-        
-        function toggleTabs(tab) {
-            const siBtn = document.getElementById('tab-signin');
-            const suBtn = document.getElementById('tab-signup');
-            const siForm = document.getElementById('form-signin');
-            const suForm = document.getElementById('form-signup');
+        <div class="tab-switcher">
+          <div class="tab-btn active" id="tab-login-btn">Sign In</div>
+          <div class="tab-btn" id="tab-signup-btn">Sign Up</div>
+        </div>
 
-            if (tab === 'signup') {
-                siBtn.classList.replace('border-primary', 'border-transparent');
-                siBtn.classList.replace('text-primary', 'text-text-muted');
-                suBtn.classList.replace('border-transparent', 'border-primary');
-                suBtn.classList.replace('text-text-muted', 'text-primary');
-                siForm.classList.add('hidden');
-                suForm.classList.remove('hidden');
-            } else {
-                suBtn.classList.replace('border-primary', 'border-transparent');
-                suBtn.classList.replace('text-primary', 'text-text-muted');
-                siBtn.classList.replace('border-transparent', 'border-primary');
-                siBtn.classList.replace('text-text-muted', 'text-primary');
-                suForm.classList.add('hidden');
-                siForm.classList.remove('hidden');
-            }
+        <!-- SIGN IN FORM -->
+        <form class="auth-form active" id="signin-form" onsubmit="handleSignIn(event)">
+          <div class="input-group">
+            <label>Email Address</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="signin-email" placeholder="name@college.edu" required>
+            </div>
+          </div>
+          <div class="input-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label>Password</label>
+              <a href="#" style="font-size:0.75rem; color:var(--emerald); font-weight:700;">Forgot Password?</a>
+            </div>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="signin-password" placeholder="••••••••" required>
+              <button type="button" class="eye-toggle"><i data-lucide="eye"></i></button>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="signin-submit">
+            <span>Sign In</span>
+          </button>
+        </form>
+
+        <!-- SIGN UP FORM -->
+        <form class="auth-form" id="signup-form" onsubmit="handleSignUp(event)">
+          <div class="input-group">
+            <label>Full Name</label>
+            <div class="input-wrapper">
+              <i data-lucide="user"></i>
+              <input type="text" id="name" placeholder="John Doe" required>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Email Address</label>
+            <div class="input-wrapper">
+              <i data-lucide="mail"></i>
+              <input type="email" id="email" placeholder="john@example.com" required>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Set Password</label>
+            <div class="input-wrapper">
+              <i data-lucide="lock"></i>
+              <input type="password" id="password" placeholder="••••••••" required oninput="checkStrength(this.value)">
+              <button type="button" class="eye-toggle"><i data-lucide="eye"></i></button>
+            </div>
+            <div class="strength-meter">
+              <div class="strength-bar" id="strength-bar"></div>
+            </div>
+            <span class="strength-text" id="strength-text">Empty</span>
+          </div>
+
+          <div class="input-group">
+            <label>College Name</label>
+            <div class="input-wrapper" style="position:relative;">
+              <i data-lucide="graduation-cap"></i>
+              <input type="text" id="college" placeholder="Search your college..." autocomplete="off" oninput="searchColleges(this.value)" onblur="setTimeout(hideDropdown, 200)" required>
+              <div id="college-dropdown" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #E2E8F0; border-top:none; border-radius:0 0 10px 10px; max-height:220px; overflow-y:auto; z-index:999; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.08);"></div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+            <div class="input-group">
+              <label>Branch</label>
+              <div class="input-wrapper">
+                <i data-lucide="book-open"></i>
+                <select id="branch" style="padding-left:42px;" required>
+                  <option value="" disabled selected>Select</option>
+                  <optgroup label="Engineering">
+                    <option>Computer Science / IT</option>
+                    <option>Electronics (ECE)</option>
+                    <option>Mechanical</option>
+                    <option>Civil</option>
+                    <option>Chemical</option>
+                  </optgroup>
+                  <optgroup label="Management">
+                    <option>BBA / MBA</option>
+                  </optgroup>
+                  <option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Dream Job</label>
+              <div class="input-wrapper">
+                <i data-lucide="briefcase"></i>
+                <input type="text" id="dreamjob" placeholder="e.g. SDE at Google" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="terms" required checked>
+            <label for="terms">I agree to the <a href="#" style="color:var(--emerald); font-weight:700;">Terms of Service</a> & <a href="#" style="color:var(--emerald); font-weight:700;">Privacy Policy</a></label>
+          </div>
+
+          <button type="submit" class="submit-btn" id="signup-submit" style="margin-top:24px;">
+            <span>Create My Account →</span>
+          </button>
+        </form>
+
+        <div class="divider">or continue with</div>
+
+        <div class="oauth-row">
+          <div class="oauth-btn google-btn" onclick="signInWithGoogle()">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" height="18" alt="G">
+            <span>Google</span>
+          </div>
+          <div class="oauth-btn github-btn" onclick="signInWithGitHub()">
+            <i data-lucide="github" style="width:18px; height:18px;"></i>
+            <span>GitHub</span>
+          </div>
+        </div>
+
+        <div id="auth-message"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCRIPTS ──────────────────────────────────────────────── -->
+  <script>
+    lucide.createIcons();
+
+    /* ── AUTH LOGIC (Supabase) ─────────────────────────────── */
+    const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function handleSignUp(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const college = document.getElementById('college').value;
+      const branch = document.getElementById('branch').value;
+      const dreamJob = document.getElementById('dreamjob').value;
+
+      showLoading('Creating your account...');
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            college_name: college,
+            branch: branch,
+            dream_job: dreamJob
+          }
         }
+      });
 
-        document.getElementById('tab-signin').onclick = () => toggleTabs('signin');
-        document.getElementById('tab-signup').onclick = () => toggleTabs('signup');
+      if (error) {
+        showError(error.message);
+      } else {
+        if (data.user) {
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            full_name: name,
+            email: email,
+            college_name: college,
+            branch: branch,
+            dream_job: dreamJob
+          });
+        }
+        showSuccess('Account created! Check your email.');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1500);
+      }
+    }
 
-        // Toggle Password visibility
-        document.querySelectorAll('input[type="password"] + button').forEach(btn => {
-            btn.onclick = () => {
-                const input = btn.previousElementSibling;
-                input.type = input.type === 'password' ? 'text' : 'password';
-            }
-        });
-    </script>
+    async function handleSignIn(e) {
+      e.preventDefault();
+      const email = document.getElementById('signin-email').value;
+      const password = document.getElementById('signin-password').value;
+
+      showLoading('Signing you in...');
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        showError(error.message);
+      } else {
+        showSuccess('Welcome back!');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1000);
+      }
+    }
+
+    async function signInWithGoogle() {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard.html'
+        }
+      });
+      if (error) showError(error.message);
+    }
+
+    async function signInWithGitHub() {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: window.location.origin + '/dashboard.html'
+        }
+      });
+      if (error) showError(error.message);
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = 'dashboard.html';
+    });
+
+    function showLoading(msg) {
+      document.getElementById('auth-message').innerHTML = `<div class="msg loading">⏳ ${msg}</div>`;
+    }
+    function showError(msg) {
+      document.getElementById('auth-message').innerHTML = `<div class="msg error">❌ ${msg}</div>`;
+    }
+    function showSuccess(msg) {
+      document.getElementById('auth-message').innerHTML = `<div class="msg success">✅ ${msg}</div>`;
+    }
+
+    /* ── COLLEGE SEARCH ───────────────────────────────────── */
+    let allColleges = [];
+    fetch('https://raw.githubusercontent.com/cbsudux/India-colleges-api/master/data/colleges.json')
+      .then(res => res.json())
+      .then(data => { allColleges = data.map(c => c.name); })
+      .catch(() => {
+        allColleges = ["IIT Bombay","IIT Delhi","IIT Madras","IIT Kanpur","NIT Trichy","NIT Warangal","BITS Pilani","VIT Vellore","Other"];
+      });
+
+    function searchColleges(query) {
+      const dropdown = document.getElementById('college-dropdown');
+      if (query.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      const filtered = allColleges
+        .filter(c => c.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 10);
+
+      if (!filtered.length) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      dropdown.innerHTML = filtered.map(college => `
+        <div onclick="selectCollege('${college.replace(/'/g,"\\'")}')" style="padding:10px 14px; cursor:pointer; font-size:13px; color:#0F172A; border-bottom:1px solid #F1F5F9; transition:background 150ms;" onmouseover="this.style.background='#F0FDF4'" onmouseout="this.style.background='white'">🎓 ${college}</div>
+      `).join('');
+      dropdown.style.display = 'block';
+    }
+
+    function selectCollege(name) {
+      document.getElementById('college').value = name;
+      document.getElementById('college-dropdown').style.display = 'none';
+    }
+
+    function hideDropdown() {
+      document.getElementById('college-dropdown').style.display = 'none';
+    }
+
+    /* ── UI LOGIC ─────────────────────────────────────────── */
+    // Tab switching
+    const loginBtn = document.getElementById('tab-login-btn');
+    const signupBtn = document.getElementById('tab-signup-btn');
+    const signinForm = document.getElementById('signin-form');
+    const signupForm = document.getElementById('signup-form');
+    const formTitle = document.getElementById('form-title');
+    const formSubtitle = document.getElementById('form-subtitle');
+
+    loginBtn.onclick = () => {
+      loginBtn.classList.add('active');
+      signupBtn.classList.remove('active');
+      signinForm.classList.add('active');
+      signupForm.classList.remove('active');
+      formTitle.textContent = "Welcome back 👋";
+      formSubtitle.textContent = "Sign in to continue your journey";
+    };
+
+    signupBtn.onclick = () => {
+      signupBtn.classList.add('active');
+      loginBtn.classList.remove('active');
+      signupForm.classList.add('active');
+      signinForm.classList.remove('active');
+      formTitle.textContent = "Create Account 🚀";
+      formSubtitle.textContent = "Join 15L+ students today";
+    };
+
+    // Password strength
+    function checkStrength(password) {
+      const bar = document.getElementById('strength-bar');
+      const text = document.getElementById('strength-text');
+      let strength = 0;
+      if (password.length > 5) strength++;
+      if (password.match(/[A-Z]/)) strength++;
+      if (password.match(/[0-9]/)) strength++;
+      if (password.match(/[^A-Za-z0-9]/)) strength++;
+
+      const colors = ['#E2E8F0', '#DC2626', '#F59E0B', '#10B981', '#10B981'];
+      const labels = ['Empty', 'Weak', 'Fair', 'Strong', 'Excellent'];
+      const widths = ['0%', '25%', '50%', '75%', '100%'];
+
+      bar.style.width = widths[strength];
+      bar.style.background = colors[strength];
+      text.textContent = labels[strength];
+      text.style.color = colors[strength];
+    }
+
+    // Eye toggle
+    document.querySelectorAll('.eye-toggle').forEach(btn => {
+      btn.onclick = () => {
+        const input = btn.previousElementSibling;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.setAttribute('data-lucide', 'eye-off');
+        } else {
+          input.type = 'password';
+          icon.setAttribute('data-lucide', 'eye');
+        }
+        lucide.createIcons();
+      };
+    });
+
+    // Terminal Typewriter
+    const termBody = document.getElementById('term-content');
+    const lines = [
+      { text: "$ skillbridge auth --init", color: "var(--emerald)" },
+      { text: "> Loading dynamic career paths...", color: "#fff" },
+      { text: "> Syncing with 500+ hiring partners...", color: "#fff" },
+      { text: "> Connection secured. Ready to launch. ✓", color: "var(--emerald)" },
+      { text: "$ awaiting student credentials...", color: "#fff" }
+    ];
+
+    let lineIdx = 0;
+    function typeLine() {
+      if (lineIdx >= lines.length) {
+        termBody.innerHTML += '<span class="cursor-blink"></span>';
+        return;
+      }
+      const div = document.createElement('div');
+      div.style.color = lines[lineIdx].color;
+      div.style.marginBottom = "8px";
+      termBody.appendChild(div);
+      
+      let charIdx = 0;
+      const text = lines[lineIdx].text;
+      
+      function typeChar() {
+        if (charIdx < text.length) {
+          div.textContent += text[charIdx];
+          charIdx++;
+          setTimeout(typeChar, 30);
+        } else {
+          lineIdx++;
+          setTimeout(typeLine, 600);
+        }
+      }
+      typeChar();
+    }
+    setTimeout(typeLine, 1000);
+  </script>
 </body>
 </html>

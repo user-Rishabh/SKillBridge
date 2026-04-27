@@ -59,7 +59,8 @@
 }
 
 /* ── Floating badge animations (hero) ────────────────────── */
-.hero-badge-top {
+.hero-badge-top,
+.hero-weekly-badge {
   animation: badgeBounce 2.5s ease-in-out infinite;
 }
 .hero-badge-bottom {
@@ -68,6 +69,21 @@
 @keyframes badgeBounce {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-4px); }
+}
+
+/* ── New card will-change hints ───────────────────────────── */
+.step-card,
+.feature-card,
+.before-card,
+.after-card,
+.mock-dashboard {
+  will-change: transform;
+}
+
+/* ── Step card pop in ─────────────────────────────────────── */
+@keyframes stepPop {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ── Skill bars animated fill on reveal ──────────────────── */

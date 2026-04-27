@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SkillBridge | From College to Career. Faster.</title>
-  <meta name="description" content="SkillBridge gives every student a personalized AI roadmap, real projects, and senior mentors — so you're job-ready before graduation.">
+  <title>SkillBridge | Know What to Learn. Prove Your Skills. Get Hired.</title>
+  <meta name="description" content="SkillBridge AI creates a personalized career roadmap, tracks your progress, and calculates your job readiness — so you never guess again.">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,20 +19,16 @@
   <!-- Scroll Progress -->
   <div class="scroll-progress" id="progress-bar"></div>
 
-  <!-- Custom Cursor -->
-  <div class="cursor-dot" id="cursor-dot"></div>
-  <div class="cursor-ring" id="cursor-ring"></div>
-
   <!-- ═══════════════════════════════════ NAVBAR -->
   <nav class="navbar" id="navbar">
     <div class="nav-inner">
       <a href="#" class="nav-logo" id="nav-logo">Skill<span>Bridge</span></a>
 
       <div class="nav-links">
-        <a href="#problem" class="nav-link" id="nav-problem">The Problem</a>
+        <a href="#problem" class="nav-link" id="nav-problem">Why It Exists</a>
+        <a href="#how" class="nav-link" id="nav-how">How It Works</a>
         <a href="#features" class="nav-link" id="nav-features">Features</a>
-        <a href="#how" class="nav-link" id="nav-how">How it Works</a>
-        <a href="#reviews" class="nav-link" id="nav-reviews">Stories</a>
+        <a href="#compare" class="nav-link" id="nav-compare">Compare</a>
       </div>
 
       <a href="auth.html" class="btn btn-primary nav-cta" id="nav-cta">Get Started Free</a>
@@ -41,7 +37,6 @@
 
   <!-- ═══════════════════════════════════ HERO -->
   <section class="hero" id="hero">
-    <!-- Background decoration -->
     <div class="dot-grid" aria-hidden="true"></div>
     <div class="hero-orbs" aria-hidden="true">
       <div class="orb orb-1"></div>
@@ -51,43 +46,61 @@
     <div class="hero-inner">
       <!-- Left text -->
       <div class="hero-text" data-reveal>
-        <div class="pill pill-emerald">🚀 AI-Powered Career Platform</div>
+        <div class="pill pill-emerald">✦ AI-Powered Career Navigation System</div>
 
         <h1 class="hero-heading" id="hero-heading">
-          From College<br>
-          to <span class="text-emerald">Career.</span><br>
-          Faster.
+          Know exactly what<br>
+          to learn. Prove<br>
+          your skills. <span class="text-emerald">Get hired.</span>
         </h1>
 
         <p class="hero-sub">
-          SkillBridge gives every student a personalized AI roadmap, real projects,
-          and senior mentors — so you're job-ready before graduation.
+          SkillBridge AI creates a personalized roadmap,
+          tracks your progress, and calculates your
+          job readiness — so you never guess again.
         </p>
 
         <div class="hero-ctas">
-          <a href="auth.html" class="btn btn-primary" id="hero-btn-1">Build My Roadmap →</a>
-          <a href="#how" class="btn btn-outline" id="hero-btn-2">▷ Watch Demo</a>
+          <a href="auth.html" class="btn btn-primary" id="hero-btn-1">Get Your Roadmap →</a>
+          <a href="#how" class="btn btn-outline" id="hero-btn-2">See How It Works</a>
         </div>
 
-        <div class="hero-stats">
-          <span>15L+ Students</span>
-          <span class="dot-sep">·</span>
-          <span>500+ Companies</span>
-          <span class="dot-sep">·</span>
-          <span>98% Placed</span>
+        <div class="hero-trust">
+          <span>✓ Free to start</span>
+          <span>✓ No credit card</span>
+          <span>✓ Results in 2 min</span>
         </div>
       </div>
 
-      <!-- Right card -->
+      <!-- Right dashboard card -->
       <div class="hero-card-wrap" data-reveal data-delay="150">
-        <div class="hero-badge-top">✓ 4 Skills Completed</div>
+        <div class="hero-weekly-badge">↑ +8% this week</div>
         <div class="hero-dashboard-card float-card">
           <div class="hdc-header">
-            <span class="hdc-title">Your Roadmap</span>
-            <span class="hdc-progress-badge">67% Complete</span>
+            <span class="hdc-label">Your Career Dashboard</span>
+            <span class="hdc-live-badge">Live Preview</span>
           </div>
 
-          <div class="skill-bars">
+          <!-- Circular Progress Ring -->
+          <div class="readiness-ring-wrap">
+            <svg class="readiness-ring" viewBox="0 0 120 120" aria-label="72% job readiness score">
+              <circle class="ring-bg" cx="60" cy="60" r="50" fill="none" stroke="#E2E8F0" stroke-width="8"/>
+              <circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="50" fill="none"
+                stroke="#059669" stroke-width="8"
+                stroke-linecap="round"
+                stroke-dasharray="314"
+                stroke-dashoffset="314"
+                transform="rotate(-90 60 60)"/>
+            </svg>
+            <div class="ring-center">
+              <span class="ring-pct" id="ring-pct">0%</span>
+              <span class="ring-label-inner">Readiness</span>
+            </div>
+          </div>
+          <p class="ring-sublabel">Job Readiness Score</p>
+
+          <!-- Skill Bars -->
+          <div class="skill-bars hdc-skills">
             <div class="skill-row">
               <span class="skill-label">React.js</span>
               <div class="bar-track"><div class="bar-fill emerald" style="--w:80%"></div></div>
@@ -100,401 +113,101 @@
             </div>
             <div class="skill-row">
               <span class="skill-label">System Design</span>
-              <div class="bar-track"><div class="bar-fill amber" style="--w:45%"></div></div>
-              <span class="skill-pct">45%</span>
+              <div class="bar-track"><div class="bar-fill amber" style="--w:50%"></div></div>
+              <span class="skill-pct">50%</span>
             </div>
             <div class="skill-row">
               <span class="skill-label">DSA</span>
-              <div class="bar-track"><div class="bar-fill slate" style="--w:30%"></div></div>
-              <span class="skill-pct">30%</span>
+              <div class="bar-track"><div class="bar-fill red" style="--w:32%"></div></div>
+              <span class="skill-pct">32%</span>
             </div>
           </div>
 
-          <div class="hdc-next">
-            <span class="hdc-next-icon">→</span>
-            <span>Next milestone: Complete 2 projects</span>
+          <!-- Next Task -->
+          <div class="hdc-next-task">
+            <div class="hdc-next-pin">📌 Next Recommended Task</div>
+            <div class="hdc-next-title">Complete: System Design Basics</div>
+            <div class="hdc-next-meta">Est. 2 hours · High Impact</div>
           </div>
         </div>
-        <div class="hero-badge-bottom">🤖 AI Updated Today</div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════ COMPANY LOGOS MARQUEE -->
-  <section class="marquee-section" aria-label="Companies our students work at">
-    <p class="marquee-label">Our students now work at →</p>
-    <div class="marquee-track">
-      <div class="marquee-content">
-        <span class="co-pill">Google</span>
-        <span class="co-pill">Microsoft</span>
-        <span class="co-pill">Amazon</span>
-        <span class="co-pill">Flipkart</span>
-        <span class="co-pill">Razorpay</span>
-        <span class="co-pill">CRED</span>
-        <span class="co-pill">Zepto</span>
-        <span class="co-pill">Swiggy</span>
-        <span class="co-pill">Meesho</span>
-        <span class="co-pill">PhonePe</span>
-        <span class="co-pill">Groww</span>
-        <span class="co-pill">Paytm</span>
-        <!-- duplicate for seamless loop -->
-        <span class="co-pill">Google</span>
-        <span class="co-pill">Microsoft</span>
-        <span class="co-pill">Amazon</span>
-        <span class="co-pill">Flipkart</span>
-        <span class="co-pill">Razorpay</span>
-        <span class="co-pill">CRED</span>
-        <span class="co-pill">Zepto</span>
-        <span class="co-pill">Swiggy</span>
-        <span class="co-pill">Meesho</span>
-        <span class="co-pill">PhonePe</span>
-        <span class="co-pill">Groww</span>
-        <span class="co-pill">Paytm</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════ PROBLEM SECTION -->
-  <section class="dark-section" id="problem">
+  <!-- ═══════════════════════════════════ PROBLEM → SOLUTION -->
+  <section class="section problem-solution-section" id="problem" style="background:#F1F5F9;">
     <div class="container">
-      <div class="section-pill pill-emerald-dark">THE PROBLEM</div>
-      <h2 class="section-heading white" data-reveal>
-        75% of graduates don't get<br>relevant jobs.
-      </h2>
-      <p class="section-sub slate-400" data-reveal>
-        Not because they aren't smart.<br>
-        Because nobody showed them the path.
-      </p>
-
-      <div class="problem-cards" data-stagger>
-        <div class="problem-card">
-          <div class="pc-number">4 Years</div>
-          <div class="pc-label">Wasted without direction</div>
-        </div>
-        <div class="problem-card">
-          <div class="pc-number">₹2 Cr+</div>
-          <div class="pc-label">Companies spend training freshers</div>
-        </div>
-        <div class="problem-card">
-          <div class="pc-number">75%</div>
-          <div class="pc-label">Graduates underplaced</div>
-        </div>
+      <div style="text-align:center; margin-bottom:0.5rem;">
+        <div class="section-pill pill-slate">WHY IT EXISTS</div>
       </div>
-    </div>
-  </section>
+      <h2 class="section-heading text-center" data-reveal>Every student faces the same confusion.</h2>
 
-  <!-- ═══════════════════════════════════ FEATURES TABS -->
-  <section class="section" id="features" style="background:#fff;">
-    <div class="container">
-      <div class="section-pill pill-emerald">FEATURES</div>
-      <h2 class="section-heading" data-reveal>Everything you need to get placed</h2>
-
-      <!-- Tab nav -->
-      <div class="tabs-nav" id="tabs-nav" data-reveal>
-        <button class="tab-btn active" data-tab="tab-roadmap" id="tbtn-roadmap">Roadmap</button>
-        <button class="tab-btn" data-tab="tab-projects" id="tbtn-projects">Projects</button>
-        <button class="tab-btn" data-tab="tab-mentors" id="tbtn-mentors">Mentors</button>
-        <button class="tab-btn" data-tab="tab-portfolio" id="tbtn-portfolio">Portfolio</button>
-        <div class="tab-ink" id="tab-ink"></div>
-      </div>
-
-      <!-- TAB: ROADMAP -->
-      <div class="tab-pane active tab-visible" id="tab-roadmap">
-        <div class="tab-left">
-          <h3 class="tab-title">AI-Powered Learning Roadmap</h3>
-          <ul class="check-list">
-            <li><span class="chk">✓</span> Personalized to your branch + dream job</li>
-            <li><span class="chk">✓</span> Based on 12,000+ industry data points</li>
-            <li><span class="chk">✓</span> One-click flowchart PDF download</li>
-            <li><span class="chk">✓</span> Updates as industry trends change</li>
-          </ul>
-          <a href="auth.html" class="btn btn-primary" id="roadmap-cta">Generate My Roadmap →</a>
-        </div>
-        <div class="tab-right">
-          <!-- Skill Tree SVG -->
-          <div class="skill-tree-card">
-            <div class="st-header">
-              <span class="st-title">ML Engineer Path</span>
-              <span class="st-badge">Your Journey</span>
+      <div class="problem-vs-grid">
+        <!-- Before card -->
+        <div class="before-card" data-reveal>
+          <div class="vs-card-header red-header">
+            <span class="vs-header-icon">❌</span>
+            <span>Without Direction</span>
+          </div>
+          <div class="vs-pain-list">
+            <div class="pain-item">
+              <div class="pain-label"><span class="pain-x">❌</span> No direction on what to learn</div>
+              <p class="pain-desc">Students waste months on random YouTube playlists going nowhere.</p>
             </div>
-            <svg class="skill-tree-svg" viewBox="0 0 480 460" xmlns="http://www.w3.org/2000/svg" aria-label="Skill tree flowchart">
-              <!-- Connections -->
-              <line class="conn-done" x1="240" y1="62" x2="130" y2="138"/>
-              <line class="conn-done" x1="240" y1="62" x2="350" y2="138"/>
-              <line class="conn-active" x1="130" y1="162" x2="130" y2="238" stroke-dasharray="5 4"/>
-              <line class="conn-done" x1="350" y1="162" x2="350" y2="238"/>
-              <line class="conn-future" x1="130" y1="262" x2="240" y2="338" stroke-dasharray="4 4"/>
-              <line class="conn-future" x1="350" y1="262" x2="240" y2="338" stroke-dasharray="4 4"/>
-              <line class="conn-future" x1="240" y1="362" x2="240" y2="428" stroke-dasharray="4 4"/>
-
-              <!-- NODE: Python Basics (completed) -->
-              <rect class="node-done" x="170" y="20" width="140" height="42" rx="10"/>
-              <text class="node-text-done" x="240" y="46" text-anchor="middle">✓ Python Basics</text>
-
-              <!-- NODE: Data Structures (completed) -->
-              <rect class="node-done" x="60" y="138" width="140" height="42" rx="10"/>
-              <text class="node-text-done" x="130" y="164" text-anchor="middle">✓ Data Structures</text>
-
-              <!-- NODE: Web Basics (completed) -->
-              <rect class="node-done" x="280" y="138" width="140" height="42" rx="10"/>
-              <text class="node-text-done" x="350" y="164" text-anchor="middle">✓ Web Basics</text>
-
-              <!-- NODE: Algorithms (ACTIVE) -->
-              <rect class="node-pulse-ring" x="56" y="234" width="148" height="48" rx="13"/>
-              <rect class="node-active" x="60" y="238" width="140" height="40" rx="10"/>
-              <text class="node-text-active" x="130" y="263" text-anchor="middle">Algorithms</text>
-              <!-- YOU ARE HERE badge -->
-              <rect fill="#F59E0B" rx="5" x="60" y="220" width="88" height="18"/>
-              <text fill="#fff" font-size="9" font-family="Inter" font-weight="700" x="104" y="233" text-anchor="middle">YOU ARE HERE →</text>
-
-              <!-- NODE: React.js (completed) -->
-              <rect class="node-done" x="280" y="238" width="140" height="40" rx="10"/>
-              <text class="node-text-done" x="350" y="263" text-anchor="middle">✓ React.js</text>
-
-              <!-- NODE: System Design (locked) -->
-              <rect class="node-locked" x="170" y="338" width="140" height="40" rx="10"/>
-              <text class="node-text-locked" x="240" y="363" text-anchor="middle">🔒 System Design</text>
-
-              <!-- NODE: PLACED (locked) -->
-              <rect class="node-locked" x="170" y="418" width="140" height="30" rx="8"/>
-              <text class="node-text-locked" x="240" y="438" text-anchor="middle">🏆 PLACED ✓</text>
+            <div class="pain-item">
+              <div class="pain-label"><span class="pain-x">❌</span> Random courses, zero outcome</div>
+              <p class="pain-desc">Finished 10 courses but still can't answer interview questions.</p>
+            </div>
+            <div class="pain-item">
+              <div class="pain-label"><span class="pain-x">❌</span> No proof of skills</div>
+              <p class="pain-desc">Resume says skills but interviews reveal the truth. Rejected.</p>
+            </div>
+          </div>
+          <div class="vs-card-footer">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <circle cx="32" cy="32" r="30" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+              <ellipse cx="22" cy="26" rx="4" ry="5" fill="#EF4444" opacity="0.8"/>
+              <ellipse cx="42" cy="26" rx="4" ry="5" fill="#EF4444" opacity="0.8"/>
+              <path d="M20 44 Q32 36 44 44" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <circle cx="22" cy="26" r="2" fill="#0F172A"/>
+              <circle cx="42" cy="26" r="2" fill="#0F172A"/>
             </svg>
-            <div class="st-legend">
-              <span class="leg"><span class="leg-dot emerald"></span>Completed</span>
-              <span class="leg"><span class="leg-dot amber"></span>Current</span>
-              <span class="leg"><span class="leg-dot slate"></span>Locked</span>
-            </div>
           </div>
         </div>
-      </div>
 
-      <!-- TAB: PROJECTS -->
-      <div class="tab-pane" id="tab-projects">
-        <div class="tab-left">
-          <h3 class="tab-title">Real-World Projects</h3>
-          <ul class="check-list">
-            <li><span class="chk">✓</span> From actual company problem statements</li>
-            <li><span class="chk">✓</span> Reviewed by senior engineers</li>
-            <li><span class="chk">✓</span> Earns certificates + cash rewards</li>
-            <li><span class="chk">✓</span> Goes directly to your portfolio</li>
-          </ul>
-          <a href="auth.html" class="btn btn-primary" id="projects-cta">Browse Projects →</a>
+        <!-- VS divider -->
+        <div class="vs-divider">
+          <div class="vs-line"></div>
+          <div class="vs-badge">VS</div>
+          <div class="vs-line"></div>
         </div>
-        <div class="tab-right">
-          <div class="projects-stack">
-            <div class="project-card">
-              <div class="pc-top">
-                <div class="pc-icon" style="background:#D1FAE5;color:#059669;">🔬</div>
-                <span class="badge-diff amber-badge">Intermediate</span>
-              </div>
-              <h4 class="pc-title">Recommendation Engine</h4>
-              <p class="pc-company">by Flipkart Engineers</p>
-              <div class="tech-row">
-                <span class="tech">Python</span><span class="tech">ML</span><span class="tech">FastAPI</span>
-              </div>
-              <div class="pc-bottom">
-                <span class="pc-reward">₹500 + Certificate</span>
-                <button class="btn btn-primary btn-sm" id="proj-btn-1">Start Project →</button>
-              </div>
+
+        <!-- After card -->
+        <div class="after-card" data-reveal data-delay="100">
+          <div class="vs-card-header emerald-header">
+            <span class="vs-header-icon">✅</span>
+            <span>With SkillBridge AI</span>
+          </div>
+          <div class="vs-win-list">
+            <div class="win-item">
+              <div class="win-label"><span class="win-check">✅</span> Personalized roadmap in 2 minutes</div>
+              <p class="win-desc">AI analyzes your goal + current level and builds your exact learning path.</p>
             </div>
-            <div class="project-card">
-              <div class="pc-top">
-                <div class="pc-icon" style="background:#FEF3C7;color:#D97706;">💳</div>
-                <span class="badge-diff emerald-badge">Beginner</span>
-              </div>
-              <h4 class="pc-title">Payment Gateway API</h4>
-              <p class="pc-company">by Razorpay Engineers</p>
-              <div class="tech-row">
-                <span class="tech">Node.js</span><span class="tech">Express</span><span class="tech">PostgreSQL</span>
-              </div>
-              <div class="pc-bottom">
-                <span class="pc-reward">₹300 + Certificate</span>
-                <button class="btn btn-primary btn-sm" id="proj-btn-2">Start Project →</button>
-              </div>
+            <div class="win-item">
+              <div class="win-label"><span class="win-check">✅</span> Daily tasks with clear outcome</div>
+              <p class="win-desc">No more guessing. Every day you know exactly what to do and why.</p>
             </div>
-            <div class="project-card">
-              <div class="pc-top">
-                <div class="pc-icon" style="background:#EDE9FE;color:#7C3AED;">💬</div>
-                <span class="badge-diff slate-badge">Advanced</span>
-              </div>
-              <h4 class="pc-title">Real-time Chat App</h4>
-              <p class="pc-company">by Startup Engineers</p>
-              <div class="tech-row">
-                <span class="tech">React</span><span class="tech">Socket.io</span><span class="tech">Redis</span>
-              </div>
-              <div class="pc-bottom">
-                <span class="pc-reward">₹1000 + Certificate</span>
-                <button class="btn btn-primary btn-sm" id="proj-btn-3">Start Project →</button>
-              </div>
+            <div class="win-item">
+              <div class="win-label"><span class="win-check">✅</span> Verified skill portfolio</div>
+              <p class="win-desc">Prove your skills with a SkillBridge verified score — not just a certificate.</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- TAB: MENTORS -->
-      <div class="tab-pane" id="tab-mentors">
-        <div class="tab-left">
-          <h3 class="tab-title">Expert Mentor Network</h3>
-          <ul class="check-list">
-            <li><span class="chk">✓</span> Placed seniors from top companies</li>
-            <li><span class="chk">✓</span> 1:1 video sessions available</li>
-            <li><span class="chk">✓</span> Mock interviews &amp; resume reviews</li>
-            <li><span class="chk">✓</span> Sessions starting at just ₹299</li>
-          </ul>
-          <a href="auth.html" class="btn btn-primary" id="mentors-cta">Find My Mentor →</a>
-        </div>
-        <div class="tab-right">
-          <div class="mentors-stack">
-            <div class="mentor-card">
-              <div class="mentor-avatar" style="background:linear-gradient(135deg,#059669,#0F172A);">RK</div>
-              <div class="mentor-info">
-                <h4 class="mentor-name">Rahul Kumar</h4>
-                <p class="mentor-role">SDE-2 @ Google</p>
-                <div class="mentor-skills">
-                  <span class="skill-tag">React</span>
-                  <span class="skill-tag">Node.js</span>
-                  <span class="skill-tag">DSA</span>
-                </div>
-              </div>
-              <div class="mentor-right">
-                <div class="mentor-rating">⭐ 4.9 <span class="rating-sub">(47 sessions)</span></div>
-                <div class="avail"><span class="avail-dot"></span>Available this week</div>
-                <button class="btn btn-outline-emerald btn-sm" id="mentor-btn-1">Book ₹299</button>
-              </div>
-            </div>
-            <div class="mentor-card">
-              <div class="mentor-avatar" style="background:linear-gradient(135deg,#0F3460,#059669);">PS</div>
-              <div class="mentor-info">
-                <h4 class="mentor-name">Priya Sharma</h4>
-                <p class="mentor-role">Data Scientist @ Microsoft</p>
-                <div class="mentor-skills">
-                  <span class="skill-tag">Python</span>
-                  <span class="skill-tag">ML</span>
-                  <span class="skill-tag">SQL</span>
-                </div>
-              </div>
-              <div class="mentor-right">
-                <div class="mentor-rating">⭐ 4.8 <span class="rating-sub">(63 sessions)</span></div>
-                <div class="avail"><span class="avail-dot"></span>Available this week</div>
-                <button class="btn btn-outline-emerald btn-sm" id="mentor-btn-2">Book ₹399</button>
-              </div>
-            </div>
-            <div class="mentor-card">
-              <div class="mentor-avatar" style="background:linear-gradient(135deg,#F59E0B,#059669);">AV</div>
-              <div class="mentor-info">
-                <h4 class="mentor-name">Arjun Verma</h4>
-                <p class="mentor-role">Full Stack @ Razorpay</p>
-                <div class="mentor-skills">
-                  <span class="skill-tag">React</span>
-                  <span class="skill-tag">Node.js</span>
-                  <span class="skill-tag">System Design</span>
-                </div>
-              </div>
-              <div class="mentor-right">
-                <div class="mentor-rating">⭐ 5.0 <span class="rating-sub">(31 sessions)</span></div>
-                <div class="avail avail-filling"><span class="avail-dot amber-dot"></span>Slots filling up</div>
-                <button class="btn btn-outline-emerald btn-sm" id="mentor-btn-3">Book ₹499</button>
-              </div>
+          <div class="vs-card-footer">
+            <div class="vs-readiness-badge">
+              <span class="vr-label">Job Readiness:</span>
+              <span class="vr-score">72% ↑</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- TAB: PORTFOLIO -->
-      <div class="tab-pane" id="tab-portfolio">
-        <div class="tab-left">
-          <h3 class="tab-title">Auto-Generated Portfolio</h3>
-          <ul class="check-list">
-            <li><span class="chk">✓</span> Automatic portfolio from your progress</li>
-            <li><span class="chk">✓</span> PDF download for recruiters</li>
-            <li><span class="chk">✓</span> GitHub integration &amp; activity heatmap</li>
-            <li><span class="chk">✓</span> SkillBridge verified badge</li>
-          </ul>
-          <a href="auth.html" class="btn btn-primary" id="portfolio-cta">Build My Portfolio →</a>
-        </div>
-        <div class="tab-right">
-          <div class="portfolio-card">
-            <div class="port-header">
-              <div class="port-avatar">AS</div>
-              <div class="port-info">
-                <h4 class="port-name">Arjun Singh</h4>
-                <p class="port-college">NIT Trichy · CSE</p>
-              </div>
-              <span class="port-badge">Placement Ready</span>
-            </div>
-
-            <p class="port-section-label">Skills Verified</p>
-            <div class="port-bars skill-bars">
-              <div class="skill-row">
-                <span class="skill-label">React.js</span>
-                <div class="bar-track"><div class="bar-fill emerald" style="--w:80%"></div></div>
-                <span class="skill-pct">80%</span>
-              </div>
-              <div class="skill-row">
-                <span class="skill-label">Python</span>
-                <div class="bar-track"><div class="bar-fill emerald" style="--w:60%"></div></div>
-                <span class="skill-pct">60%</span>
-              </div>
-              <div class="skill-row">
-                <span class="skill-label">DSA</span>
-                <div class="bar-track"><div class="bar-fill emerald" style="--w:50%"></div></div>
-                <span class="skill-pct">50%</span>
-              </div>
-            </div>
-
-            <div class="port-stats-row">
-              <span class="port-stat">4 Projects</span>
-              <span class="port-stat">2 Mentors</span>
-              <span class="port-stat">67% Ready</span>
-            </div>
-
-            <p class="port-section-label">GitHub Activity</p>
-            <div class="github-heatmap" id="github-heatmap"></div>
-
-            <button class="btn btn-outline-emerald port-download-btn" id="port-download-btn">📥 Download Portfolio PDF</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════════════════════ INNOVATION SECTION -->
-  <section class="section" style="background:var(--surface-2);" id="innovation">
-    <div class="container">
-      <h2 class="section-heading text-center" data-reveal>Built different. For Indian students.</h2>
-      <div class="innovation-grid" data-stagger>
-        <!-- Card 1 -->
-        <div class="inno-card">
-          <div class="inno-badge amber-badge-top">NEW</div>
-          <div class="inno-icon emerald-icon">📥</div>
-          <h3 class="inno-title">Download Your Study Flowchart</h3>
-          <p class="inno-desc">Your complete personalized learning path as a beautiful PDF. One click. Always updated.</p>
-          <a href="auth.html" class="btn btn-primary btn-sm" id="inno-btn-1">Try It Free →</a>
-        </div>
-        <!-- Card 2 -->
-        <div class="inno-card">
-          <div class="inno-badge emerald-badge-top">AI POWERED</div>
-          <div class="inno-icon emerald-icon">🤖</div>
-          <h3 class="inno-title">AI Doubt Clearing Assistant</h3>
-          <p class="inno-desc">Ask anything about your roadmap. Focused answers. No distractions. Only SkillBridge topics.</p>
-          <div class="mini-chat">
-            <div class="chat-user">How do I download my flowchart?</div>
-            <div class="chat-bot">Click Download in your Roadmap section →</div>
-          </div>
-          <a href="auth.html" class="btn btn-primary btn-sm" id="inno-btn-2">Ask Now →</a>
-        </div>
-        <!-- Card 3 -->
-        <div class="inno-card">
-          <div class="inno-badge slate-badge-top">COMING SOON</div>
-          <div class="inno-icon slate-icon">📊</div>
-          <h3 class="inno-title">Progress Dashboard</h3>
-          <p class="inno-desc">Track skills, projects, mentor sessions and your placement readiness score in one view.</p>
-          <div class="mini-stats-row">
-            <span class="mini-stat">67% Ready</span>
-            <span class="mini-stat">4 Projects</span>
-            <span class="mini-stat">2 Sessions</span>
-          </div>
-          <button class="btn btn-outline btn-sm" id="inno-btn-3">Join Waitlist</button>
         </div>
       </div>
     </div>
@@ -503,200 +216,239 @@
   <!-- ═══════════════════════════════════ HOW IT WORKS -->
   <section class="section" id="how" style="background:#fff;">
     <div class="container">
-      <div class="section-pill pill-emerald">HOW IT WORKS</div>
-      <h2 class="section-heading" data-reveal>Your journey to placement</h2>
+      <div style="text-align:center;margin-bottom:0.5rem;">
+        <div class="section-pill pill-emerald">THE PROCESS</div>
+      </div>
+      <h2 class="section-heading text-center" data-reveal>From zero to job-ready in 5 steps.</h2>
 
-      <div class="timeline" id="timeline">
-        <svg class="tl-line-svg" aria-hidden="true">
-          <line id="tl-line" x1="50%" y1="0" x2="50%" y2="0" stroke="#059669" stroke-width="2" stroke-dasharray="8 6"/>
-        </svg>
-
-        <div class="tl-step" data-reveal>
-          <div class="tl-content">
-            <div class="tl-bg-num">01</div>
-            <h3 class="tl-title">Sign Up &amp; Set Your Goal</h3>
-            <p class="tl-desc">Tell us your college, branch, dream role. Takes 2 minutes.</p>
-          </div>
-          <div class="tl-num">01</div>
-          <div class="tl-visual">
-            <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=600" alt="Student setting goals" loading="lazy">
-          </div>
+      <div class="steps-row" id="steps-row">
+        <div class="steps-connector" id="steps-connector" aria-hidden="true">
+          <div class="steps-line" id="steps-line"></div>
         </div>
 
-        <div class="tl-step tl-reverse" data-reveal>
-          <div class="tl-content">
-            <div class="tl-bg-num">02</div>
-            <h3 class="tl-title">AI Builds Your Roadmap</h3>
-            <p class="tl-desc">Personalized 6-month skill plan generated in seconds. No guessing.</p>
-          </div>
-          <div class="tl-num">02</div>
-          <div class="tl-visual">
-            <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=600" alt="AI roadmap" loading="lazy">
-          </div>
+        <div class="step-card" data-step="1" data-reveal>
+          <div class="step-num-badge">01</div>
+          <div class="step-icon">🎯</div>
+          <h3 class="step-title">Set Your Goal</h3>
+          <p class="step-desc">Tell us your target role. e.g. Frontend Developer</p>
+          <div class="step-tag">2 minutes</div>
         </div>
 
-        <div class="tl-step" data-reveal>
-          <div class="tl-content">
-            <div class="tl-bg-num">03</div>
-            <h3 class="tl-title">Build Real Projects</h3>
-            <p class="tl-desc">Work on actual company problems. Build a portfolio that talks.</p>
-          </div>
-          <div class="tl-num">03</div>
-          <div class="tl-visual tl-code-mock">
-            <div class="code-bar">
-              <span class="cd r"></span><span class="cd y"></span><span class="cd g"></span>
-              <span class="code-file">project.py</span>
-            </div>
-            <div class="code-body">
-              <div><span style="color:#059669;">def</span> <span style="color:#334155;">recommend</span>(user):</div>
-              <div>&nbsp;&nbsp;<span style="color:#94A3B8;"># ML-powered engine</span></div>
-              <div>&nbsp;&nbsp;<span style="color:#059669;">return</span> model.predict(user)</div>
-              <div class="code-cursor">|</div>
-            </div>
-          </div>
+        <div class="step-card" data-step="2" data-reveal data-delay="100">
+          <div class="step-num-badge">02</div>
+          <div class="step-icon">🤖</div>
+          <h3 class="step-title">AI Analyzes You</h3>
+          <p class="step-desc">AI scans your current skills and finds exact gaps.</p>
+          <div class="step-tag">Instant</div>
         </div>
 
-        <div class="tl-step tl-reverse" data-reveal>
-          <div class="tl-content">
-            <div class="tl-bg-num">04</div>
-            <h3 class="tl-title">Get Mentored</h3>
-            <p class="tl-desc">Connect with seniors already at top companies. Weekly 1-on-1 sessions.</p>
-          </div>
-          <div class="tl-num">04</div>
-          <div class="tl-visual tl-mentor-mock">
-            <div class="tl-mentor-avatar">RK</div>
-            <div>
-              <div class="tl-mentor-name">Rahul Kumar</div>
-              <div class="tl-mentor-role">SDE-2 @ Google</div>
-              <div class="tl-mentor-avail"><span class="avail-dot"></span> Available Now</div>
-            </div>
-          </div>
+        <div class="step-card step-active" data-step="3" data-reveal data-delay="200">
+          <div class="step-num-badge active">03</div>
+          <div class="step-icon">🗺️</div>
+          <h3 class="step-title">Get Your Roadmap</h3>
+          <p class="step-desc">Personalized step-by-step path built for your goal.</p>
+          <div class="step-tag">Unique to you</div>
         </div>
 
-        <div class="tl-step" data-reveal>
-          <div class="tl-content">
-            <div class="tl-bg-num">05</div>
-            <h3 class="tl-title">Get Placed 🎉</h3>
-            <p class="tl-desc">Apply to 500+ hiring partners with your verified SkillBridge portfolio.</p>
-          </div>
-          <div class="tl-num">05</div>
-          <div class="tl-visual tl-offer-mock">
-            <div class="offer-logo">G</div>
-            <div>
-              <div class="offer-role">SDE-1 @ Google</div>
-              <div class="offer-ctc">₹24 LPA</div>
-              <div class="offer-check">✓ Offer Accepted</div>
-            </div>
-          </div>
+        <div class="step-card" data-step="4" data-reveal data-delay="300">
+          <div class="step-num-badge">04</div>
+          <div class="step-icon">⚡</div>
+          <h3 class="step-title">Complete Tasks</h3>
+          <p class="step-desc">Daily tasks, real projects, skill checkpoints.</p>
+          <div class="step-tag">At your pace</div>
+        </div>
+
+        <div class="step-card" data-step="5" data-reveal data-delay="400">
+          <div class="step-num-badge">05</div>
+          <div class="step-icon">🏆</div>
+          <h3 class="step-title">Get Readiness Score</h3>
+          <p class="step-desc">Your verified Job Readiness Score. Show it. Get hired.</p>
+          <div class="step-tag">Employer trusted</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════ STATS -->
-  <section class="dark-section" id="stats">
+  <!-- ═══════════════════════════════════ CORE FEATURES -->
+  <section class="section" id="features" style="background:#F8FAFC;">
     <div class="container">
-      <div class="stats-grid" data-stagger>
-        <div class="stat-card">
-          <div class="stat-num" id="sn-0">0</div>
-          <div class="stat-label">Students Guided</div>
-          <div class="stat-sub">200+ colleges</div>
+      <div style="text-align:center;margin-bottom:0.5rem;">
+        <div class="section-pill pill-emerald">CORE FEATURES</div>
+      </div>
+      <h2 class="section-heading text-center" data-reveal>Built like a system. Not a course.</h2>
+
+      <div class="features-grid">
+        <!-- Card 1 -->
+        <div class="feature-card" data-reveal>
+          <div class="fc-tag fc-tag-emerald">CORE ENGINE</div>
+          <div class="fc-icon-wrap emerald-circle">🔍</div>
+          <h3 class="fc-title">Skill Gap Analyzer</h3>
+          <p class="fc-desc">AI compares your current skills against actual job requirements. Tells you exactly what's missing.</p>
+          <div class="fc-stat">Analyzes 200+ job roles</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="sn-1">0</div>
-          <div class="stat-label">Hiring Partners</div>
-          <div class="stat-sub">Top MNCs &amp; startups</div>
+
+        <!-- Card 2 -->
+        <div class="feature-card" data-reveal data-delay="80">
+          <div class="fc-tag fc-tag-emerald">AI POWERED</div>
+          <div class="fc-icon-wrap emerald-circle">🗺️</div>
+          <h3 class="fc-title">Personalized Roadmap</h3>
+          <p class="fc-desc">Not a generic course list. A custom-built path based on your goal, level, and timeline.</p>
+          <div class="fc-stat">Unique per student</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="sn-2">0</div>
-          <div class="stat-label">Placement Rate</div>
-          <div class="stat-sub">Within 6 months</div>
+
+        <!-- Card 3 -->
+        <div class="feature-card" data-reveal data-delay="160">
+          <div class="fc-tag fc-tag-amber">PRODUCTIVITY</div>
+          <div class="fc-icon-wrap amber-circle">⚡</div>
+          <h3 class="fc-title">Daily Task Engine</h3>
+          <p class="fc-desc">Every morning: 3 tasks matched to your roadmap. No decision fatigue.</p>
+          <div class="fc-stat">Updated daily</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="sn-3">0</div>
-          <div class="stat-label">Average Rating</div>
-          <div class="stat-sub">12,000+ reviews</div>
+
+        <!-- Card 4 -->
+        <div class="feature-card" data-reveal data-delay="240">
+          <div class="fc-tag fc-tag-emerald">TRUST SIGNAL</div>
+          <div class="fc-icon-wrap emerald-circle">📊</div>
+          <h3 class="fc-title">Job Readiness Score</h3>
+          <p class="fc-desc">A single % score that tells you how close you are to being hireable. Watch it grow.</p>
+          <div class="fc-stat">Employer-readable</div>
+        </div>
+
+        <!-- Card 5 — wide -->
+        <div class="feature-card feature-card-wide" data-reveal data-delay="320">
+          <div class="fc-tag fc-tag-dark">CAREER PROOF</div>
+          <div class="fc-icon-wrap dark-circle">✓</div>
+          <h3 class="fc-title">Verified Skill Portfolio</h3>
+          <p class="fc-desc">Your skills verified by SkillBridge AI. Not self-reported. Not a certificate. Proof.</p>
+          <div class="fc-stat">Shareable link</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════ TESTIMONIALS -->
-  <section class="section" id="reviews" style="background:var(--bg);">
-    <div class="container">
-      <div class="section-pill pill-emerald">STUDENT STORIES</div>
-      <h2 class="section-heading text-center" data-reveal>Real students. Real results.</h2>
-      <div class="testi-grid" data-stagger>
-        <div class="testi-card">
-          <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-          <p class="testi-quote">"The AI roadmap saved me months of aimless learning. I knew exactly what to build to get hired."</p>
-          <div class="testi-footer">
-            <div class="testi-avatar" style="background:#059669;">AK</div>
+  <!-- ═══════════════════════════════════ LIVE DASHBOARD PREVIEW -->
+  <section class="dashboard-preview-section" id="dashboard-preview">
+    <div class="dp-bg-orb dp-orb-1" aria-hidden="true"></div>
+    <div class="dp-bg-orb dp-orb-2" aria-hidden="true"></div>
+    <div class="dp-dot-grid" aria-hidden="true"></div>
+
+    <div class="container" style="position:relative;z-index:1;">
+      <div style="text-align:center;margin-bottom:0.5rem;">
+        <div class="section-pill pill-emerald-dark">LIVE PREVIEW</div>
+      </div>
+      <h2 class="section-heading white text-center" data-reveal>See exactly what<br>you'll get inside.</h2>
+
+      <div class="mock-dashboard" data-reveal data-delay="100">
+        <!-- Top bar -->
+        <div class="mdb-topbar">
+          <div class="mdb-logo">SkillBridge <span>AI</span></div>
+          <div class="mdb-user">
+            <div class="mdb-avatar">AS</div>
             <div>
-              <div class="testi-name">Ananya Kapoor</div>
-              <div class="testi-college">NIT Trichy</div>
+              <div class="mdb-username">Arjun Singh</div>
+              <div class="mdb-last-updated">Last updated: Today</div>
             </div>
-            <span class="testi-company">→ Now at Razorpay</span>
           </div>
         </div>
-        <div class="testi-card">
-          <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-          <p class="testi-quote">"3 offers in 4 months. The project reviews from seniors and mock interviews made all the difference."</p>
-          <div class="testi-footer">
-            <div class="testi-avatar" style="background:#0F3460;">PS</div>
-            <div>
-              <div class="testi-name">Pratik Shah</div>
-              <div class="testi-college">VIT Vellore</div>
-            </div>
-            <span class="testi-company">→ Now at Microsoft</span>
+
+        <div class="mdb-body">
+          <!-- Sidebar -->
+          <div class="mdb-sidebar">
+            <div class="mdb-nav-item active">Dashboard</div>
+            <div class="mdb-nav-item">Roadmap</div>
+            <div class="mdb-nav-item">Projects</div>
+            <div class="mdb-nav-item">Portfolio</div>
           </div>
-        </div>
-        <div class="testi-card">
-          <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-          <p class="testi-quote">"From zero Python to ML Engineer in 6 months. The personalized path made the impossible possible."</p>
-          <div class="testi-footer">
-            <div class="testi-avatar" style="background:#7C3AED;">RV</div>
-            <div>
-              <div class="testi-name">Rohan Varma</div>
-              <div class="testi-college">BITS Pilani</div>
+
+          <!-- Main content -->
+          <div class="mdb-main">
+            <!-- Stat cards row -->
+            <div class="mdb-stats-row">
+              <div class="mdb-stat-card emerald-stat">
+                <div class="mdb-stat-val">72%</div>
+                <div class="mdb-stat-label">Job Ready</div>
+              </div>
+              <div class="mdb-stat-card">
+                <div class="mdb-stat-val slate-val">8/20</div>
+                <div class="mdb-stat-label">Tasks Done</div>
+              </div>
+              <div class="mdb-stat-card">
+                <div class="mdb-stat-val emerald-val">4</div>
+                <div class="mdb-stat-label">Skills Verified</div>
+              </div>
+              <div class="mdb-stat-card">
+                <div class="mdb-stat-val amber-val">3</div>
+                <div class="mdb-stat-label">Projects Built</div>
+              </div>
             </div>
-            <span class="testi-company">→ Now at Google</span>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-          <p class="testi-quote">"The Flipkart project on SkillBridge literally got me the interview. No exaggeration at all."</p>
-          <div class="testi-footer">
-            <div class="testi-avatar" style="background:#F59E0B;">MM</div>
-            <div>
-              <div class="testi-name">Meera Mehta</div>
-              <div class="testi-college">Manipal University</div>
+
+            <!-- Two-column row -->
+            <div class="mdb-two-col">
+              <!-- Skills -->
+              <div class="mdb-skills-panel">
+                <div class="mdb-panel-title">Skill Progress</div>
+                <div class="skill-bars dp-skills">
+                  <div class="skill-row">
+                    <span class="skill-label">React.js</span>
+                    <div class="bar-track"><div class="bar-fill emerald" style="--w:80%"></div></div>
+                    <span class="skill-pct">80%</span>
+                  </div>
+                  <div class="skill-row">
+                    <span class="skill-label">Python</span>
+                    <div class="bar-track"><div class="bar-fill emerald" style="--w:60%"></div></div>
+                    <span class="skill-pct">60%</span>
+                  </div>
+                  <div class="skill-row">
+                    <span class="skill-label">System Design</span>
+                    <div class="bar-track"><div class="bar-fill amber" style="--w:50%"></div></div>
+                    <span class="skill-pct">50%</span>
+                  </div>
+                  <div class="skill-row">
+                    <span class="skill-label">DSA</span>
+                    <div class="bar-track"><div class="bar-fill red" style="--w:32%"></div></div>
+                    <span class="skill-pct">32%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Weak areas -->
+              <div class="mdb-weak-panel">
+                <div class="mdb-panel-title">Weak Areas</div>
+                <div class="weak-list">
+                  <div class="weak-item">
+                    <div class="weak-label-row">
+                      <span class="weak-skill">System Design</span>
+                      <span class="weak-pct red-pct">32%</span>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill red" style="--w:32%"></div></div>
+                  </div>
+                  <div class="weak-item">
+                    <div class="weak-label-row">
+                      <span class="weak-skill">DSA</span>
+                      <span class="weak-pct red-pct">28%</span>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill red" style="--w:28%"></div></div>
+                  </div>
+                  <div class="weak-item">
+                    <div class="weak-label-row">
+                      <span class="weak-skill">SQL</span>
+                      <span class="weak-pct red-pct">45%</span>
+                    </div>
+                    <div class="bar-track"><div class="bar-fill red" style="--w:45%"></div></div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <span class="testi-company">→ Now at Flipkart</span>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-          <p class="testi-quote">"Switched from non-CS to SDE in 8 months. The mentor sessions were worth every rupee spent."</p>
-          <div class="testi-footer">
-            <div class="testi-avatar" style="background:#1abc9c;">SK</div>
-            <div>
-              <div class="testi-name">Sneha Krishnan</div>
-              <div class="testi-college">SRM University</div>
+
+            <!-- Next task -->
+            <div class="mdb-next-task">
+              <div class="mdb-nt-left">
+                <div class="mdb-nt-pin">📌 Complete: Build a REST API project</div>
+                <div class="mdb-nt-why">Why: Directly maps to your Backend Developer goal</div>
+                <div class="mdb-nt-impact">Impact: +12% Job Readiness</div>
+              </div>
+              <a href="auth.html" class="btn btn-primary btn-sm mdb-nt-btn">Start Task →</a>
             </div>
-            <span class="testi-company">→ Now at Swiggy</span>
-          </div>
-        </div>
-        <div class="testi-card">
-          <div class="testi-stars">⭐⭐⭐⭐⭐</div>
-          <p class="testi-quote">"SkillBridge portfolio got more recruiter messages than my LinkedIn. Best career investment."</p>
-          <div class="testi-footer">
-            <div class="testi-avatar" style="background:#3B82F6;">NK</div>
-            <div>
-              <div class="testi-name">Nikhil Kumar</div>
-              <div class="testi-college">NIT Warangal</div>
-            </div>
-            <span class="testi-company">→ Now at CRED</span>
           </div>
         </div>
       </div>
@@ -704,9 +456,11 @@
   </section>
 
   <!-- ═══════════════════════════════════ COMPARISON TABLE -->
-  <section class="section" style="background:#fff;">
+  <section class="section" id="compare" style="background:#fff;">
     <div class="container">
-      <h2 class="section-heading text-center" data-reveal>Why SkillBridge wins</h2>
+      <h2 class="section-heading text-center" data-reveal>Why SkillBridge is different</h2>
+      <p class="section-sub text-center" data-reveal style="margin-top:-0.5rem;">Not another course platform.</p>
+
       <div class="table-wrap" data-reveal>
         <table class="compare-table">
           <thead>
@@ -719,60 +473,30 @@
             </tr>
           </thead>
           <tbody>
-            <tr class="trow"><td>Personalized AI Roadmap</td><td class="sb-col">✅ Unlimited</td><td>❌</td><td>❌</td><td>❌</td></tr>
-            <tr class="trow"><td>Real Company Projects</td><td class="sb-col">✅ 120+ Projects</td><td>❌</td><td>⚡ Generic</td><td>⚡ Basic</td></tr>
-            <tr class="trow"><td>Verified Skill Portfolio</td><td class="sb-col">✅ One-Click PDF</td><td>⚡ Manual</td><td>⚡ Certificate</td><td>❌</td></tr>
-            <tr class="trow"><td>Senior Mentorship</td><td class="sb-col">✅ 500+ Mentors</td><td>⚡ Paid</td><td>❌</td><td>❌</td></tr>
-            <tr class="trow"><td>Campus → Company Pipeline</td><td class="sb-col">✅ 500+ Partners</td><td>❌</td><td>❌</td><td>⚡ Limited</td></tr>
-            <tr class="trow"><td>Flowchart Download</td><td class="sb-col">✅ Free</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            <tr class="trow"><td>Personalized Roadmap</td><td class="sb-col">✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            <tr class="trow"><td>Skill Gap Analysis</td><td class="sb-col">✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            <tr class="trow"><td>Job Readiness Score</td><td class="sb-col">✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            <tr class="trow"><td>Verified Skill Portfolio</td><td class="sb-col">✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            <tr class="trow"><td>Daily Task Engine</td><td class="sb-col">✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            <tr class="trow"><td>Progress Tracking</td><td class="sb-col">✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+            <tr class="trow"><td>Career Outcome Focus</td><td class="sb-col">✅</td><td>❌</td><td>❌</td><td>✅</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════ FAQ -->
-  <section class="section" style="background:var(--bg);" id="faq">
-    <div class="container">
-      <h2 class="section-heading text-center" data-reveal>Got questions?</h2>
-      <div class="faq-list">
-        <div class="faq-item" data-reveal>
-          <button class="faq-q" id="faq-1">Is SkillBridge free to use? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><p>Yes! SkillBridge offers a comprehensive free plan — generate your first roadmap, access basic community features, and explore projects. Pro plans unlock advanced mentorship and premium project rewards.</p></div>
-        </div>
-        <div class="faq-item" data-reveal>
-          <button class="faq-q" id="faq-2">How does the AI roadmap actually work? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><p>Our AI analyzes current job listings, company-specific hiring patterns, your branch, and your current skill level to create a month-by-month learning plan that maximizes your placement chances.</p></div>
-        </div>
-        <div class="faq-item" data-reveal>
-          <button class="faq-q" id="faq-3">Can I really download my study flowchart? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><p>Absolutely. One-click export to a beautifully formatted PDF. Your flowchart includes all skills, timelines, resources, and project recommendations — personalized to you.</p></div>
-        </div>
-        <div class="faq-item" data-reveal>
-          <button class="faq-q" id="faq-4">Are the projects from real companies? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><p>Yes. Every project is sourced from actual engineering problems submitted by our 500+ hiring partners including Flipkart, Razorpay, CRED, and others. Completing them strengthens your portfolio substantially.</p></div>
-        </div>
-        <div class="faq-item" data-reveal>
-          <button class="faq-q" id="faq-5">How is this different from YouTube or Coursera? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><p>YouTube and Coursera give you content. SkillBridge gives you a strategy. We tell you what to learn, in what order, connect you with seniors who've done it, give you real projects, and help you get hired.</p></div>
-        </div>
-        <div class="faq-item" data-reveal>
-          <button class="faq-q" id="faq-6">How do I book a mentor session? <span class="faq-icon">+</span></button>
-          <div class="faq-a"><p>After signing up, go to the Mentors section, browse by skill or company, pick a time slot that works for you, and pay securely. Sessions start at ₹299 for 30 minutes.</p></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ═══════════════════════════════════ FINAL CTA -->
   <section class="cta-section">
+    <div class="cta-particles" aria-hidden="true" id="cta-particles"></div>
+    <div class="cta-glow" aria-hidden="true"></div>
     <div class="cta-inner">
-      <div class="pill pill-white-outline">Join 15L+ Students</div>
-      <h2 class="cta-heading">Your career doesn't start<br>after college.</h2>
-      <h3 class="cta-sub">It starts TODAY.</h3>
+      <div class="pill pill-white-outline">Start Free Today</div>
+      <h2 class="cta-heading">Start Your Career Journey Today</h2>
+      <p class="cta-sub">Join students who stopped guessing<br>and started building real career proof.</p>
       <div class="cta-btns">
-        <a href="auth.html" class="btn btn-cta-primary" id="cta-main">Build My Roadmap →</a>
-        <a href="#" class="btn btn-cta-outline" id="cta-pricing">See Pricing</a>
+        <a href="auth.html" class="btn btn-cta-primary" id="cta-main">Generate My Roadmap →</a>
+        <a href="#how" class="btn btn-cta-outline" id="cta-how">See How It Works</a>
       </div>
     </div>
   </section>
@@ -783,7 +507,7 @@
       <div class="footer-top">
         <div class="footer-brand">
           <div class="footer-logo">Skill<span>Bridge</span></div>
-          <p class="footer-tagline">Built for every Indian student.</p>
+          <p class="footer-tagline">Career navigation + skill verification.</p>
           <div class="social-icons" style="margin-top:16px;">
             <a href="#" class="social-icon" aria-label="Twitter" id="social-twitter">𝕏</a>
             <a href="#" class="social-icon" aria-label="LinkedIn" id="social-linkedin">in</a>
@@ -794,10 +518,10 @@
         <div class="footer-links-grid">
           <div class="footer-col">
             <h5>Product</h5>
+            <a href="#">Skill Gap Analyzer</a>
             <a href="#">Roadmap Builder</a>
-            <a href="#">Project Marketplace</a>
-            <a href="#">Mentor Connect</a>
-            <a href="#">Portfolio</a>
+            <a href="#">Job Readiness Score</a>
+            <a href="#">Verified Portfolio</a>
           </div>
           <div class="footer-col">
             <h5>Company</h5>
