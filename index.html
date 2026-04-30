@@ -37,10 +37,19 @@
 
   <!-- ═══════════════════════════════════ HERO -->
   <section class="hero" id="hero">
-    <div class="dot-grid" aria-hidden="true"></div>
+    <canvas id="edu-canvas" style="
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.12;
+    "></canvas>
+
     <div class="hero-orbs" aria-hidden="true">
-      <div class="orb orb-1"></div>
-      <div class="orb orb-2"></div>
+      <div class="orb hero-orb-1"></div>
+      <div class="orb hero-orb-2"></div>
+      <div class="orb hero-orb-3"></div>
     </div>
 
     <div class="hero-inner">
@@ -135,8 +144,9 @@
   </section>
 
   <!-- ═══════════════════════════════════ PROBLEM → SOLUTION -->
-  <section class="section problem-solution-section" id="problem" style="background:#F1F5F9;">
-    <div class="container">
+  <section class="section problem-solution-section" id="problem">
+    <div class="dot-texture" aria-hidden="true"></div>
+    <div class="container" style="position:relative;z-index:1;">
       <div style="text-align:center; margin-bottom:0.5rem;">
         <div class="section-pill pill-slate">WHY IT EXISTS</div>
       </div>
@@ -214,7 +224,7 @@
   </section>
 
   <!-- ═══════════════════════════════════ HOW IT WORKS -->
-  <section class="section" id="how" style="background:#fff;">
+  <section class="section" id="how" style="background:var(--cream-3, #FAF7F2);">
     <div class="container">
       <div style="text-align:center;margin-bottom:0.5rem;">
         <div class="section-pill pill-emerald">THE PROCESS</div>
@@ -270,7 +280,7 @@
   </section>
 
   <!-- ═══════════════════════════════════ CORE FEATURES -->
-  <section class="section" id="features" style="background:#F8FAFC;">
+  <section class="section" id="features" style="background:var(--cream, #F5F0E8);">
     <div class="container">
       <div style="text-align:center;margin-bottom:0.5rem;">
         <div class="section-pill pill-emerald">CORE FEATURES</div>
@@ -280,7 +290,7 @@
       <div class="features-grid">
         <!-- Card 1 -->
         <div class="feature-card" data-reveal>
-          <div class="fc-tag fc-tag-emerald">CORE ENGINE</div>
+          <div class="fc-tag fc-tag-core">CORE ENGINE</div>
           <div class="fc-icon-wrap emerald-circle">🔍</div>
           <h3 class="fc-title">Skill Gap Analyzer</h3>
           <p class="fc-desc">AI compares your current skills against actual job requirements. Tells you exactly what's missing.</p>
@@ -289,7 +299,7 @@
 
         <!-- Card 2 -->
         <div class="feature-card" data-reveal data-delay="80">
-          <div class="fc-tag fc-tag-emerald">AI POWERED</div>
+          <div class="fc-tag fc-tag-ai">AI POWERED</div>
           <div class="fc-icon-wrap emerald-circle">🗺️</div>
           <h3 class="fc-title">Personalized Roadmap</h3>
           <p class="fc-desc">Not a generic course list. A custom-built path based on your goal, level, and timeline.</p>
@@ -307,7 +317,7 @@
 
         <!-- Card 4 -->
         <div class="feature-card" data-reveal data-delay="240">
-          <div class="fc-tag fc-tag-emerald">TRUST SIGNAL</div>
+          <div class="fc-tag fc-tag-trust">TRUST SIGNAL</div>
           <div class="fc-icon-wrap emerald-circle">📊</div>
           <h3 class="fc-title">Job Readiness Score</h3>
           <p class="fc-desc">A single % score that tells you how close you are to being hireable. Watch it grow.</p>
@@ -456,7 +466,7 @@
   </section>
 
   <!-- ═══════════════════════════════════ COMPARISON TABLE -->
-  <section class="section" id="compare" style="background:#fff;">
+  <section class="section" id="compare" style="background:var(--cream-3, #FAF7F2);">
     <div class="container">
       <h2 class="section-heading text-center" data-reveal>Why SkillBridge is different</h2>
       <p class="section-sub text-center" data-reveal style="margin-top:-0.5rem;">Not another course platform.</p>
@@ -553,5 +563,73 @@
   </footer>
 
   <script src="scripts/landing.js"></script>
+
+  <!-- ═══ EDU CANVAS ANIMATION ══════════════════════════════ -->
+  <script>
+  (function() {
+    const canvas = document.getElementById('edu-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const symbols = [
+      '⌨', '{ }', '</>', '⚡', '★',
+      '∑', 'AI', '01', '∞', '#',
+      'ML', '→', '◈', 'JS', 'Py',
+      '[]', '( )', '✓', '≈', 'SQL',
+      'API', 'Git', 'CSS', 'DSA', '%'
+    ];
+
+    const particles = [];
+    const COUNT = 35;
+    for (let i = 0; i < COUNT; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        symbol: symbols[Math.floor(Math.random() * symbols.length)],
+        size: Math.random() * 14 + 10,
+        speedX: (Math.random() - 0.5) * 0.4,
+        speedY: (Math.random() - 0.5) * 0.4,
+        opacity: Math.random() * 0.6 + 0.2,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.005,
+        color: Math.random() > 0.7 ? '#059669' : '#0D0D0D'
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(function(p) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        ctx.font = p.size + 'px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.symbol, 0, 0);
+        ctx.restore();
+
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.rotation += p.rotSpeed;
+
+        if (p.x < -50)                 p.x = canvas.width  + 50;
+        if (p.x > canvas.width  + 50)  p.x = -50;
+        if (p.y < -50)                 p.y = canvas.height + 50;
+        if (p.y > canvas.height + 50)  p.y = -50;
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+  </script>
 </body>
 </html>

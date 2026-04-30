@@ -23,6 +23,45 @@
     <link rel="stylesheet" href="styles/animations.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
+      const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // Auth guard on dashboard
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) {
+          // Not logged in → back to auth
+          window.location.href = 'auth.html';
+        } else {
+          // Load user data
+          loadUserData(session.user);
+        }
+      });
+
+      async function loadUserData(user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          // Update dashboard with real name
+          const nameEl = document.getElementById('user-name');
+          if (nameEl) nameEl.textContent = profile.full_name || user.email;
+
+          const greetEl = document.getElementById('greeting');
+          if (greetEl) greetEl.textContent = 'Welcome back, ' + (profile.full_name?.split(' ')[0] || 'Student') + ' 👋';
+        }
+      }
+
+      // Logout function
+      async function logout() {
+        await supabase.auth.signOut();
+        window.location.href = 'auth.html';
+      }
+    </script>
     <style>
         .sidebar { width: 280px; transition: width 0.3s ease; }
         .sidebar.collapsed { width: 80px; }
@@ -111,10 +150,10 @@
         <div class="mt-auto pt-6 border-t border-border flex items-center gap-4">
             <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">AD</div>
             <div class="sidebar-text">
-                <p class="text-sm font-bold">Anil Das</p>
+                <p id="user-name" class="text-sm font-bold">Anil Das</p>
                 <p class="text-xs text-text-muted">Pro Access</p>
             </div>
-            <button class="ml-auto text-text-muted hover:text-primary">
+            <button onclick="logout()" class="ml-auto text-text-muted hover:text-primary">
                 <i data-lucide="log-out" class="w-5 h-5"></i>
             </button>
         </div>
@@ -126,7 +165,7 @@
         <!-- Top Bar -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-                <h1 class="text-2xl lg:text-3xl">Welcome back, <span id="user-display-name">Anil</span> 👋</h1>
+                <h1 id="greeting" class="text-2xl lg:text-3xl">Welcome back, <span id="user-display-name">Anil</span> 👋</h1>
                 <p class="text-text-muted text-sm" id="dashboard-date">Today is Saturday, April 18, 2026</p>
             </div>
             <div class="flex items-center gap-4">

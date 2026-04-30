@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Join SkillBridge | Access Your Career Path</title>
-  
+
   <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+  <script src="https://jmogxwejdrkqsrmpxxya.supabase.co"></script>
+
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/animations.css">
@@ -48,7 +51,9 @@
     }
 
     @media (max-width: 768px) {
-      .left-panel { display: none; }
+      .left-panel {
+        display: none;
+      }
     }
 
     /* Background Orbs */
@@ -59,35 +64,56 @@
       z-index: 0;
       pointer-events: none;
     }
+
     .orb-1 {
-      top: -100px; left: -100px;
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(5,150,105,0.2) 0%, transparent 70%);
+      top: -100px;
+      left: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(5, 150, 105, 0.2) 0%, transparent 70%);
       animation: orbFloat 15s infinite alternate ease-in-out;
     }
+
     .orb-2 {
-      bottom: -100px; right: -100px;
-      width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%);
+      bottom: -100px;
+      right: -100px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(52, 211, 153, 0.12) 0%, transparent 70%);
       animation: orbFloat 20s infinite alternate-reverse ease-in-out;
     }
+
     @keyframes orbFloat {
-      0% { transform: scale(1) translate(0,0); opacity: 0.6; }
-      100% { transform: scale(1.2) translate(40px, 40px); opacity: 0.9; }
+      0% {
+        transform: scale(1) translate(0, 0);
+        opacity: 0.6;
+      }
+
+      100% {
+        transform: scale(1.2) translate(40px, 40px);
+        opacity: 0.9;
+      }
     }
 
     /* Dot Grid */
     .dot-grid-overlay {
-      position: absolute; inset: 0;
-      background-image: radial-gradient(circle, rgba(52,211,153,0.08) 1px, transparent 1px);
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(52, 211, 153, 0.08) 1px, transparent 1px);
       background-size: 32px 32px;
       z-index: 1;
       pointer-events: none;
       animation: gridShift 60s linear infinite;
     }
+
     @keyframes gridShift {
-      from { background-position: 0 0; }
-      to { background-position: 100% 100%; }
+      from {
+        background-position: 0 0;
+      }
+
+      to {
+        background-position: 100% 100%;
+      }
     }
 
     .panel-inner {
@@ -106,7 +132,11 @@
       color: #fff;
       text-decoration: none;
     }
-    .brand-logo span { color: var(--emerald); }
+
+    .brand-logo span {
+      color: var(--emerald);
+    }
+
     .brand-tagline {
       color: var(--slate-400);
       font-size: 0.9rem;
@@ -125,25 +155,79 @@
       position: absolute;
       background: rgba(30, 41, 59, 0.7);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 16px;
       padding: 16px;
       width: 240px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       color: #fff;
     }
 
-    .card-a { top: 15%; left: 10%; border-left: 4px solid var(--emerald); animation: float-a 6s infinite ease-in-out; }
-    .card-b { top: 40%; right: 5%; animation: float-b 8s infinite ease-in-out; }
-    .card-c { bottom: 20%; left: 8%; animation: float-c 7s infinite ease-in-out; }
-    .card-d { top: 10%; right: 15%; width: auto; animation: float-a 5s infinite ease-in-out; }
+    .card-a {
+      top: 15%;
+      left: 10%;
+      border-left: 4px solid var(--emerald);
+      animation: float-a 6s infinite ease-in-out;
+    }
 
-    @keyframes float-a { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-    @keyframes float-b { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-    @keyframes float-c { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    .card-b {
+      top: 40%;
+      right: 5%;
+      animation: float-b 8s infinite ease-in-out;
+    }
+
+    .card-c {
+      bottom: 20%;
+      left: 8%;
+      animation: float-c 7s infinite ease-in-out;
+    }
+
+    .card-d {
+      top: 10%;
+      right: 15%;
+      width: auto;
+      animation: float-a 5s infinite ease-in-out;
+    }
+
+    @keyframes float-a {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+
+    @keyframes float-b {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-20px);
+      }
+    }
+
+    @keyframes float-c {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-12px);
+      }
+    }
 
     .pulse-dot {
-      width: 8px; height: 8px;
+      width: 8px;
+      height: 8px;
       background: var(--emerald);
       border-radius: 50%;
       display: inline-block;
@@ -151,7 +235,23 @@
       box-shadow: 0 0 10px var(--emerald);
       animation: pulse 2s infinite;
     }
-    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
 
     /* Skill Badges */
     .skill-badge {
@@ -166,29 +266,56 @@
       pointer-events: none;
       z-index: 4;
     }
-    .sb-1 { top: 30%; left: 40%; animation: float-b 10s infinite; }
-    .sb-2 { top: 60%; right: 35%; animation: float-a 12s infinite; }
-    .sb-3 { bottom: 40%; left: 45%; animation: float-c 9s infinite; }
-    .sb-4 { top: 15%; left: 60%; animation: float-b 11s infinite; }
+
+    .sb-1 {
+      top: 30%;
+      left: 40%;
+      animation: float-b 10s infinite;
+    }
+
+    .sb-2 {
+      top: 60%;
+      right: 35%;
+      animation: float-a 12s infinite;
+    }
+
+    .sb-3 {
+      bottom: 40%;
+      left: 45%;
+      animation: float-c 9s infinite;
+    }
+
+    .sb-4 {
+      top: 15%;
+      left: 60%;
+      animation: float-b 11s infinite;
+    }
 
     /* Terminal */
     .terminal-widget {
       width: 100%;
       max-width: 440px;
       background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       overflow: hidden;
       margin: 0 auto;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
     }
+
     .term-header {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       padding: 10px 16px;
       display: flex;
       gap: 6px;
     }
-    .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .term-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
     .term-body {
       padding: 20px;
       font-family: 'JetBrains Mono', monospace;
@@ -196,8 +323,28 @@
       color: var(--emerald);
       min-height: 180px;
     }
-    .cursor-blink { display: inline-block; width: 8px; height: 16px; background: var(--emerald); margin-left: 4px; animation: blink 1s step-end infinite; vertical-align: middle; }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .cursor-blink {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background: var(--emerald);
+      margin-left: 4px;
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
 
     /* Stats */
     .stats-row {
@@ -207,6 +354,7 @@
       justify-content: center;
       margin-top: 24px;
     }
+
     .stat-item {
       color: #fff;
       font-size: 0.85rem;
@@ -215,7 +363,13 @@
       align-items: center;
       gap: 8px;
     }
-    .stat-sep { width: 4px; height: 4px; background: var(--emerald); border-radius: 50%; }
+
+    .stat-sep {
+      width: 4px;
+      height: 4px;
+      background: var(--emerald);
+      border-radius: 50%;
+    }
 
     /* ── RIGHT PANEL ────────────────────────────────────────── */
     .right-panel {
@@ -229,7 +383,11 @@
     }
 
     @media (max-width: 768px) {
-      .right-panel { flex: 1; width: 100%; padding: 24px; }
+      .right-panel {
+        flex: 1;
+        width: 100%;
+        padding: 24px;
+      }
     }
 
     .form-container {
@@ -237,9 +395,22 @@
       max-width: 440px;
     }
 
-    .welcome-text { margin-bottom: 32px; }
-    .welcome-text h1 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--slate-900); margin-bottom: 8px; }
-    .welcome-text p { color: var(--slate-500); font-size: 0.95rem; }
+    .welcome-text {
+      margin-bottom: 32px;
+    }
+
+    .welcome-text h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      margin-bottom: 8px;
+    }
+
+    .welcome-text p {
+      color: var(--slate-500);
+      font-size: 0.95rem;
+    }
 
     /* Tab Switcher */
     .tab-switcher {
@@ -249,6 +420,7 @@
       border-radius: 12px;
       margin-bottom: 24px;
     }
+
     .tab-btn {
       flex: 1;
       padding: 10px;
@@ -260,22 +432,51 @@
       text-align: center;
       transition: all 0.25s;
     }
+
     .tab-btn.active {
       background: #fff;
       color: var(--emerald);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
 
     /* Form Styles */
-    .auth-form { display: none; }
-    .auth-form.active { display: block; }
+    .auth-form {
+      display: none;
+    }
 
-    .input-group { margin-bottom: 18px; position: relative; }
-    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--slate-900); margin-bottom: 6px; }
-    .input-wrapper { position: relative; }
-    .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--slate-400); width: 18px; height: 18px; }
-    
-    input, select {
+    .auth-form.active {
+      display: block;
+    }
+
+    .input-group {
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--slate-900);
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--slate-400);
+      width: 18px;
+      height: 18px;
+    }
+
+    input,
+    select {
       width: 100%;
       background: #F8FAFC;
       border: 1px solid #E2E8F0;
@@ -287,7 +488,9 @@
       outline: none;
       transition: all 0.2s;
     }
-    input:focus, select:focus {
+
+    input:focus,
+    select:focus {
       border-color: var(--emerald);
       box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08);
       background: #fff;
@@ -295,7 +498,8 @@
 
     .eye-toggle {
       position: absolute;
-      right: 14px; top: 50%;
+      right: 14px;
+      top: 50%;
       transform: translateY(-50%);
       color: var(--slate-400);
       cursor: pointer;
@@ -304,12 +508,33 @@
       align-items: center;
       padding: 0;
     }
-    .eye-toggle:hover { color: var(--emerald); }
+
+    .eye-toggle:hover {
+      color: var(--emerald);
+    }
 
     /* Strength Bar */
-    .strength-meter { height: 4px; border-radius: 10px; background: #E2E8F0; margin-top: 8px; overflow: hidden; }
-    .strength-bar { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
-    .strength-text { font-size: 10px; font-weight: 700; text-transform: uppercase; margin-top: 4px; display: block; }
+    .strength-meter {
+      height: 4px;
+      border-radius: 10px;
+      background: #E2E8F0;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .strength-bar {
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    .strength-text {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 4px;
+      display: block;
+    }
 
     /* Button Styles */
     .submit-btn {
@@ -328,14 +553,43 @@
       justify-content: center;
       gap: 8px;
     }
-    .submit-btn:hover { background: var(--emerald-dark); transform: translateY(-1px); box-shadow: var(--shadow-emerald); }
-    .submit-btn:active { transform: scale(0.98); }
+
+    .submit-btn:hover {
+      background: var(--emerald-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-emerald);
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
 
     /* Auth Providers */
-    .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; color: var(--slate-400); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #E2E8F0; }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+      color: var(--slate-400);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
 
-    .oauth-row { display: flex; gap: 12px; }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #E2E8F0;
+    }
+
+    .oauth-row {
+      display: flex;
+      gap: 12px;
+    }
+
     .oauth-btn {
       flex: 1;
       height: 46px;
@@ -349,29 +603,97 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .google-btn { background: #fff; border: 1px solid #E2E8F0; color: var(--slate-900); }
-    .google-btn:hover { background: #F8FAFC; border-color: var(--slate-300); }
-    .github-btn { background: #0F172A; color: #fff; }
-    .github-btn:hover { background: #1E293B; }
+
+    .google-btn {
+      background: #fff;
+      border: 1px solid #E2E8F0;
+      color: var(--slate-900);
+    }
+
+    .google-btn:hover {
+      background: #F8FAFC;
+      border-color: var(--slate-300);
+    }
+
+    .github-btn {
+      background: #0F172A;
+      color: #fff;
+    }
+
+    .github-btn:hover {
+      background: #1E293B;
+    }
 
     /* Checkbox */
-    .checkbox-group { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; }
-    .checkbox-group input { width: 18px; height: 18px; margin-top: 2px; cursor: pointer; accent-color: var(--emerald); padding: 0; }
-    .checkbox-group label { font-size: 0.85rem; color: var(--slate-500); line-height: 1.4; }
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: var(--emerald);
+      padding: 0;
+    }
+
+    .checkbox-group label {
+      font-size: 0.85rem;
+      color: var(--slate-500);
+      line-height: 1.4;
+    }
 
     /* Messages */
-    #auth-message { margin-top: 16px; min-height: 48px; }
-    .msg { padding: 12px 16px; border-radius: 10px; font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 10px; }
-    .msg.loading { background: #F0FDF4; color: #059669; }
-    .msg.error { background: #FEF2F2; color: #DC2626; }
-    .msg.success { background: #F0FDF4; color: #059669; }
+    #auth-message {
+      margin-top: 16px;
+      min-height: 48px;
+    }
+
+    .msg {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .msg.loading {
+      background: #F0FDF4;
+      color: #059669;
+    }
+
+    .msg.error {
+      background: #FEF2F2;
+      color: #DC2626;
+    }
+
+    .msg.success {
+      background: #F0FDF4;
+      color: #059669;
+    }
 
     /* Custom scrollbar for college dropdown */
-    #college-dropdown::-webkit-scrollbar { width: 4px; }
-    #college-dropdown::-webkit-scrollbar-track { background: #f1f1f1; }
-    #college-dropdown::-webkit-scrollbar-thumb { background: var(--emerald); border-radius: 10px; }
+    #college-dropdown::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #college-dropdown::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    #college-dropdown::-webkit-scrollbar-thumb {
+      background: var(--emerald);
+      border-radius: 10px;
+    }
   </style>
 </head>
+
 <body>
 
   <div class="auth-layout">
@@ -396,8 +718,16 @@
         <div class="f-card card-b">
           <p style="font-weight:700; font-size:0.8rem; margin-bottom:12px;">📊 Your Progress</p>
           <div style="font-size:0.7rem; color:var(--slate-300);">
-            <div style="margin-bottom:8px;">React.js <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:4px;"><div style="width:80%; height:100%; background:var(--emerald); border-radius:10px;"></div></div></div>
-            <div style="margin-bottom:8px;">Python <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:4px;"><div style="width:60%; height:100%; background:var(--emerald); border-radius:10px;"></div></div></div>
+            <div style="margin-bottom:8px;">React.js <div
+                style="height:4px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:4px;">
+                <div style="width:80%; height:100%; background:var(--emerald); border-radius:10px;"></div>
+              </div>
+            </div>
+            <div style="margin-bottom:8px;">Python <div
+                style="height:4px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:4px;">
+                <div style="width:60%; height:100%; background:var(--emerald); border-radius:10px;"></div>
+              </div>
+            </div>
             <p style="font-weight:600; color:#fff; margin-top:10px;">67% complete</p>
           </div>
         </div>
@@ -405,7 +735,9 @@
         <div class="f-card card-c">
           <p style="font-weight:700; font-size:0.8rem; margin-bottom:12px;">🤝 Mentor Session</p>
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-            <div style="width:32px; height:32px; background:linear-gradient(135deg,#059669,#0F172A); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800;">RK</div>
+            <div
+              style="width:32px; height:32px; background:linear-gradient(135deg,#059669,#0F172A); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800;">
+              RK</div>
             <div>
               <p style="font-size:0.8rem; font-weight:700;">Rahul Kumar</p>
               <p style="font-size:0.65rem; color:var(--slate-400);">Google SDE-2</p>
@@ -465,12 +797,12 @@
         </div>
 
         <div class="tab-switcher">
-          <div class="tab-btn active" id="tab-login-btn">Sign In</div>
-          <div class="tab-btn" id="tab-signup-btn">Sign Up</div>
+          <div class="tab-btn active" id="tab-signin">Sign In</div>
+          <div class="tab-btn" id="tab-signup">Sign Up</div>
         </div>
 
         <!-- SIGN IN FORM -->
-        <form class="auth-form active" id="signin-form" onsubmit="handleSignIn(event)">
+        <form class="auth-form active" id="form-signin">
           <div class="input-group">
             <label>Email Address</label>
             <div class="input-wrapper">
@@ -496,7 +828,7 @@
         </form>
 
         <!-- SIGN UP FORM -->
-        <form class="auth-form" id="signup-form" onsubmit="handleSignUp(event)">
+        <form class="auth-form" id="form-signup">
           <div class="input-group">
             <label>Full Name</label>
             <div class="input-wrapper">
@@ -508,28 +840,23 @@
             <label>Email Address</label>
             <div class="input-wrapper">
               <i data-lucide="mail"></i>
-              <input type="email" id="email" placeholder="john@example.com" required>
+              <input type="email" id="signup-email" placeholder="john@example.com" required>
             </div>
           </div>
           <div class="input-group">
             <label>Set Password</label>
             <div class="input-wrapper">
               <i data-lucide="lock"></i>
-              <input type="password" id="password" placeholder="••••••••" required oninput="checkStrength(this.value)">
+              <input type="password" id="signup-password" placeholder="••••••••" required>
               <button type="button" class="eye-toggle"><i data-lucide="eye"></i></button>
             </div>
-            <div class="strength-meter">
-              <div class="strength-bar" id="strength-bar"></div>
-            </div>
-            <span class="strength-text" id="strength-text">Empty</span>
           </div>
 
           <div class="input-group">
             <label>College Name</label>
             <div class="input-wrapper" style="position:relative;">
               <i data-lucide="graduation-cap"></i>
-              <input type="text" id="college" placeholder="Search your college..." autocomplete="off" oninput="searchColleges(this.value)" onblur="setTimeout(hideDropdown, 200)" required>
-              <div id="college-dropdown" style="position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid #E2E8F0; border-top:none; border-radius:0 0 10px 10px; max-height:220px; overflow-y:auto; z-index:999; display:none; box-shadow:0 8px 24px rgba(0,0,0,0.08);"></div>
+              <input type="text" id="college" placeholder="Search your college..." autocomplete="off" required>
             </div>
           </div>
 
@@ -565,7 +892,8 @@
 
           <div class="checkbox-group">
             <input type="checkbox" id="terms" required checked>
-            <label for="terms">I agree to the <a href="#" style="color:var(--emerald); font-weight:700;">Terms of Service</a> & <a href="#" style="color:var(--emerald); font-weight:700;">Privacy Policy</a></label>
+            <label for="terms">I agree to the <a href="#" style="color:var(--emerald); font-weight:700;">Terms of
+                Service</a> & <a href="#" style="color:var(--emerald); font-weight:700;">Privacy Policy</a></label>
           </div>
 
           <button type="submit" class="submit-btn" id="signup-submit" style="margin-top:24px;">
@@ -576,14 +904,16 @@
         <div class="divider">or continue with</div>
 
         <div class="oauth-row">
-          <div class="oauth-btn google-btn" onclick="signInWithGoogle()">
+          <button class="oauth-btn google-btn" onclick="signInWithGoogle()" type="button"
+            style="cursor: pointer; z-index: 10; position: relative;">
             <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" height="18" alt="G">
             <span>Google</span>
-          </div>
-          <div class="oauth-btn github-btn" onclick="signInWithGitHub()">
+          </button>
+          <button class="oauth-btn github-btn" onclick="signInWithGitHub()" type="button"
+            style="cursor: pointer; z-index: 10; position: relative;">
             <i data-lucide="github" style="width:18px; height:18px;"></i>
             <span>GitHub</span>
-          </div>
+          </button>
         </div>
 
         <div id="auth-message"></div>
@@ -595,21 +925,122 @@
   <script>
     lucide.createIcons();
 
-    /* ── AUTH LOGIC (Supabase) ─────────────────────────────── */
+    // Tab switching — fix
+    const tabSignIn = document.getElementById('tab-signin');
+    const tabSignUp = document.getElementById('tab-signup');
+    const formSignIn = document.getElementById('form-signin');
+    const formSignUp = document.getElementById('form-signup');
+
+    function showSignIn() {
+      // Show sign in form
+      formSignIn.style.display = 'block';
+      formSignUp.style.display = 'none';
+      // Active tab styles
+      tabSignIn.style.background = '#fff';
+      tabSignIn.style.color = '#059669';
+      tabSignIn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+
+      tabSignUp.style.background = 'transparent';
+      tabSignUp.style.color = '#6B7280';
+      tabSignUp.style.boxShadow = 'none';
+
+      document.getElementById('form-title').textContent = "Welcome back 👋";
+      document.getElementById('form-subtitle').textContent = "Sign in to continue your journey";
+    }
+
+    function showSignUp() {
+      // Show sign up form
+      formSignIn.style.display = 'none';
+      formSignUp.style.display = 'block';
+      // Active tab styles
+      tabSignUp.style.background = '#fff';
+      tabSignUp.style.color = '#059669';
+      tabSignUp.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+
+      tabSignIn.style.background = 'transparent';
+      tabSignIn.style.color = '#6B7280';
+      tabSignIn.style.boxShadow = 'none';
+
+      document.getElementById('form-title').textContent = "Create Account 🚀";
+      document.getElementById('form-subtitle').textContent = "Join 15L+ students today";
+    }
+
+    // Attach click events
+    tabSignIn.addEventListener('click', showSignIn);
+    tabSignUp.addEventListener('click', showSignUp);
+
+    // Check URL param — if ?tab=signup show signup
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'signup') {
+      showSignUp();
+    } else {
+      showSignIn();
+    }
+  </script>
+
+  <script>
+    // ── CONFIG ──────────────────────────────
     const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function handleSignUp(e) {
-      e.preventDefault();
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const college = document.getElementById('college').value;
-      const branch = document.getElementById('branch').value;
-      const dreamJob = document.getElementById('dreamjob').value;
+    // ── AUTH GUARD ──────────────────────────
+    // If already logged in → go to dashboard
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        window.location.href = 'dashboard.html';
+      }
+    });
 
-      showLoading('Creating your account...');
+    // ── SIGN IN ─────────────────────────────
+    document.getElementById('form-signin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('signin-email').value.trim();
+      const password = document.getElementById('signin-password').value;
+
+      if (!email || !password) {
+        showMsg('signin', 'error', '❌ Fill all fields');
+        return;
+      }
+
+      showMsg('signin', 'loading', '⏳ Signing you in...');
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email, password
+      });
+
+      if (error) {
+        showMsg('signin', 'error', '❌ ' + error.message);
+      } else {
+        showMsg('signin', 'success', '✅ Welcome back! Redirecting...');
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1000);
+      }
+    });
+
+    // ── SIGN UP ─────────────────────────────
+    document.getElementById('form-signup').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const college = document.getElementById('college').value.trim();
+      const branch = document.getElementById('branch').value;
+      const dreamJob = document.getElementById('dreamjob').value.trim();
+
+      if (!name || !email || !password || !college || !branch) {
+        showMsg('signup', 'error', '❌ Please fill all required fields');
+        return;
+      }
+      if (password.length < 6) {
+        showMsg('signup', 'error', '❌ Password must be 6+ characters');
+        return;
+      }
+
+      showMsg('signup', 'loading', '⏳ Creating your account...');
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -625,164 +1056,49 @@
       });
 
       if (error) {
-        showError(error.message);
-      } else {
-        if (data.user) {
-          await supabase.from('profiles').upsert({
-            id: data.user.id,
-            full_name: name,
-            email: email,
-            college_name: college,
-            branch: branch,
-            dream_job: dreamJob
-          });
-        }
-        showSuccess('Account created! Check your email.');
+        showMsg('signup', 'error', '❌ ' + error.message);
+        return;
+      }
+
+      // Save to profiles table
+      if (data.user) {
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          full_name: name,
+          email: email,
+          college_name: college,
+          branch: branch,
+          dream_job: dreamJob
+        });
+
+        showMsg('signup', 'success', '✅ Account created! Redirecting...');
         setTimeout(() => {
           window.location.href = 'dashboard.html';
-        }, 1500);
+        }, 1200);
       }
-    }
+    });
 
-    async function handleSignIn(e) {
-      e.preventDefault();
-      const email = document.getElementById('signin-email').value;
-      const password = document.getElementById('signin-password').value;
-
-      showLoading('Signing you in...');
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        showError(error.message);
-      } else {
-        showSuccess('Welcome back!');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1000);
-      }
-    }
-
+    // ── GOOGLE OAUTH ────────────────────────
     async function signInWithGoogle() {
+      showMsg('signin', 'loading', '⏳ Opening Google...');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin + '/dashboard.html'
         }
       });
-      if (error) showError(error.message);
+      if (error) showMsg('signin', 'error', '❌ ' + error.message);
     }
 
+    // ── GITHUB OAUTH ────────────────────────
     async function signInWithGitHub() {
+      showMsg('signin', 'loading', '⏳ Opening GitHub...');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
           redirectTo: window.location.origin + '/dashboard.html'
         }
       });
-      if (error) showError(error.message);
-    }
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = 'dashboard.html';
-    });
-
-    function showLoading(msg) {
-      document.getElementById('auth-message').innerHTML = `<div class="msg loading">⏳ ${msg}</div>`;
-    }
-    function showError(msg) {
-      document.getElementById('auth-message').innerHTML = `<div class="msg error">❌ ${msg}</div>`;
-    }
-    function showSuccess(msg) {
-      document.getElementById('auth-message').innerHTML = `<div class="msg success">✅ ${msg}</div>`;
-    }
-
-    /* ── COLLEGE SEARCH ───────────────────────────────────── */
-    let allColleges = [];
-    fetch('https://raw.githubusercontent.com/cbsudux/India-colleges-api/master/data/colleges.json')
-      .then(res => res.json())
-      .then(data => { allColleges = data.map(c => c.name); })
-      .catch(() => {
-        allColleges = ["IIT Bombay","IIT Delhi","IIT Madras","IIT Kanpur","NIT Trichy","NIT Warangal","BITS Pilani","VIT Vellore","Other"];
-      });
-
-    function searchColleges(query) {
-      const dropdown = document.getElementById('college-dropdown');
-      if (query.length < 2) {
-        dropdown.style.display = 'none';
-        return;
-      }
-      const filtered = allColleges
-        .filter(c => c.toLowerCase().includes(query.toLowerCase()))
-        .slice(0, 10);
-
-      if (!filtered.length) {
-        dropdown.style.display = 'none';
-        return;
-      }
-      dropdown.innerHTML = filtered.map(college => `
-        <div onclick="selectCollege('${college.replace(/'/g,"\\'")}')" style="padding:10px 14px; cursor:pointer; font-size:13px; color:#0F172A; border-bottom:1px solid #F1F5F9; transition:background 150ms;" onmouseover="this.style.background='#F0FDF4'" onmouseout="this.style.background='white'">🎓 ${college}</div>
-      `).join('');
-      dropdown.style.display = 'block';
-    }
-
-    function selectCollege(name) {
-      document.getElementById('college').value = name;
-      document.getElementById('college-dropdown').style.display = 'none';
-    }
-
-    function hideDropdown() {
-      document.getElementById('college-dropdown').style.display = 'none';
-    }
-
-    /* ── UI LOGIC ─────────────────────────────────────────── */
-    // Tab switching
-    const loginBtn = document.getElementById('tab-login-btn');
-    const signupBtn = document.getElementById('tab-signup-btn');
-    const signinForm = document.getElementById('signin-form');
-    const signupForm = document.getElementById('signup-form');
-    const formTitle = document.getElementById('form-title');
-    const formSubtitle = document.getElementById('form-subtitle');
-
-    loginBtn.onclick = () => {
-      loginBtn.classList.add('active');
-      signupBtn.classList.remove('active');
-      signinForm.classList.add('active');
-      signupForm.classList.remove('active');
-      formTitle.textContent = "Welcome back 👋";
-      formSubtitle.textContent = "Sign in to continue your journey";
-    };
-
-    signupBtn.onclick = () => {
-      signupBtn.classList.add('active');
-      loginBtn.classList.remove('active');
-      signupForm.classList.add('active');
-      signinForm.classList.remove('active');
-      formTitle.textContent = "Create Account 🚀";
-      formSubtitle.textContent = "Join 15L+ students today";
-    };
-
-    // Password strength
-    function checkStrength(password) {
-      const bar = document.getElementById('strength-bar');
-      const text = document.getElementById('strength-text');
-      let strength = 0;
-      if (password.length > 5) strength++;
-      if (password.match(/[A-Z]/)) strength++;
-      if (password.match(/[0-9]/)) strength++;
-      if (password.match(/[^A-Za-z0-9]/)) strength++;
-
-      const colors = ['#E2E8F0', '#DC2626', '#F59E0B', '#10B981', '#10B981'];
-      const labels = ['Empty', 'Weak', 'Fair', 'Strong', 'Excellent'];
-      const widths = ['0%', '25%', '50%', '75%', '100%'];
-
-      bar.style.width = widths[strength];
-      bar.style.background = colors[strength];
-      text.textContent = labels[strength];
-      text.style.color = colors[strength];
     }
 
     // Eye toggle
@@ -821,10 +1137,10 @@
       div.style.color = lines[lineIdx].color;
       div.style.marginBottom = "8px";
       termBody.appendChild(div);
-      
+
       let charIdx = 0;
       const text = lines[lineIdx].text;
-      
+
       function typeChar() {
         if (charIdx < text.length) {
           div.textContent += text[charIdx];
@@ -840,4 +1156,5 @@
     setTimeout(typeLine, 1000);
   </script>
 </body>
+
 </html>

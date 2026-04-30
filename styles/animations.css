@@ -47,15 +47,15 @@
   overflow: hidden;
 }
 
-/* ── Glow pulse for CTA ───────────────────────────────────── */
-.btn-primary {
-  animation: glowPulse 3s ease-in-out infinite;
+/* ── Glow pulse for nav CTA ──────────────────────────────── */
+.nav-cta {
+  animation: navCtaGlow 3s ease-in-out infinite;
 }
-.btn-primary:hover { animation: none; }
+.nav-cta:hover { animation: none; }
 
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 8px 24px rgba(5,150,105,0.25); }
-  50%       { box-shadow: 0 8px 32px rgba(5,150,105,0.45); }
+@keyframes navCtaGlow {
+  0%, 100% { box-shadow: 0 4px 14px rgba(5,150,105,0.25); }
+  50%       { box-shadow: 0 4px 20px rgba(5,150,105,0.45); }
 }
 
 /* ── Floating badge animations (hero) ────────────────────── */
@@ -158,5 +158,5 @@
 
 /* ── Scrollbar emerald thumb ──────────────────────────────── */
 ::-webkit-scrollbar        { width: 5px; }
-::-webkit-scrollbar-track  { background: #F8FAFC; }
+::-webkit-scrollbar-track  { background: var(--cream-2, #EDE8DC); }
 ::-webkit-scrollbar-thumb  { background: #059669; border-radius: 10px; }

@@ -27,3 +27,17 @@ if (signupForm) {
         window.location.href = 'dashboard.html';
     };
 }
+
+// Google OAuth
+const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+        redirectTo: 'http://127.0.0.1:5500/dashboard.html'
+    }
+});
+
+// Sign In success
+setTimeout(() => {
+    window.location.href =
+        'http://127.0.0.1:5500/dashboard.html';
+}, 1000);

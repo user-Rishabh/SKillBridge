@@ -1,0 +1,214 @@
+/* 
+   SkillBridge AI - Premium Design System
+   Theme: Cream + Black + Green Accent
+   Author: Antigravity
+*/
+
+:root {
+    /* Color Palette — Cream + Black + Emerald */
+    --cream:        #F5F0E8;
+    --cream-2:      #EDE8DC;
+    --cream-3:      #FAF7F2;
+    --black:        #0D0D0D;
+    --black-2:      #1A1A1A;
+    --black-3:      #2A2A2A;
+    --emerald:      #059669;
+    --emerald-dark: #047857;
+    --emerald-light:#D1FAE5;
+    --emerald-glow: rgba(5,150,105,0.15);
+    --mint:         #34D399;
+    --gold:         #D4A843;
+    --text-primary: #0D0D0D;
+    --text-muted:   #6B6560;
+    --text-light:   #9E9890;
+    --border:       rgba(13,13,13,0.1);
+    --border-strong:rgba(13,13,13,0.2);
+    
+    /* Typography */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading: 'Plus Jakarta Sans', var(--font-family);
+    
+    /* Shadows & Effects */
+    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 10px -2px rgba(0, 0, 0, 0.03);
+    --shadow-medium: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 12px -4px rgba(0, 0, 0, 0.04);
+    
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+
+    /* Spacing */
+    --space-xs: 0.5rem;
+    --space-sm: 1rem;
+    --space-md: 1.5rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--cream);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+p {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* Typography Utilities */
+.text-emerald { color: var(--emerald); }
+.text-muted { color: var(--text-muted); }
+.font-bold { font-weight: 700; }
+.font-medium { font-weight: 500; }
+
+/* 🧩 UI Elements */
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 1px solid transparent;
+    text-decoration: none;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background-color: var(--black);
+    color: var(--cream);
+}
+
+.btn-primary:hover {
+    background-color: var(--emerald);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.btn-outline {
+    background: transparent;
+    border-color: var(--black);
+    color: var(--black);
+    border-width: 1.5px;
+}
+
+.btn-outline:hover {
+    background: var(--black);
+    color: var(--cream);
+}
+
+/* Cards */
+.card {
+    background: #FDFAF5;
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-medium);
+}
+
+/* Inputs */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: var(--space-md);
+}
+
+.input-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: #FDFAF5;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--emerald);
+    box-shadow: 0 0 0 4px var(--emerald-glow);
+}
+
+/* Progress Indicators */
+.progress-track {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--emerald);
+    border-radius: var(--radius-full);
+    transition: width 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Nav Links & Hover states */
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--emerald);
+}
+
+/* Section Header */
+.section-header {
+    margin-bottom: var(--space-xl);
+    text-align: center;
+}
+
+.section-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--emerald);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-sm);
+}
