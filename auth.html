@@ -7,7 +7,8 @@
   <title>Join SkillBridge | Access Your Career Path</title>
 
   <!-- Supabase -->
-  <script src="https://jmogxwejdrkqsrmpxxya.supabase.co"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.js"></script>
+  <script src="scripts/auth.js" defer></script>
 
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -802,7 +803,7 @@
         </div>
 
         <!-- SIGN IN FORM -->
-        <form class="auth-form active" id="form-signin">
+        <form class="auth-form active" id="form-signin" novalidate>
           <div class="input-group">
             <label>Email Address</label>
             <div class="input-wrapper">
@@ -828,7 +829,7 @@
         </form>
 
         <!-- SIGN UP FORM -->
-        <form class="auth-form" id="form-signup">
+        <form class="auth-form" id="form-signup" novalidate>
           <div class="input-group">
             <label>Full Name</label>
             <div class="input-wrapper">
@@ -978,129 +979,9 @@
     }
   </script>
 
+
+
   <script>
-    // ── CONFIG ──────────────────────────────
-    const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // ── AUTH GUARD ──────────────────────────
-    // If already logged in → go to dashboard
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        window.location.href = 'dashboard.html';
-      }
-    });
-
-    // ── SIGN IN ─────────────────────────────
-    document.getElementById('form-signin').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const email = document.getElementById('signin-email').value.trim();
-      const password = document.getElementById('signin-password').value;
-
-      if (!email || !password) {
-        showMsg('signin', 'error', '❌ Fill all fields');
-        return;
-      }
-
-      showMsg('signin', 'loading', '⏳ Signing you in...');
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email, password
-      });
-
-      if (error) {
-        showMsg('signin', 'error', '❌ ' + error.message);
-      } else {
-        showMsg('signin', 'success', '✅ Welcome back! Redirecting...');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1000);
-      }
-    });
-
-    // ── SIGN UP ─────────────────────────────
-    document.getElementById('form-signup').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('signup-email').value.trim();
-      const password = document.getElementById('signup-password').value;
-      const college = document.getElementById('college').value.trim();
-      const branch = document.getElementById('branch').value;
-      const dreamJob = document.getElementById('dreamjob').value.trim();
-
-      if (!name || !email || !password || !college || !branch) {
-        showMsg('signup', 'error', '❌ Please fill all required fields');
-        return;
-      }
-      if (password.length < 6) {
-        showMsg('signup', 'error', '❌ Password must be 6+ characters');
-        return;
-      }
-
-      showMsg('signup', 'loading', '⏳ Creating your account...');
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-            college_name: college,
-            branch: branch,
-            dream_job: dreamJob
-          }
-        }
-      });
-
-      if (error) {
-        showMsg('signup', 'error', '❌ ' + error.message);
-        return;
-      }
-
-      // Save to profiles table
-      if (data.user) {
-        await supabase.from('profiles').upsert({
-          id: data.user.id,
-          full_name: name,
-          email: email,
-          college_name: college,
-          branch: branch,
-          dream_job: dreamJob
-        });
-
-        showMsg('signup', 'success', '✅ Account created! Redirecting...');
-        setTimeout(() => {
-          window.location.href = 'dashboard.html';
-        }, 1200);
-      }
-    });
-
-    // ── GOOGLE OAUTH ────────────────────────
-    async function signInWithGoogle() {
-      showMsg('signin', 'loading', '⏳ Opening Google...');
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/dashboard.html'
-        }
-      });
-      if (error) showMsg('signin', 'error', '❌ ' + error.message);
-    }
-
-    // ── GITHUB OAUTH ────────────────────────
-    async function signInWithGitHub() {
-      showMsg('signin', 'loading', '⏳ Opening GitHub...');
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: window.location.origin + '/dashboard.html'
-        }
-      });
-    }
-
     // Eye toggle
     document.querySelectorAll('.eye-toggle').forEach(btn => {
       btn.onclick = () => {
@@ -1129,6 +1010,7 @@
 
     let lineIdx = 0;
     function typeLine() {
+      if (!termBody) return;
       if (lineIdx >= lines.length) {
         termBody.innerHTML += '<span class="cursor-blink"></span>';
         return;
