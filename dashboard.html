@@ -12,10 +12,13 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <!-- Styles -->
-    <link rel="stylesheet" href="styles/dashboard.css">
+    <link rel="stylesheet" href="/styles/dashboard.css">
     
     <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.js"></script>
+
+    <!-- Scripts -->
+    <script src="/scripts/dashboard.js" defer></script>
 </head>
 <body>
     <div class="app-container" style="display: flex; width: 100%;">
@@ -59,7 +62,7 @@
                         <span class="user-role">Premium Student</span>
                     </div>
                 </div>
-                <a href="#" id="logout-btn" class="nav-item" style="margin-top: 12px; color: #ef4444;">
+                <a href="#" id="logoutBtn" class="nav-item" style="margin-top: 12px; color: #ef4444;">
                     <i data-lucide="log-out" class="w-4 h-4"></i>
                     Logout
                 </a>
@@ -228,59 +231,6 @@
         </main>
     </div>
 
-    <!-- Scripts -->
-    <script src="scripts/dashboard.js"></script>
-    <script>
-        // 1. Initialize Icons
-        lucide.createIcons();
 
-        // 2. Supabase Config
-        const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // 3. Auth Check & Data Load
-        async function initAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.href = 'auth.html';
-                return;
-            }
-            
-            const user = session.user;
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            if (profile) {
-                const name = profile.full_name || user.email.split('@')[0];
-                document.getElementById('user-display-name').textContent = name;
-                document.getElementById('greeting-name').textContent = name.split(' ')[0];
-                document.getElementById('profile-initials').textContent = name.substring(0, 1).toUpperCase();
-            }
-        }
-        initAuth();
-
-        // 4. Logout Logic
-        document.getElementById('logout-btn').onclick = async (e) => {
-            e.preventDefault();
-            await supabase.auth.signOut();
-            window.location.href = 'auth.html';
-        };
-
-        // 5. Heatmap Generation
-        const heatmap = document.getElementById('heatmap-grid');
-        if (heatmap) {
-            for (let i = 0; i < 70; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'heat-cell';
-                const level = Math.floor(Math.random() * 5);
-                if (level > 0) cell.classList.add(`level-${level}`);
-                heatmap.appendChild(cell);
-            }
-        }
-    </script>
 </body>
 </html>
