@@ -581,7 +581,7 @@ button { font-family: inherit; border: none; background: none; }
 #problem {
   position: relative;
   overflow: hidden;
-  background: var(--black);
+  background: var(--cream);
   padding: 100px 0;
 }
 
@@ -609,7 +609,7 @@ button { font-family: inherit; border: none; background: none; }
   position: absolute; inset: 0;
   background-image: radial-gradient(
     circle,
-    rgba(245,240,232,0.08) 1px,
+    rgba(0, 0, 0, 0.05) 1px,
     transparent 1px
   );
   background-size: 28px 28px;
@@ -617,11 +617,11 @@ button { font-family: inherit; border: none; background: none; }
 }
 
 #problem .section-heading {
-  color: var(--cream);
+  color: var(--text-primary);
 }
 
 #problem .section-sub {
-  color: rgba(245,240,232,0.6);
+  color: var(--text-secondary);
 }
 
 .problem-content {
@@ -1578,13 +1578,14 @@ button { font-family: inherit; border: none; background: none; }
 }
 
 .before-card {
-  background: var(--black-2);
-  border: 1px solid rgba(239,68,68,0.2);
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
+  box-shadow: var(--shadow-sm);
 }
 
 .after-card {
-  background: var(--cream);
-  border: 1px solid rgba(5,150,105,0.2);
+  background: #F0F9FF;
+  border: 1px solid #BAE6FD;
   box-shadow: var(--shadow-md);
 }
 
@@ -1597,7 +1598,7 @@ button { font-family: inherit; border: none; background: none; }
   font-size: 1.05rem;
   padding: 0 0 16px;
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .red-header { color: #EF4444; }
@@ -1634,7 +1635,7 @@ button { font-family: inherit; border: none; background: none; }
   line-height: 1.55;
 }
 
-.pain-desc { color: var(--slate-400); }
+.pain-desc { color: var(--text-secondary); }
 .win-desc  { color: var(--text-secondary); }
 
 .vs-card-footer {
