@@ -192,9 +192,3 @@ This is a personal project, but suggestions and feedback are welcome.
 * Email: rishabmishra075@gmail.com
 
 ---
-
-## ⭐ If you like this project
-
-Give it a star ⭐ — it motivates me to build more!
-
----
