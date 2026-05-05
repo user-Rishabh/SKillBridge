@@ -19,7 +19,7 @@ initTabs();
 
 // Supabase Initialization & Dashboard
 initSupabase();
-initDashboard();
+initDashboard().then(() => postInit());
 
 function initSupabase() {
     try {
@@ -403,3 +403,212 @@ document.addEventListener('DOMContentLoaded', () => {
     if (error) console.error('Profile save error:', error.message);
   });
 });
+
+// ═══════════════════════════════════════════════════════
+// ── ONBOARDING + ROADMAP (New Features) ─────────────────
+// ═══════════════════════════════════════════════════════
+
+const ONBOARDING_QUESTIONS = [
+  { key: 'target_role', text: 'What is your target career role? (e.g. Full-Stack Developer, Data Scientist)', options: ['Full-Stack Developer', 'Data Scientist', 'UI/UX Designer', 'DevOps Engineer'] },
+  { key: 'skill_level', text: 'What is your current skill level?', options: ['Beginner', 'Intermediate', 'Advanced'] },
+  { key: 'existing_skills', text: 'What existing skills do you have? (Comma separated)', options: ['HTML/CSS', 'JavaScript', 'Python', 'nothing'] },
+  { key: 'hours_per_day', text: 'How many hours can you commit daily?', options: ['1-2 Hours', '3-4 Hours', '5+ Hours'] }
+];
+
+let obStep = 0;
+let obData = {};
+
+// Called from initDashboard — check if onboarding needed
+async function checkOnboarding(userId) {
+  const lsKey = `ob_done_${userId}`;
+  if (localStorage.getItem(lsKey)) return; // Already done (local fallback)
+
+  const { data: profile } = await supabase.from('profiles').select('onboarding_completed').eq('id', userId).single();
+  if (profile && profile.onboarding_completed) return;
+
+  startOnboarding();
+}
+
+function startOnboarding() {
+  const overlay = document.getElementById('onboarding-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  obStep = 0;
+  obData = {};
+  document.getElementById('onboarding-chat').innerHTML = '';
+  setTimeout(() => askObQuestion(), 400);
+
+  // Wire up send button & enter key once
+  const sendBtn = document.getElementById('onboarding-send-btn');
+  const input = document.getElementById('onboarding-input');
+  if (sendBtn) sendBtn.onclick = () => handleObInput();
+  if (input) input.onkeydown = (e) => { if (e.key === 'Enter') handleObInput(); };
+}
+
+function askObQuestion() {
+  if (obStep >= ONBOARDING_QUESTIONS.length) { finishOnboarding(); return; }
+  const q = ONBOARDING_QUESTIONS[obStep];
+  addObMsg(q.text, false);
+  const opts = document.getElementById('onboarding-options');
+  if (opts) {
+    opts.innerHTML = '';
+    q.options.forEach(o => {
+      const btn = document.createElement('button');
+      btn.textContent = o;
+      btn.style.cssText = 'padding:6px 14px;background:white;border:1px solid #059669;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;margin:2px;';
+      btn.onclick = () => handleObInput(o);
+      opts.appendChild(btn);
+    });
+  }
+}
+
+function handleObInput(val) {
+  if (!val) {
+    const inp = document.getElementById('onboarding-input');
+    val = inp ? inp.value.trim() : '';
+    if (inp) inp.value = '';
+  }
+  if (!val) return;
+  addObMsg(val, true);
+  obData[ONBOARDING_QUESTIONS[obStep].key] = val;
+  obStep++;
+  const opts = document.getElementById('onboarding-options');
+  if (opts) opts.innerHTML = '';
+  setTimeout(() => askObQuestion(), 700);
+}
+
+function addObMsg(text, isUser) {
+  const chat = document.getElementById('onboarding-chat');
+  if (!chat) return;
+  const d = document.createElement('div');
+  d.style.padding = '10px 14px';
+  d.style.borderRadius = '12px';
+  d.style.maxWidth = '82%';
+  d.style.fontSize = '14px';
+  d.style.lineHeight = '1.5';
+  d.style.marginBottom = '6px';
+  if (isUser) {
+    d.style.alignSelf = 'flex-end';
+    d.style.background = '#059669';
+    d.style.color = 'white';
+  } else {
+    d.style.alignSelf = 'flex-start';
+    d.style.background = 'white';
+    d.style.border = '1px solid #E2E8F0';
+    d.style.color = '#1E293B';
+  }
+  d.textContent = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function finishOnboarding() {
+  addObMsg('Great! Generating your personalized roadmap now... 🚀', false);
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  const userId = session.user.id;
+
+  // Save onboarding data
+  await supabase.from('profiles').upsert({
+    id: userId,
+    dream_job: obData.target_role,
+    skill_level: obData.skill_level,
+    onboarding_completed: true,
+    updated_at: new Date().toISOString()
+  });
+  localStorage.setItem(`ob_done_${userId}`, 'true');
+
+  await generateAndSaveRoadmap(userId);
+
+  setTimeout(() => {
+    const overlay = document.getElementById('onboarding-overlay');
+    if (overlay) overlay.style.display = 'none';
+    renderRoadmap();
+  }, 1800);
+}
+
+async function generateAndSaveRoadmap(userId) {
+  const target = obData.target_role || 'Full-Stack Developer';
+  const roadmap = {
+    title: `${target} Mastery Path`,
+    focus: `Mastering ${target} essentials and advanced patterns`,
+    progress: 0,
+    phases: [
+      { id: 1, name: 'Foundations', status: 'active', skills: ['HTML5', 'CSS3', 'JS ES6'] },
+      { id: 2, name: 'Frameworks', status: 'locked', skills: ['React', 'State Mgmt', 'Routing'] },
+      { id: 3, name: 'Backend', status: 'locked', skills: ['Node.js', 'DB Design', 'APIs'] },
+      { id: 4, name: 'Career Prep', status: 'locked', skills: ['Portfolio', 'Interviews', 'Resume'] }
+    ],
+    projects: [
+      { name: 'Personal Portfolio', status: 'In Progress', progress: 20, tags: ['HTML', 'CSS', 'JS'] },
+      { name: 'Task Manager App', status: 'Upcoming', progress: 0, tags: ['React'] }
+    ],
+    skill_stats: [
+      { name: 'Frontend', value: 20 },
+      { name: 'Backend', value: 5 },
+      { name: 'Problem Solving', value: 10 }
+    ]
+  };
+  await supabase.from('profiles').update({ roadmap_json: roadmap }).eq('id', userId);
+  return roadmap;
+}
+
+async function renderRoadmap() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  const { data: profile } = await supabase.from('profiles').select('roadmap_json').eq('id', session.user.id).single();
+  if (!profile || !profile.roadmap_json) return;
+  const r = profile.roadmap_json;
+
+  // Phase nodes
+  ['roadmap-nodes-dashboard', 'roadmap-nodes-tab'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = r.phases.map(p => `<div class="node ${p.status}">${p.status === 'active' ? '<div class="node-active-tag">You are here</div>' : ''}<span class="node-label">${p.name}</span></div>`).join('');
+  });
+
+  // Phase grid (roadmap tab)
+  const pg = document.getElementById('roadmap-phase-grid');
+  if (pg) {
+    pg.innerHTML = r.phases.map(p => {
+      const colors = p.status === 'active' ? ['#FFF7ED','#FED7AA','#92400E'] : p.status === 'completed' ? ['#F0FDF4','#BBF7D0','#065F46'] : ['#F8FAFC','#E2E8F0','#64748B'];
+      return `<div style="padding:14px;background:${colors[0]};border-radius:10px;border:1px solid ${colors[1]};"><div style="font-size:13px;font-weight:700;color:${colors[2]};">${p.status === 'active' ? '⏳ In Progress' : p.status === 'completed' ? '✅ Done' : '🔒 Upcoming'}</div><div style="font-size:14px;font-weight:600;margin-top:4px;">${p.name}</div><div style="font-size:12px;color:${colors[2]};margin-top:2px;">${p.skills.join(', ')}</div></div>`;
+    }).join('');
+  }
+
+  // Projects
+  ['active-projects-container', 'all-projects-container'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = r.projects.map(p => `
+      <div class="project-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <h4 style="font-size:15px;font-weight:700;">${p.name}</h4>
+          <span class="status-badge ${p.status !== 'Completed' ? 'in-progress' : ''}">${p.status}</span>
+        </div>
+        <div class="tag-list" style="margin-bottom:10px;">${p.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:4px;"><span>Progress</span><span>${p.progress}%</span></div>
+        <div class="progress-bg"><div class="progress-fill" style="width:${p.progress}%;"></div></div>
+      </div>`).join('');
+  });
+
+  // Skills
+  const sc = document.getElementById('skill-progress-container');
+  if (sc) {
+    sc.innerHTML = r.skill_stats.map(s => `
+      <div class="skill-item">
+        <div class="skill-info"><span>${s.name}</span><span>${s.value}%</span></div>
+        <div class="progress-bg"><div class="progress-fill" style="width:${s.value}%;"></div></div>
+      </div>`).join('');
+  }
+}
+
+// Post-init: runs after original initDashboard completes
+async function postInit() {
+  if (!supabase) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    await checkOnboarding(session.user.id);
+    await renderRoadmap();
+  }
+}
