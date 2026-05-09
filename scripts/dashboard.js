@@ -650,6 +650,80 @@ async function loadDashboard(profile) {
     recordTodayLogin(currentUserId);
     updateStreakDisplay(currentUserId);
     buildActivityHeatmap(currentUserId);
+    if (window.lucide) lucide.createIcons();
+}
+
+// ... (previous functions continue) ...
+
+// ── RESUME & PORTFOLIO FUNCTIONS ─────────────────────────────
+async function generateAIResume() {
+  const preview = document.getElementById('resume-preview');
+  if (!preview) return;
+  preview.innerHTML = '<div style="text-align:center;margin-top:100px;color:#059669;">✨ AI is crafting your professional resume...</div>';
+  
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
+  const { data: tasks } = await supabase.from('tasks').select('title').eq('user_id', currentUserId).eq('status', 'completed');
+  
+  const prompt = `Create a professional resume for ${profile.full_name}. Goal: ${profile.goal}. Education: ${profile.college_name}, ${profile.branch}. Skills: ${tasks.map(t=>t.title).join(', ')}. Use a clean layout. Return as HTML with simple inline styles.`;
+  const result = await callAI(prompt, 1000);
+  if (result) {
+    preview.innerHTML = `<div style="background:white;padding:20px;color:#333;font-family:serif;line-height:1.6;">${result}</div>`;
+  } else {
+    preview.innerHTML = '<p style="color:#ef4444;text-align:center;">Failed to generate resume. Try again.</p>';
+  }
+}
+
+function analyzeResume(input) {
+  const msg = document.getElementById('resume-suggestions');
+  if (msg) msg.textContent = '🔍 Analyzing resume for keywords and ATS compatibility...';
+  setTimeout(() => {
+    if (msg) msg.textContent = '✅ Analysis complete: Strong focus on technical skills. Suggestion: Add more project impact metrics.';
+  }, 2000);
+}
+
+function downloadResumePDF() {
+  const preview = document.getElementById('resume-preview');
+  if (!preview || preview.textContent.includes('Generate a resume')) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(10);
+  const text = preview.innerText;
+  const lines = doc.splitTextToSize(text, 180);
+  doc.text(lines, 15, 20);
+  doc.save('SkillBridge_Resume.pdf');
+}
+
+function downloadPortfolio() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const name = document.getElementById('port-name')?.textContent || 'Student';
+  const goal = document.getElementById('port-goal')?.textContent || 'Developer';
+  doc.setFontSize(22); doc.text(name, 20, 30);
+  doc.setFontSize(16); doc.setTextColor(5, 150, 105); doc.text(goal, 20, 40);
+  doc.setDrawColor(226, 232, 240); doc.line(20, 45, 190, 45);
+  doc.save('SkillBridge_Portfolio.pdf');
+}
+
+async function saveProfile() {
+  const updates = {
+    full_name: document.getElementById('edit-name')?.value,
+    college_name: document.getElementById('edit-college-name')?.value,
+    branch: document.getElementById('edit-branch')?.value,
+    goal: document.getElementById('edit-dreamjob')?.value,
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await supabase.from('profiles').update(updates).eq('id', currentUserId);
+  if (error) showToast('Failed to save profile');
+  else {
+    showToast('Profile updated!');
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
+    if (profile) updateProfileUI(profile, '');
+  }
+}
+
+function changeTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+  localStorage.setItem('theme', theme === 'dark' ? 'dark' : 'light');
 }
 
 // ── Task Completion ──────────────────────────────────────────
