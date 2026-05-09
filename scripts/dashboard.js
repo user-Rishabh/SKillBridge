@@ -814,45 +814,287 @@ async function callAI(prompt, maxTokens = 800) {
 }
 
 // ── RESUME & PORTFOLIO FUNCTIONS ─────────────────────────────
-async function generateAIResume() {
-  const preview = document.getElementById('resume-preview');
-  if (!preview) return;
-  preview.innerHTML = '<div style="text-align:center;margin-top:100px;color:#059669;">✨ AI is crafting your professional resume...</div>';
+let resumeData = {
+  basics: { name: '', email: '', phone: '', location: '', summary: '' },
+  experience: [],
+  education: [],
+  skills: [],
+  projects: []
+};
+
+function switchResumeSection(sectionId) {
+  document.querySelectorAll('.resume-section-form').forEach(f => f.style.display = 'none');
+  document.getElementById(`resume-editor-${sectionId}`).style.display = 'block';
+  document.querySelectorAll('.resume-nav-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function addResumeItem(type) {
+  const container = document.getElementById(`${type}-list`);
+  const id = Date.now();
+  const item = document.createElement('div');
+  item.className = 'resume-item-card';
+  item.dataset.id = id;
   
+  if (type === 'experience') {
+    item.innerHTML = `
+      <input type="text" placeholder="Company" class="form-input" oninput="updateResumePreview()">
+      <input type="text" placeholder="Role" class="form-input" oninput="updateResumePreview()">
+      <input type="text" placeholder="Years" class="form-input" oninput="updateResumePreview()">
+      <textarea placeholder="Achievements..." class="form-input" oninput="updateResumePreview()"></textarea>
+      <button onclick="this.parentElement.remove();updateResumePreview()" class="remove-btn">Remove</button>
+    `;
+  } else if (type === 'education') {
+    item.innerHTML = `
+      <input type="text" placeholder="University" class="form-input" oninput="updateResumePreview()">
+      <input type="text" placeholder="Degree" class="form-input" oninput="updateResumePreview()">
+      <input type="text" placeholder="Year" class="form-input" oninput="updateResumePreview()">
+      <button onclick="this.parentElement.remove();updateResumePreview()" class="remove-btn">Remove</button>
+    `;
+  } else if (type === 'projects') {
+    item.innerHTML = `
+      <input type="text" placeholder="Project Name" class="form-input" oninput="updateResumePreview()">
+      <textarea placeholder="Description..." class="form-input" oninput="updateResumePreview()"></textarea>
+      <button onclick="this.parentElement.remove();updateResumePreview()" class="remove-btn">Remove</button>
+    `;
+  }
+  container.appendChild(item);
+  updateResumePreview();
+}
+
+function updateResumePreview() {
+  const page = document.getElementById('resume-page');
+  if (!page) return;
+
+  const name = document.getElementById('res-name').value;
+  const email = document.getElementById('res-email').value;
+  const phone = document.getElementById('res-phone').value;
+  const location = document.getElementById('res-location').value;
+  const summary = document.getElementById('res-summary').value;
+  const skills = document.getElementById('res-skills-input').value.split(',').map(s => s.trim()).filter(s => s);
+
+  let html = `
+    <div style="text-align:center;border-bottom:2px solid #333;padding-bottom:15px;margin-bottom:20px;">
+      <h1 style="margin:0;font-size:28px;text-transform:uppercase;letter-spacing:2px;">${name || 'YOUR NAME'}</h1>
+      <div style="font-size:12px;margin-top:5px;color:#666;">
+        ${location} | ${phone} | ${email}
+      </div>
+    </div>
+    
+    ${summary ? `
+      <div style="margin-bottom:20px;">
+        <h3 style="font-size:14px;border-bottom:1px solid #EEE;padding-bottom:5px;margin-bottom:10px;text-transform:uppercase;">Professional Summary</h3>
+        <p style="font-size:12px;text-align:justify;">${summary}</p>
+      </div>
+    ` : ''}
+
+    <div style="margin-bottom:20px;">
+      <h3 style="font-size:14px;border-bottom:1px solid #EEE;padding-bottom:5px;margin-bottom:10px;text-transform:uppercase;">Technical Skills</h3>
+      <p style="font-size:12px;">${skills.join(' • ')}</p>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="font-size:14px;border-bottom:1px solid #EEE;padding-bottom:5px;margin-bottom:10px;text-transform:uppercase;">Experience</h3>
+      ${Array.from(document.querySelectorAll('#experience-list .resume-item-card')).map(card => {
+        const inputs = card.querySelectorAll('input, textarea');
+        return `
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:12px;">
+              <span>${inputs[0].value}</span>
+              <span>${inputs[2].value}</span>
+            </div>
+            <div style="font-style:italic;font-size:12px;margin-bottom:4px;">${inputs[1].value}</div>
+            <p style="font-size:11px;margin:0;">${inputs[3].value}</p>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="font-size:14px;border-bottom:1px solid #EEE;padding-bottom:5px;margin-bottom:10px;text-transform:uppercase;">Education</h3>
+      ${Array.from(document.querySelectorAll('#education-list .resume-item-card')).map(card => {
+        const inputs = card.querySelectorAll('input');
+        return `
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+            <span><strong>${inputs[0].value}</strong> - ${inputs[1].value}</span>
+            <span>${inputs[2].value}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+  page.innerHTML = html;
+}
+
+function downloadResumePDF() {
+  console.log('PDF Download triggered');
+  const page = document.getElementById('resume-page');
+  if (!page) {
+    console.error('Resume page element not found');
+    return;
+  }
+  
+  try {
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF) {
+      console.warn('jsPDF not found, falling back to print');
+      window.print();
+      return;
+    }
+
+    const doc = new jsPDF('p', 'pt', 'a4');
+    doc.setFont('times', 'normal');
+    doc.setFontSize(11);
+    
+    // Header
+    const name = document.getElementById('res-name')?.value || 'RESUME';
+    const text = page.innerText;
+    const lines = doc.splitTextToSize(text, 500);
+    
+    doc.text(lines, 40, 50);
+    doc.save(`${name.replace(/\s+/g, '_')}_Resume.pdf`);
+    showToast('Resume PDF downloaded!');
+  } catch (err) {
+    console.error('PDF Generation Error:', err);
+    showToast('PDF failed. Opening print dialog instead...', 'info');
+    window.print();
+  }
+}
+
+async function generateAIResume() {
+  const btn = event.currentTarget;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '✨ Analyzing...';
+  btn.disabled = true;
+
   try {
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
     const { data: tasks } = await supabase.from('tasks').select('title').eq('user_id', currentUserId).eq('status', 'completed');
     
-    const skillsList = (tasks || []).map(t => t.title).join(', ') || 'Various Technical Skills';
+    const skillsList = (tasks || []).map(t => t.title).join(', ') || 'Web Development, Problem Solving';
     
-    const prompt = `Act as a professional Resume Builder. Create a modern, professional resume for a student.
-    NAME: ${profile.full_name || 'Raina Mishra'}
-    GOAL: ${profile.goal || 'Software Engineer'}
-    EDUCATION: ${profile.college_name || 'Not Specified'} (${profile.branch || 'Not Specified'})
-    KEY SKILLS: ${skillsList}
+    const prompt = `Generate a JSON object for a professional resume.
+    USER: ${profile.full_name}
+    GOAL: ${profile.goal}
+    SKILLS: ${skillsList}
     
-    Format the response in clean HTML (no <html> or <body> tags) using only standard tags like <h3>, <p>, <ul>, <li>. Use inline CSS for a premium look (font-family: Inter, sans-serif). Keep it professional and concise.`;
+    RETURN ONLY VALID JSON. Format:
+    {
+      "name": "${profile.full_name}",
+      "email": "user@example.com",
+      "phone": "7400159509",
+      "location": "Mumbai, Maharashtra",
+      "summary": "Professional summary based on goal...",
+      "skills": ["Skill1", "Skill2"],
+      "experience": [{"company": "Project A", "role": "Developer", "years": "2024", "desc": "Built a web app..."}],
+      "education": [{"school": "${profile.college_name || 'University'}", "degree": "${profile.branch || 'B.Tech'}", "year": "2025"}]
+    }`;
     
-    const result = await callAI(prompt, 900);
+    const result = await callAI(prompt, 1200);
     if (result) {
-      const cleanHTML = result.replace(/```html|```/g, '').trim();
-      preview.innerHTML = `<div class="resume-content fade-in" style="background:white;padding:32px;color:#1E293B;line-height:1.6;font-family:'Inter',sans-serif;max-height:500px;overflow-y:auto;">${cleanHTML}</div>`;
-    } else {
-      throw new Error('AI service failed to respond');
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON found in response');
+      
+      const data = JSON.parse(jsonMatch[0]);
+      
+      // Populate basics
+      document.getElementById('res-name').value = data.name || '';
+      document.getElementById('res-email').value = data.email || '';
+      document.getElementById('res-phone').value = data.phone || '';
+      document.getElementById('res-location').value = data.location || '';
+      document.getElementById('res-summary').value = data.summary || '';
+      document.getElementById('res-skills-input').value = (data.skills || []).join(', ');
+      
+      // Experience
+      const expList = document.getElementById('experience-list');
+      expList.innerHTML = '';
+      (data.experience || []).forEach(exp => {
+        const item = document.createElement('div');
+        item.className = 'resume-item-card';
+        item.innerHTML = `
+          <input type="text" value="${exp.company}" class="form-input" oninput="updateResumePreview()">
+          <input type="text" value="${exp.role}" class="form-input" oninput="updateResumePreview()">
+          <input type="text" value="${exp.years}" class="form-input" oninput="updateResumePreview()">
+          <textarea class="form-input" oninput="updateResumePreview()">${exp.desc}</textarea>
+          <button onclick="this.parentElement.remove();updateResumePreview()" class="remove-btn">Remove</button>
+        `;
+        expList.appendChild(item);
+      });
+
+      // Education
+      const eduList = document.getElementById('education-list');
+      eduList.innerHTML = '';
+      (data.education || []).forEach(edu => {
+        const item = document.createElement('div');
+        item.className = 'resume-item-card';
+        item.innerHTML = `
+          <input type="text" value="${edu.school}" class="form-input" oninput="updateResumePreview()">
+          <input type="text" value="${edu.degree}" class="form-input" oninput="updateResumePreview()">
+          <input type="text" value="${edu.year}" class="form-input" oninput="updateResumePreview()">
+          <button onclick="this.parentElement.remove();updateResumePreview()" class="remove-btn">Remove</button>
+        `;
+        eduList.appendChild(item);
+      });
+      
+      updateResumePreview();
+      showToast('Resume auto-filled successfully!');
     }
   } catch (err) {
-    console.error('Resume Generation Error:', err);
-    const errInfo = window.lastAIError || { status: 'Unknown', data: err.message };
-    preview.innerHTML = `<div style="text-align:center;margin-top:80px;color:#ef4444;">
-      <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
-      <div style="font-weight:600;">Failed to generate resume</div>
-      <div style="font-size:12px;color:#94A3B8;margin-top:4px;">
-        Error: ${errInfo.status} ${errInfo.data?.error?.message || ''}
-      </div>
-      <button onclick="generateAIResume()" style="margin-top:16px;background:#F1F5F9;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;color:#0F172A;">🔄 Try Again</button>
-    </div>`;
+    console.error('AI Resume Error:', err);
+    showToast('Failed to auto-fill resume', 'error');
+  } finally {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
   }
 }
+
+function exportJSONResume() {
+  const json = {
+    basics: {
+      name: document.getElementById('res-name').value,
+      email: document.getElementById('res-email').value,
+      phone: document.getElementById('res-phone').value,
+      location: { address: document.getElementById('res-location').value },
+      summary: document.getElementById('res-summary').value
+    },
+    skills: [{ keywords: document.getElementById('res-skills-input').value.split(',') }],
+    // ... add more mapping to JSON Resume standard
+  };
+  const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'resume.json';
+  a.click();
+}
+
+// Inject Resume Styles
+const resumeStyles = document.createElement('style');
+resumeStyles.textContent = `
+  .resume-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    color: #64748B;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 200ms;
+    text-align: left;
+  }
+  .resume-nav-btn:hover { background: #F1F5F9; color: #0F172A; }
+  .resume-nav-btn.active { background: #059669; color: white; box-shadow: 0 4px 12px rgba(5,150,105,0.2); }
+  .form-label { display: block; font-size: 12px; font-weight: 700; color: #94A3B8; text-transform: uppercase; margin-bottom: 6px; }
+  .form-input { width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 10px; font-size: 14px; transition: all 200ms; }
+  .form-input:focus { outline: none; border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+  .resume-item-card { background: #F8FAFC; border: 1px solid #E2E8F0; padding: 16px; border-radius: 12px; margin-bottom: 16px; position: relative; }
+  .remove-btn { position: absolute; top: 12px; right: 12px; background: #FEE2E2; color: #EF4444; border: none; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
+`;
+document.head.appendChild(resumeStyles);
 
 function analyzeResume(input) {
   const msg = document.getElementById('resume-suggestions');

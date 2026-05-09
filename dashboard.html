@@ -317,32 +317,75 @@
               </div>
             </section>
 
-            <!-- ══ RESUME TAB ══ -->
+            <!-- ══ RESUME TAB (REACTIVE STYLE) ══ -->
             <section id="tab-resume" style="display:none;">
-              <div class="hero-card">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
-                  <div>
-                    <h3 class="card-title" style="margin-bottom:16px;">AI Resume Builder</h3>
-                    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;">We'll generate a professional, ATS-friendly resume based on your SkillBridge progress.</p>
-                    <button class="btn-primary" onclick="generateAIResume()" style="width:100%;justify-content:center;margin-bottom:24px;">
-                      <i data-lucide="sparkles" class="w-4 h-4"></i> Generate AI Resume
+              <div style="display:grid;grid-template-columns:220px 1fr 1fr;gap:20px;height:calc(100vh - 180px);background:white;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.05);border:1px solid #E2E8F0;">
+                
+                <!-- 1. Left Sidebar: Sections -->
+                <div style="background:#F8FAFC;border-right:1px solid #E2E8F0;padding:20px;display:flex;flex-direction:column;gap:8px;">
+                  <h4 style="font-size:12px;color:#94A3B8;text-transform:uppercase;margin-bottom:12px;letter-spacing:0.05em;">Sections</h4>
+                  <button onclick="switchResumeSection('basics')" class="resume-nav-btn active">👤 Basics</button>
+                  <button onclick="switchResumeSection('experience')" class="resume-nav-btn">💼 Experience</button>
+                  <button onclick="switchResumeSection('education')" class="resume-nav-btn">🎓 Education</button>
+                  <button onclick="switchResumeSection('skills')" class="resume-nav-btn">🛠️ Skills</button>
+                  <button onclick="switchResumeSection('projects')" class="resume-nav-btn">🚀 Projects</button>
+                  <div style="margin-top:auto;padding-top:20px;border-top:1px solid #E2E8F0;">
+                    <button class="btn-primary" onclick="generateAIResume()" style="width:100%;font-size:12px;padding:10px;">
+                      <i data-lucide="sparkles" class="w-3 h-3"></i> AI Auto-Fill
                     </button>
-                    
-                    <div style="padding-top:24px;border-top:1px solid #E2E8F0;">
-                      <h4 style="font-size:14px;margin-bottom:12px;">Upload Existing Resume</h4>
-                      <input type="file" id="resume-upload" accept=".pdf,.doc,.txt" onchange="analyzeResume(this)" style="font-size:13px;">
-                      <div id="resume-suggestions" style="margin-top:12px;font-size:12px;color:#059669;"></div>
+                  </div>
+                </div>
+
+                <!-- 2. Middle: Editor -->
+                <div style="padding:24px;overflow-y:auto;border-right:1px solid #E2E8F0;">
+                  <div id="resume-editor-basics" class="resume-section-form">
+                    <h3 style="margin-bottom:20px;">Basic Information</h3>
+                    <div style="display:grid;gap:16px;">
+                      <div><label class="form-label">Full Name</label><input type="text" id="res-name" oninput="updateResumePreview()" class="form-input" placeholder="John Doe"></div>
+                      <div><label class="form-label">Email</label><input type="email" id="res-email" oninput="updateResumePreview()" class="form-input" placeholder="john@example.com"></div>
+                      <div><label class="form-label">Phone</label><input type="text" id="res-phone" oninput="updateResumePreview()" class="form-input" placeholder="+1 234 567 890"></div>
+                      <div><label class="form-label">Location</label><input type="text" id="res-location" oninput="updateResumePreview()" class="form-input" placeholder="New York, USA"></div>
+                      <div><label class="form-label">Summary</label><textarea id="res-summary" oninput="updateResumePreview()" class="form-input" style="height:100px;" placeholder="Briefly describe your goals..."></textarea></div>
+                    </div>
+                  </div>
+
+                  <div id="resume-editor-experience" class="resume-section-form" style="display:none;">
+                    <h3 style="margin-bottom:20px;">Work Experience</h3>
+                    <div id="experience-list"></div>
+                    <button class="btn-outline" onclick="addResumeItem('experience')" style="width:100%;margin-top:12px;">+ Add Experience</button>
+                  </div>
+
+                  <div id="resume-editor-education" class="resume-section-form" style="display:none;">
+                    <h3 style="margin-bottom:20px;">Education</h3>
+                    <div id="education-list"></div>
+                    <button class="btn-outline" onclick="addResumeItem('education')" style="width:100%;margin-top:12px;">+ Add Education</button>
+                  </div>
+
+                  <div id="resume-editor-skills" class="resume-section-form" style="display:none;">
+                    <h3 style="margin-bottom:20px;">Skills</h3>
+                    <textarea id="res-skills-input" oninput="updateResumePreview()" class="form-input" style="height:150px;" placeholder="React, Node.js, SQL, Python (comma separated)"></textarea>
+                  </div>
+
+                  <div id="resume-editor-projects" class="resume-section-form" style="display:none;">
+                    <h3 style="margin-bottom:20px;">Projects</h3>
+                    <div id="projects-list"></div>
+                    <button class="btn-outline" onclick="addResumeItem('projects')" style="width:100%;margin-top:12px;">+ Add Project</button>
+                  </div>
+                </div>
+
+                <!-- 3. Right: Preview -->
+                <div style="background:#F1F5F9;padding:40px;overflow-y:auto;position:relative;display:flex;flex-direction:column;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <h4 style="font-size:12px;color:#64748B;font-weight:600;">LIVE PREVIEW</h4>
+                    <div style="display:flex;gap:8px;">
+                      <button class="btn-outline" style="padding:6px 12px;font-size:12px;" onclick="downloadResumePDF()">PDF</button>
+                      <button class="btn-outline" style="padding:6px 12px;font-size:12px;" onclick="exportJSONResume()">JSON</button>
                     </div>
                   </div>
                   
-                  <div id="resume-preview-container">
-                    <h4 style="font-size:14px;margin-bottom:12px;">Preview</h4>
-                    <div id="resume-preview" style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:16px;min-height:300px;font-size:11px;overflow-y:auto;max-height:400px;">
-                      <p style="color:#64748B;text-align:center;margin-top:100px;">Generate a resume to see preview</p>
-                    </div>
-                    <button class="btn-primary" onclick="downloadResumePDF()" style="margin-top:12px;width:100%;justify-content:center;background:white;color:#059669;border:1px solid #059669;">
-                      <i data-lucide="download" class="w-4 h-4"></i> Download PDF
-                    </button>
+                  <!-- Actual Resume Page Rendering -->
+                  <div id="resume-page" style="background:white;width:100%;aspect-ratio:1/1.414;padding:40px;box-shadow:0 10px 30px rgba(0,0,0,0.1);min-height:800px;font-family:'Times New Roman', serif;">
+                    <!-- Content injected by JS -->
                   </div>
                 </div>
               </div>
