@@ -76,6 +76,10 @@
                     <i data-lucide="user" class="w-4 h-4"></i>
                     Profile
                 </a>
+                <a href="#" class="nav-item" data-tab="placement">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i>
+                    Placement
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -273,7 +277,7 @@
             <!-- ══ TASKS TAB ══ -->
             <section id="tab-tasks" style="display:none;">
               <h3 class="card-title" style="margin-bottom:20px;">Your Learning Tasks</h3>
-              <div id="tasks-container" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;">
+              <div id="tasks-container" style="max-width:900px;">
                 <!-- Loaded dynamically -->
                 <p style="color:var(--text-secondary);">Complete onboarding to see tasks.</p>
               </div>
@@ -454,6 +458,432 @@
                 </div>
               </div>
             </section>
+
+            <!-- ══ PLACEMENT TAB ══ -->
+            <div id="tab-placement" style="display:none;">
+
+              <!-- Header -->
+              <div style="margin-bottom:24px;">
+                <h2 style="font-size:22px;font-weight:600;
+                  margin-bottom:6px;">
+                  Placement Preparation
+                </h2>
+                <p style="color:#64748B;font-size:14px;">
+                  Follow the real placement sequence. 
+                  Complete each round to unlock the next.
+                </p>
+              </div>
+
+              <!-- Progress bar across rounds -->
+              <div id="placement-progress-bar"
+                style="display:flex;gap:0;margin-bottom:28px;
+                border-radius:10px;overflow:hidden;
+                border:1px solid #E2E8F0;">
+                <div id="bar-resume" style="flex:1;
+                  padding:10px;text-align:center;
+                  font-size:12px;font-weight:500;
+                  background:#F0FDF4;color:#059669;
+                  border-right:1px solid #E2E8F0;
+                  cursor:pointer;"
+                  onclick="scrollToSection('resume-section')">
+                  📄 Resume
+                </div>
+                <div id="bar-r1" style="flex:1;padding:10px;
+                  text-align:center;font-size:12px;
+                  font-weight:500;background:#F8FAFC;
+                  color:#94A3B8;border-right:1px solid #E2E8F0;
+                  cursor:pointer;"
+                  onclick="scrollToSection('round1-section')">
+                  📝 Round 1
+                </div>
+                <div id="bar-r2" style="flex:1;padding:10px;
+                  text-align:center;font-size:12px;
+                  font-weight:500;background:#F8FAFC;
+                  color:#94A3B8;border-right:1px solid #E2E8F0;
+                  cursor:pointer;"
+                  onclick="scrollToSection('round2-section')">
+                  💻 Round 2
+                </div>
+                <div id="bar-r3" style="flex:1;padding:10px;
+                  text-align:center;font-size:12px;
+                  font-weight:500;background:#F8FAFC;
+                  color:#94A3B8;cursor:pointer;"
+                  onclick="scrollToSection('round3-section')">
+                  🎥 Round 3
+                </div>
+              </div>
+
+              <!-- ═══════════════════════════════════ -->
+              <!-- SECTION 0: RESUME MANAGER          -->
+              <!-- ═══════════════════════════════════ -->
+              <div id="resume-section" style="
+                background:white;border-radius:16px;
+                border:1px solid #E2E8F0;
+                padding:24px;margin-bottom:20px;">
+
+                <div style="display:flex;justify-content:
+                  space-between;align-items:center;
+                  margin-bottom:16px;">
+                  <div>
+                    <h3 style="font-size:16px;
+                      font-weight:600;margin-bottom:4px;">
+                      📄 Resume Manager
+                    </h3>
+                    <p style="font-size:13px;color:#64748B;">
+                      Upload, analyze, and improve your resume
+                    </p>
+                  </div>
+                  <span style="background:#D1FAE5;
+                    color:#059669;padding:4px 12px;
+                    border-radius:20px;font-size:12px;
+                    font-weight:500;">Always Available</span>
+                </div>
+
+                <!-- Upload area -->
+                <div id="resume-upload-area" style="
+                  border:2px dashed #E2E8F0;
+                  border-radius:12px;padding:32px;
+                  text-align:center;cursor:pointer;
+                  transition:all 200ms;margin-bottom:16px;"
+                  onclick="document.getElementById(
+                    'resume-file').click()"
+                  onmouseover="this.style.borderColor='#059669';
+                    this.style.background='#F0FDF4'"
+                  onmouseout="this.style.borderColor='#E2E8F0';
+                    this.style.background='transparent'">
+                  <div style="font-size:32px;
+                    margin-bottom:8px;">📎</div>
+                  <div style="font-size:14px;
+                    font-weight:500;margin-bottom:4px;">
+                    Click to upload your resume
+                  </div>
+                  <div style="font-size:12px;color:#94A3B8;">
+                    PDF, DOC, DOCX or TXT — max 5MB
+                  </div>
+                  <input type="file" id="resume-file"
+                    accept=".pdf,.doc,.docx,.txt"
+                    style="display:none"
+                    onchange="handleResumeUpload(this)">
+                </div>
+
+                <!-- Resume actions (shown after upload) -->
+                <div id="resume-actions" style="display:none;
+                  display:grid;grid-template-columns:1fr 1fr;
+                  gap:10px;margin-bottom:16px;">
+                  <button onclick="analyzeResume()"
+                    style="padding:10px;background:#059669;
+                    color:white;border:none;
+                    border-radius:10px;font-size:13px;
+                    font-weight:500;cursor:pointer;">
+                    🔍 Analyze Resume
+                  </button>
+                  <button onclick="generateAIResume()"
+                    style="padding:10px;background:transparent;
+                    border:1px solid #059669;color:#059669;
+                    border-radius:10px;font-size:13px;
+                    font-weight:500;cursor:pointer;">
+                    ✨ Generate AI Resume
+                  </button>
+                  <button onclick="improveResume()"
+                    style="padding:10px;background:transparent;
+                    border:1px solid #E2E8F0;
+                    border-radius:10px;font-size:13px;
+                    cursor:pointer;">
+                    📈 Get Improvements
+                  </button>
+                  <button onclick="downloadResumePDF()"
+                    style="padding:10px;background:#0F172A;
+                    color:white;border:none;
+                    border-radius:10px;font-size:13px;
+                    cursor:pointer;">
+                    ⬇️ Download PDF
+                  </button>
+                </div>
+
+                <!-- Analysis result area -->
+                <div id="resume-result"></div>
+              </div>
+
+              <!-- ═══════════════════════════════════ -->
+              <!-- SECTION 1: APTITUDE + CODING TEST  -->
+              <!-- ═══════════════════════════════════ -->
+              <div id="round1-section" style="
+                background:white;border-radius:16px;
+                border:1px solid #E2E8F0;padding:24px;
+                margin-bottom:20px;">
+
+                <div style="display:flex;justify-content:
+                  space-between;align-items:center;
+                  margin-bottom:16px;">
+                  <div>
+                    <div style="display:flex;
+                      align-items:center;gap:8px;
+                      margin-bottom:4px;">
+                      <span style="background:#DBEAFE;
+                        color:#1D4ED8;padding:2px 10px;
+                        border-radius:20px;font-size:11px;
+                        font-weight:500;">ROUND 1</span>
+                    </div>
+                    <h3 style="font-size:16px;font-weight:600;
+                      margin-bottom:4px;">
+                      📝 Aptitude + Coding Test
+                    </h3>
+                    <p style="font-size:13px;color:#64748B;">
+                      30 MCQs + 2 coding problems · 45 minutes
+                    </p>
+                  </div>
+                  <div id="r1-status" style="
+                    background:#F1F5F9;color:#94A3B8;
+                    padding:6px 14px;border-radius:20px;
+                    font-size:12px;font-weight:500;">
+                    Not Started
+                  </div>
+                </div>
+
+                <!-- Company type selector -->
+                <div style="margin-bottom:16px;">
+                  <label style="font-size:13px;
+                    color:#64748B;margin-bottom:6px;
+                    display:block;">
+                    Select company type:
+                  </label>
+                  <div style="display:flex;gap:8px;
+                    flex-wrap:wrap;">
+                    <button id="ct-product"
+                      onclick="selectCompanyType('product',this)"
+                      style="padding:6px 16px;
+                      border-radius:20px;font-size:13px;
+                      border:1px solid #059669;
+                      background:#059669;color:white;
+                      cursor:pointer;">
+                      Product (FAANG)
+                    </button>
+                    <button id="ct-service"
+                      onclick="selectCompanyType('service',this)"
+                      style="padding:6px 16px;
+                      border-radius:20px;font-size:13px;
+                      border:1px solid #E2E8F0;
+                      background:transparent;cursor:pointer;">
+                      Service (TCS/Infosys)
+                    </button>
+                    <button id="ct-startup"
+                      onclick="selectCompanyType('startup',this)"
+                      style="padding:6px 16px;
+                      border-radius:20px;font-size:13px;
+                      border:1px solid #E2E8F0;
+                      background:transparent;cursor:pointer;">
+                      Startup
+                    </button>
+                  </div>
+                </div>
+
+                <button id="start-r1-btn"
+                  onclick="startRound1()"
+                  style="width:100%;padding:12px;
+                  background:#1D4ED8;color:white;border:none;
+                  border-radius:10px;font-size:14px;
+                  font-weight:500;cursor:pointer;">
+                  Start Round 1 Test →
+                </button>
+
+                <!-- Test area (hidden until started) -->
+                <div id="round1-test-area"
+                  style="display:none;margin-top:20px;">
+                </div>
+
+                <!-- Score report -->
+                <div id="round1-result"
+                  style="display:none;margin-top:16px;">
+                </div>
+              </div>
+
+              <!-- ═══════════════════════════════════ -->
+              <!-- SECTION 2: TECHNICAL INTERVIEW     -->
+              <!-- ═══════════════════════════════════ -->
+              <div id="round2-section" style="
+                background:white;border-radius:16px;
+                border:1px solid #E2E8F0;padding:24px;
+                margin-bottom:20px;opacity:0.5;
+                pointer-events:none;">
+
+                <div style="display:flex;justify-content:
+                  space-between;align-items:center;
+                  margin-bottom:16px;">
+                  <div>
+                    <div style="display:flex;
+                      align-items:center;gap:8px;
+                      margin-bottom:4px;">
+                      <span style="background:#FEF3C7;
+                        color:#D97706;padding:2px 10px;
+                        border-radius:20px;font-size:11px;
+                        font-weight:500;">ROUND 2</span>
+                      <span id="r2-lock" style="
+                        font-size:11px;color:#94A3B8;">
+                        🔒 Pass Round 1 to unlock
+                      </span>
+                    </div>
+                    <h3 style="font-size:16px;
+                      font-weight:600;margin-bottom:4px;">
+                      💻 Technical Interview
+                    </h3>
+                    <p style="font-size:13px;color:#64748B;">
+                      AI-powered technical Q&A · 20 minutes
+                    </p>
+                  </div>
+                </div>
+
+                <button id="start-r2-btn"
+                  onclick="startRound2()"
+                  style="width:100%;padding:12px;
+                  background:#D97706;color:white;border:none;
+                  border-radius:10px;font-size:14px;
+                  font-weight:500;cursor:pointer;
+                  opacity:0.6;">
+                  Start Technical Interview →
+                </button>
+
+                <div id="round2-chat-area"
+                  style="display:none;margin-top:20px;">
+                </div>
+
+                <div id="round2-result"
+                  style="display:none;margin-top:16px;">
+                </div>
+              </div>
+
+              <!-- ═══════════════════════════════════ -->
+              <!-- SECTION 3: AI VIDEO INTERVIEW      -->
+              <!-- ═══════════════════════════════════ -->
+              <div id="round3-section" style="
+                background:white;border-radius:16px;
+                border:1px solid #E2E8F0;padding:24px;
+                margin-bottom:20px;opacity:0.5;
+                pointer-events:none;">
+
+                <div style="display:flex;justify-content:
+                  space-between;align-items:center;
+                  margin-bottom:16px;">
+                  <div>
+                    <div style="display:flex;
+                      align-items:center;gap:8px;
+                      margin-bottom:4px;">
+                      <span style="background:#FEE2E2;
+                        color:#DC2626;padding:2px 10px;
+                        border-radius:20px;font-size:11px;
+                        font-weight:500;">ROUND 3 — FINAL</span>
+                      <span id="r3-lock" style="
+                        font-size:11px;color:#94A3B8;">
+                        🔒 Pass Round 2 to unlock
+                      </span>
+                    </div>
+                    <h3 style="font-size:16px;
+                      font-weight:600;margin-bottom:4px;">
+                      🎥 AI Video Interview
+                    </h3>
+                    <p style="font-size:13px;color:#64748B;">
+                      Real-time voice + camera · Resume-based
+                      questions · 15 minutes
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Camera/Mic preview -->
+                <div id="camera-preview" style="
+                  background:#0F172A;border-radius:12px;
+                  aspect-ratio:16/9;margin-bottom:16px;
+                  display:flex;align-items:center;
+                  justify-content:center;
+                  overflow:hidden;position:relative;">
+                  <video id="user-video" autoplay muted
+                    style="width:100%;height:100%;
+                    object-fit:cover;display:none;">
+                  </video>
+                  <div id="camera-placeholder" style="
+                    text-align:center;color:white;">
+                    <div style="font-size:40px;
+                      margin-bottom:8px;">📷</div>
+                    <div style="font-size:14px;">
+                      Camera will appear here
+                    </div>
+                  </div>
+                  <!-- Live interview UI overlay -->
+                  <div id="interview-overlay" style="
+                    position:absolute;bottom:12px;
+                    left:12px;right:12px;
+                    display:none;">
+                    <div style="background:rgba(0,0,0,0.7);
+                      border-radius:10px;padding:10px 14px;
+                      color:white;font-size:13px;">
+                      <span id="ai-question-display">
+                        AI is thinking...
+                      </span>
+                    </div>
+                  </div>
+                  <!-- Recording indicator -->
+                  <div id="rec-indicator" style="
+                    position:absolute;top:12px;right:12px;
+                    background:rgba(220,38,38,0.9);
+                    color:white;padding:4px 10px;
+                    border-radius:20px;font-size:11px;
+                    font-weight:500;display:none;
+                    align-items:center;gap:4px;">
+                    <span style="width:6px;height:6px;
+                      background:white;border-radius:50%;
+                      animation:pulse 1s infinite;
+                      display:inline-block;"></span>
+                    LIVE
+                  </div>
+                </div>
+
+                <!-- Permission check + start -->
+                <div id="permission-check" style="
+                  background:#FEF3C7;border-radius:10px;
+                  padding:12px 14px;margin-bottom:14px;
+                  font-size:13px;color:#92400E;">
+                  ⚠️ This interview requires 
+                  <strong>camera + microphone</strong> access.
+                  Make sure to allow permissions when prompted.
+                </div>
+
+                <button id="start-r3-btn"
+                  onclick="startVideoInterview()"
+                  style="width:100%;padding:12px;
+                  background:#DC2626;color:white;border:none;
+                  border-radius:10px;font-size:14px;
+                  font-weight:500;cursor:pointer;
+                  opacity:0.6;">
+                  Start AI Video Interview 🎥 →
+                </button>
+
+                <!-- Interview controls (shown during interview) -->
+                <div id="interview-controls"
+                  style="display:none;margin-top:14px;
+                  display:grid;grid-template-columns:1fr 1fr;
+                  gap:10px;">
+                  <button id="mic-toggle"
+                    onclick="toggleMic()"
+                    style="padding:10px;background:#F1F5F9;
+                    border:1px solid #E2E8F0;
+                    border-radius:10px;font-size:13px;
+                    cursor:pointer;">
+                    🎤 Mic: ON
+                  </button>
+                  <button onclick="endInterview()"
+                    style="padding:10px;background:#FEE2E2;
+                    color:#DC2626;border:1px solid #FECACA;
+                    border-radius:10px;font-size:13px;
+                    cursor:pointer;">
+                    ⏹ End Interview
+                  </button>
+                </div>
+
+                <!-- Final report -->
+                <div id="round3-result"
+                  style="display:none;margin-top:16px;">
+                </div>
+              </div>
+
+            </div><!-- end tab-placement -->
 
             </div><!-- end tab content wrapper -->
         </main>

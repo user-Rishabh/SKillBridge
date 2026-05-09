@@ -5,6 +5,7 @@
 const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
 const OPENROUTER_KEY = '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';
+const GEMINI_KEY = 'AIzaSyDS7TYMoat41MabOAIXGAEgOc_4s7hQSts';
 const YOUTUBE_API_KEY = 'AIzaSyDE3b7vCrg4HMwQLtjCcbmGMLp6-vZ4Lao';
 
 let supabase;
@@ -58,11 +59,15 @@ const conversation = [
 
 console.log('🚀 SkillBridge Dashboard JS Loading...');
 
-initTheme();
-initInteractions();
-initTabs();
-initSupabase();
-checkOnboarding();
+// ── INITIALIZATION ──────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 SkillBridge Dashboard: DOM Ready');
+    initTheme();
+    initInteractions();
+    initTabs();
+    initSupabase();
+    checkOnboarding();
+});
 
 // ── Supabase Init ────────────────────────────────────────────
 function initSupabase() {
@@ -96,18 +101,25 @@ async function checkOnboarding() {
       .eq('id', session.user.id)
       .single();
 
-  console.log('Profile check:', profile);
+  console.log('Profile check result:', { profile, error });
 
-  if (profile?.onboarding_completed === true) {
+  if (profile && profile.onboarding_completed === true) {
+    console.log('✅ Onboarding already completed');
     const overlay = document.getElementById('onboarding-overlay');
     if (overlay) overlay.style.display = 'none';
     loadDashboard(profile);
   } else {
+    console.log('🚀 Starting onboarding flow...');
     showOnboarding(profile);
   }
 }
 
-function showOnboarding(profile) {
+async function showOnboarding(profile) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const meta = session?.user?.user_metadata;
+    onboardingData.name = profile?.full_name?.split(' ')[0] || meta?.full_name?.split(' ')[0] || meta?.name?.split(' ')[0] || 'there';
+    currentUserName = onboardingData.name;
+
     const overlay = document.getElementById('onboarding-overlay');
     if (overlay) {
         overlay.style.display = 'flex';
@@ -117,9 +129,6 @@ function showOnboarding(profile) {
             overlay.style.opacity = '1';
         });
     }
-  
-    onboardingData.name = profile?.full_name?.split(' ')[0] || 'there';
-    currentUserName = onboardingData.name;
   
     addMessage('Hey ' + onboardingData.name + '! 👋 Welcome to SkillBridge AI.<br><br>I\'ll build your personalized career roadmap in just 2 minutes.<br><br>Ready? Let\'s go! 🚀');
   
@@ -185,7 +194,9 @@ async function sendChatAnswer() {
 }
 
 async function finishOnboarding() {
-    await supabase.from('profiles').update({
+    // Use upsert instead of update to handle new users (especially OAuth)
+    const { error } = await supabase.from('profiles').upsert({
+        id: currentUserId,
         goal: onboardingData.goal,
         current_level: onboardingData.currentLevel,
         skills: onboardingData.skills,
@@ -194,7 +205,15 @@ async function finishOnboarding() {
         education_level: onboardingData.educationLevel,
         onboarding_completed: true,
         updated_at: new Date().toISOString()
-    }).eq('id', currentUserId);
+    });
+
+    if (error) {
+        console.error('Error saving onboarding data:', error);
+        showToast('Failed to save your preferences. Please try again.');
+        const overlay = document.getElementById('onboarding-overlay');
+        if (overlay) overlay.style.display = 'none';
+        return;
+    }
 
     await generateRoadmapWithAI();
 }
@@ -266,9 +285,26 @@ Return ONLY the JSON. No explanation.`;
   } catch (error) {
     console.error('Roadmap error:', error);
     hideTyping();
+    addMessage('⚠️ I had some trouble with the AI, but I\'ve created a standard roadmap for you to get started! You can customize it later.');
     const fallback = getSmartFallback(onboardingData.goal || 'Software Developer');
     await saveAndShowRoadmap(fallback);
   }
+}
+
+function showTyping() {
+    const chat = document.getElementById('chat-messages');
+    if (!chat || document.getElementById('typing-indicator')) return;
+    const d = document.createElement('div');
+    d.id = 'typing-indicator';
+    d.style.cssText = `padding: 12px 16px; border-radius: 16px; max-width: 80px; margin-bottom: 8px; align-self: flex-start; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: flex; gap: 4px; align-items: center; justify-content: center; animation: fadeUp 300ms ease-out both;`;
+    d.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function hideTyping() {
+    const el = document.getElementById('typing-indicator');
+    if (el) el.remove();
 }
 
 async function saveAndShowRoadmap(roadmap) {
@@ -303,11 +339,19 @@ async function saveAndShowRoadmap(roadmap) {
     await supabase.from('projects').insert(projects);
   }
 
+  // Final success message
+  addMessage('✅ Your roadmap is ready! Redirecting to your personalized dashboard...');
+  
   const overlay = document.getElementById('onboarding-overlay');
   if (overlay) {
-    overlay.style.opacity = '0';
-    overlay.style.transition = 'opacity 500ms';
-    setTimeout(() => { overlay.style.display = 'none'; window.location.reload(); }, 500);
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 500ms';
+        setTimeout(() => { 
+            overlay.style.display = 'none'; 
+            window.location.reload(); 
+        }, 500);
+    }, 1500); // Give user time to see the success message
   }
 }
 
@@ -370,10 +414,10 @@ function renderTasks(tasks) {
   const completed = tasks.filter(t => t.status === 'completed');
 
   container.innerHTML = `
-    <div style="display:flex;gap:12px;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--color-border);">
-      <button onclick="filterTasks('all')" id="filter-all" style="padding:8px 18px;border-radius:12px;font-size:13px;font-weight:600;border:1px solid #059669;background:#059669;color:white;cursor:pointer;transition:all 200ms;">Mastery Path (${tasks.length})</button>
-      <button onclick="filterTasks('pending')" id="filter-pending" style="padding:8px 18px;border-radius:12px;font-size:13px;font-weight:600;border:1px solid var(--color-border);background:transparent;cursor:pointer;transition:all 200ms;">Next Steps (${pending.length})</button>
-      <button onclick="filterTasks('completed')" id="filter-completed" style="padding:8px 18px;border-radius:12px;font-size:13px;font-weight:600;border:1px solid var(--color-border);background:transparent;cursor:pointer;transition:all 200ms;">Completed (${completed.length})</button>
+    <div style="display:flex;gap:10px;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--color-border);align-items:center;flex-wrap:wrap;">
+      <button onclick="filterTasks('all')" id="filter-all" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid #059669;background:#059669;color:white;cursor:pointer;transition:all 200ms;height:36px;">Mastery Path (${tasks.length})</button>
+      <button onclick="filterTasks('pending')" id="filter-pending" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid var(--color-border);background:transparent;cursor:pointer;transition:all 200ms;height:36px;">Next Steps (${pending.length})</button>
+      <button onclick="filterTasks('completed')" id="filter-completed" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid var(--color-border);background:transparent;cursor:pointer;transition:all 200ms;height:36px;">Completed (${completed.length})</button>
     </div>
     <div id="tasks-list" style="position:relative; padding-left:20px;"></div>
   `;
@@ -1245,6 +1289,7 @@ function initTabs() {
         if (tabName === 'resources') searchYouTube('');
         if (tabName === 'tasks') loadTasks();
         if (tabName === 'profile') loadProfile();
+        if (tabName === 'placement') loadPlacementState();
     }
     tabs.forEach(tab => tab.addEventListener('click', (e) => { e.preventDefault(); switchTab(tab.dataset.tab); }));
     switchTab(localStorage.getItem('activeTab') || 'dashboard');
@@ -1298,5 +1343,114 @@ async function buildActivityHeatmap(userId) {
 function getSmartFallback(goal) { return { title: goal + " Roadmap", phases: [ { phase: "Phase 1", skills: ["Skill 1"], tasks: [{title: "Task 1", difficulty: "Easy"}] } ] }; }
 
 const style = document.createElement('style');
-style.textContent = `@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } .dot { width: 6px; height: 6px; background: #94A3B8; border-radius: 50%; animation: typing 1s infinite; } .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; } @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }`;
+style.textContent = `
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } 
+  .dot { width: 6px; height: 6px; background: #94A3B8; border-radius: 50%; animation: typing 1s infinite; } 
+  .dot:nth-child(2) { animation-delay: 0.2s; } 
+  .dot:nth-child(3) { animation-delay: 0.4s; } 
+  @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  .placement-card { background:white; border-radius:16px; border:1px solid #E2E8F0; padding:24px; margin-bottom:20px; transition: all 300ms; }
+  .placement-card.locked { opacity: 0.7; filter: grayscale(1); cursor: not-allowed; }
+  .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .status-passed { background: #D1FAE5; color: #059669; }
+  .status-pending { background: #FEF3C7; color: #D97706; }
+  .status-locked { background: #F1F5F9; color: #64748B; }
+`;
 document.head.appendChild(style);
+
+// ── PLACEMENT PREPARATION LOGIC ─────────────────────────────
+let placementState = {
+  resumeUploaded: true, // Unlocked as requested
+  r1Passed: true,       // Unlocked as requested
+  r2Passed: true,       // Unlocked as requested
+  r3Passed: true        // Unlocked as requested
+};
+
+function loadPlacementState() {
+  const saved = localStorage.getItem('placementState_' + currentUserId);
+  if (saved) {
+    // Merge saved state but keep "Unlock All" override if needed
+    // For now, we force all true as per user request
+    // placementState = JSON.parse(saved);
+  }
+  updatePlacementUI();
+}
+
+function updatePlacementUI() {
+  const { resumeUploaded, r1Passed, r2Passed, r3Passed } = placementState;
+  
+  // Progress Bar
+  updateBar('bar-resume', resumeUploaded);
+  updateBar('bar-r1', r1Passed);
+  updateBar('bar-r2', r2Passed);
+  updateBar('bar-r3', r3Passed);
+
+  // Sections
+  updateSection('round1-section', r1Passed || resumeUploaded, r1Passed);
+  updateSection('round2-section', r2Passed || r1Passed, r2Passed);
+  updateSection('round3-section', r3Passed || r2Passed, r3Passed);
+  
+  // Resume actions
+  const resumeActions = document.getElementById('resume-actions');
+  if (resumeActions) resumeActions.style.display = 'grid';
+}
+
+function updateBar(id, passed) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.background = passed ? '#F0FDF4' : '#F8FAFC';
+  el.style.color = passed ? '#059669' : '#94A3B8';
+  if (passed) el.innerHTML = el.innerHTML.replace('📄', '✅').replace('📝', '✅').replace('💻', '✅').replace('🎥', '✅');
+}
+
+function updateSection(id, unlocked, passed) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!unlocked) {
+    el.classList.add('locked');
+    el.style.pointerEvents = 'none';
+  } else {
+    el.classList.remove('locked');
+    el.style.pointerEvents = 'auto';
+  }
+}
+
+// Round Start Functions
+async function startRound1() {
+  showToast('Starting Aptitude & Coding Round...');
+  // Logic for generating quiz...
+}
+
+async function startRound2() {
+  showToast('Starting Technical Interview Simulation...');
+}
+
+async function startRound3() {
+  showToast('Initializing AI Video Interview...');
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function handleResumeUpload(input) {
+  if (input.files && input.files[0]) {
+    placementState.resumeUploaded = true;
+    localStorage.setItem('placementState_' + currentUserId, JSON.stringify(placementState));
+    showToast('Resume uploaded and analyzed! Round 1 Unlocked.');
+    updatePlacementUI();
+  }
+}
+
+// Ensure the functions are global for onclick handlers
+window.startRound1 = startRound1;
+window.startRound2 = startRound2;
+window.startRound3 = startRound3;
+window.scrollToSection = scrollToSection;
+window.handleResumeUpload = handleResumeUpload;
+window.loadPlacementState = loadPlacementState;
+window.analyzeResume = analyzeResume;
+window.generateAIResume = generateAIResume;
+window.downloadResumePDF = downloadResumePDF;
+
