@@ -4,7 +4,7 @@
 
 const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
-const OPENROUTER_KEY = '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';
+const OPENROUTER_KEY = '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';
 const YOUTUBE_API_KEY = 'AIzaSyDE3b7vCrg4HMwQLtjCcbmGMLp6-vZ4Lao';
 
 let supabase;
@@ -494,8 +494,10 @@ function openTaskDetail(taskId) {
       background:white;
       border-radius:24px;
       padding:32px;
-      max-width:520px;width:100%;
+      max-width:560px;width:100%;
       box-shadow:0 24px 60px rgba(0,0,0,0.2);
+      max-height:90vh;
+      overflow-y:auto;
     ">
       <div style="display:flex;justify-content:space-between;margin-bottom:24px;">
         <div>
@@ -516,23 +518,42 @@ function openTaskDetail(taskId) {
         <span style="background:#F1F5F9;padding:4px 10px;border-radius:8px;">📍 ${task.roadmap_phase}</span>
       </div>
 
-      ${task.resource_link ? `
-        <div style="margin-bottom:24px;">
-          <div style="font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:10px;">Learning Material</div>
-          <a href="${task.resource_link}" target="_blank" 
-            style="display:flex;align-items:center;gap:12px;padding:16px;background:#F8FAFC;color:#059669;border-radius:16px;text-decoration:none;border:1px solid #E2E8F0;transition:all 200ms;"
+      <div style="margin-bottom:24px;">
+        <div style="font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:12px;">Learning Resources</div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <!-- Link 1: Documentation -->
+          <a href="${task.resource_link || 'https://developer.mozilla.org'}" target="_blank" 
+            style="display:flex;flex-direction:column;gap:8px;padding:16px;background:#F8FAFC;border-radius:16px;text-decoration:none;border:1px solid #E2E8F0;transition:all 200ms;"
             onmouseover="this.style.borderColor='#059669';this.style.background='#F0FDF4'"
             onmouseout="this.style.borderColor='#E2E8F0';this.style.background='#F8FAFC'"
           >
-            <span style="font-size:20px;">📚</span>
+            <span style="font-size:20px;">🌐</span>
             <div>
-              <div style="font-weight:600;font-size:14px;">Study Resource</div>
-              <div style="font-size:12px;color:#64748B;">Open documentation or tutorial</div>
+              <div style="font-weight:700;font-size:13px;color:#0F172A;">Official Docs</div>
+              <div style="font-size:11px;color:#64748B;">External tutorial</div>
             </div>
-            <span style="margin-left:auto;">→</span>
           </a>
+
+          <!-- Link 2: AI Course Notes -->
+          <button onclick="generateCourseNotes('${task.id}', '${task.title.replace(/'/g,"\\'")}')"
+            style="display:flex;flex-direction:column;gap:8px;padding:16px;background:#F0FDF4;border-radius:16px;border:1px solid #059669;cursor:pointer;text-align:left;transition:all 200ms;"
+            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(5,150,105,0.1)'"
+            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'"
+          >
+            <span style="font-size:20px;">📝</span>
+            <div>
+              <div style="font-weight:700;font-size:13px;color:#065F46;">Course Notes</div>
+              <div style="font-size:11px;color:#059669;">AI-generated summary</div>
+            </div>
+          </button>
         </div>
-      ` : ''}
+      </div>
+
+      <!-- Notes Preview Area -->
+      <div id="course-notes-container" style="display:none;margin-bottom:24px;padding:16px;background:#F8FAFC;border-radius:16px;border:1px solid #E2E8F0;font-size:14px;color:#334155;line-height:1.6;">
+        <div id="notes-content"></div>
+      </div>
 
       <div style="background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-radius:16px;padding:20px;margin-bottom:28px;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -554,6 +575,111 @@ function openTaskDetail(taskId) {
     </div>
   `;
   document.body.appendChild(modal);
+}
+
+async function generateCourseNotes(taskId, title) {
+  // Create a dedicated high-fidelity popup for course notes
+  const viewer = document.createElement('div');
+  viewer.id = 'course-viewer-modal';
+  viewer.style.cssText = `position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:10000;display:flex;flex-direction:column;padding:0;overflow-y:auto;font-family:'Inter',sans-serif;`;
+  
+  viewer.innerHTML = `
+    <nav style="padding:20px 40px;background:white;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:#059669;color:white;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;">SB</div>
+        <div>
+          <div style="font-size:12px;color:#64748B;font-weight:600;">COURSE CONTENT</div>
+          <div style="font-size:16px;color:#0F172A;font-weight:700;">${title}</div>
+        </div>
+      </div>
+      <button onclick="document.getElementById('course-viewer-modal').remove()" 
+        style="background:#F1F5F9;border:none;padding:8px 20px;border-radius:12px;font-weight:700;color:#0F172A;cursor:pointer;transition:all 200ms;"
+        onmouseover="this.style.background='#E2E8F0'"
+      >Close Viewer</button>
+    </nav>
+
+    <div style="max-width:1000px;margin:0 auto;width:100%;padding:60px 20px;display:grid;grid-template-columns:1.5fr 1fr;gap:40px;">
+      <!-- Left: Notes Content -->
+      <div id="viewer-content">
+        <div style="text-align:center;padding:100px 0;">
+          <div class="shimmer" style="height:30px;width:60%;margin:0 auto 20px;border-radius:8px;"></div>
+          <div class="shimmer" style="height:20px;width:40%;margin:0 auto 40px;border-radius:8px;"></div>
+          <p style="color:#059669;font-weight:600;font-size:18px;">✨ Our AI is drafting your comprehensive study notes...</p>
+        </div>
+      </div>
+
+      <!-- Right: Video & Resources -->
+      <div style="display:flex;flex-direction:column;gap:32px;">
+        <div style="background:#F8FAFC;border-radius:24px;padding:24px;border:1px solid #E2E8F0;">
+          <h4 style="margin-bottom:16px;font-size:14px;color:#0F172A;">🎥 Video Masterclass</h4>
+          <div id="viewer-video" style="aspect-ratio:16/9;background:#E2E8F0;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#64748B;font-size:12px;">
+            Searching for best tutorial...
+          </div>
+        </div>
+
+        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border-radius:24px;padding:24px;color:white;">
+          <h4 style="margin-bottom:12px;font-size:14px;color:#94A3B8;">🚀 Quick Challenge</h4>
+          <p style="font-size:15px;margin-bottom:20px;">Master this topic to earn +30 XP and unlock the next phase of your roadmap.</p>
+          <button onclick="document.getElementById('course-viewer-modal').remove()" 
+            style="width:100%;background:#059669;color:white;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;"
+          >Return to Dashboard</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(viewer);
+
+  // 1. Load Video (YouTube)
+  searchYouTube(title).then(videos => {
+    const videoArea = document.getElementById('viewer-video');
+    if (videos && videos.length > 0) {
+      videoArea.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videos[0].id.videoId}" frameborder="0" allowfullscreen></iframe>`;
+    } else {
+      videoArea.innerHTML = 'No video found';
+    }
+  });
+
+  // 2. Generate Notes
+  const prompt = `Write a deep-dive technical article for: "${title}". 
+  Include:
+  - Theoretical Background
+  - Step-by-step Implementation Guide
+  - Common Pitfalls and Best Practices
+  - 3 Complex Code Examples with explanations
+  - A summary "Cheat Sheet" at the end.
+  
+  Format in semantic HTML. Use Inter font style. Return ONLY the content.`;
+
+  const result = await callAI(prompt, 1200);
+  const contentArea = document.getElementById('viewer-content');
+  if (result) {
+    const cleanHTML = result.replace(/```html|```/g, '').trim();
+    contentArea.innerHTML = `
+      <div class="fade-in" style="line-height:1.8;color:#1E293B;font-size:16px;">
+        <h1 style="font-size:32px;font-weight:800;color:#0F172A;margin-bottom:32px;">${title}</h1>
+        ${cleanHTML}
+      </div>
+    `;
+  } else {
+    // Fallback if AI fails
+    contentArea.innerHTML = `
+      <div style="padding:60px;background:#FEF2F2;border-radius:24px;border:1px solid #FEE2E2;text-align:center;">
+        <h2 style="color:#B91C1C;">AI Service Currently Busy</h2>
+        <p style="color:#991B1B;margin:16px 0;">We couldn't generate the notes right now. However, you can still watch the video tutorial on the right!</p>
+        <button onclick="generateCourseNotes('${taskId}','${title}')" style="background:white;border:1px solid #B91C1C;color:#B91C1C;padding:10px 24px;border-radius:12px;cursor:pointer;font-weight:600;">Retry Generation</button>
+      </div>
+    `;
+  }
+}
+
+async function searchYouTube(query) {
+  try {
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)} tutorial&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`);
+    const data = await res.json();
+    return data.items;
+  } catch (e) {
+    return null;
+  }
 }
 
 async function startQuiz(taskId, taskTitle, phase) {
@@ -653,7 +779,39 @@ async function loadDashboard(profile) {
     if (window.lucide) lucide.createIcons();
 }
 
-// ... (previous functions continue) ...
+async function callAI(prompt, maxTokens = 800) {
+    try {
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': `Bearer ${OPENROUTER_KEY}`, 
+              'HTTP-Referer': window.location.origin, 
+              'X-Title': 'SkillBridge' 
+            },
+            body: JSON.stringify({ 
+              model: 'google/gemma-2-9b-it:free', 
+              messages: [{ role: 'user', content: prompt }], 
+              max_tokens: maxTokens, 
+              temperature: 0.7 
+            })
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          console.error('OpenRouter API Error:', res.status, errorData);
+          window.lastAIError = { status: res.status, data: errorData };
+          return null;
+        }
+        
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content || null;
+    } catch (e) { 
+      console.error('AI Call failed:', e);
+      window.lastAIError = { status: 'Network Error', data: e.message };
+      return null; 
+    }
+}
 
 // ── RESUME & PORTFOLIO FUNCTIONS ─────────────────────────────
 async function generateAIResume() {
@@ -661,15 +819,38 @@ async function generateAIResume() {
   if (!preview) return;
   preview.innerHTML = '<div style="text-align:center;margin-top:100px;color:#059669;">✨ AI is crafting your professional resume...</div>';
   
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
-  const { data: tasks } = await supabase.from('tasks').select('title').eq('user_id', currentUserId).eq('status', 'completed');
-  
-  const prompt = `Create a professional resume for ${profile.full_name}. Goal: ${profile.goal}. Education: ${profile.college_name}, ${profile.branch}. Skills: ${tasks.map(t=>t.title).join(', ')}. Use a clean layout. Return as HTML with simple inline styles.`;
-  const result = await callAI(prompt, 1000);
-  if (result) {
-    preview.innerHTML = `<div style="background:white;padding:20px;color:#333;font-family:serif;line-height:1.6;">${result}</div>`;
-  } else {
-    preview.innerHTML = '<p style="color:#ef4444;text-align:center;">Failed to generate resume. Try again.</p>';
+  try {
+    const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
+    const { data: tasks } = await supabase.from('tasks').select('title').eq('user_id', currentUserId).eq('status', 'completed');
+    
+    const skillsList = (tasks || []).map(t => t.title).join(', ') || 'Various Technical Skills';
+    
+    const prompt = `Act as a professional Resume Builder. Create a modern, professional resume for a student.
+    NAME: ${profile.full_name || 'Raina Mishra'}
+    GOAL: ${profile.goal || 'Software Engineer'}
+    EDUCATION: ${profile.college_name || 'Not Specified'} (${profile.branch || 'Not Specified'})
+    KEY SKILLS: ${skillsList}
+    
+    Format the response in clean HTML (no <html> or <body> tags) using only standard tags like <h3>, <p>, <ul>, <li>. Use inline CSS for a premium look (font-family: Inter, sans-serif). Keep it professional and concise.`;
+    
+    const result = await callAI(prompt, 900);
+    if (result) {
+      const cleanHTML = result.replace(/```html|```/g, '').trim();
+      preview.innerHTML = `<div class="resume-content fade-in" style="background:white;padding:32px;color:#1E293B;line-height:1.6;font-family:'Inter',sans-serif;max-height:500px;overflow-y:auto;">${cleanHTML}</div>`;
+    } else {
+      throw new Error('AI service failed to respond');
+    }
+  } catch (err) {
+    console.error('Resume Generation Error:', err);
+    const errInfo = window.lastAIError || { status: 'Unknown', data: err.message };
+    preview.innerHTML = `<div style="text-align:center;margin-top:80px;color:#ef4444;">
+      <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+      <div style="font-weight:600;">Failed to generate resume</div>
+      <div style="font-size:12px;color:#94A3B8;margin-top:4px;">
+        Error: ${errInfo.status} ${errInfo.data?.error?.message || ''}
+      </div>
+      <button onclick="generateAIResume()" style="margin-top:16px;background:#F1F5F9;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-weight:600;color:#0F172A;">🔄 Try Again</button>
+    </div>`;
   }
 }
 
