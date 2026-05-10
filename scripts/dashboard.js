@@ -1598,10 +1598,13 @@ function initTabs() {
         if (target) { target.style.display = 'block'; }
         tabs.forEach(t => { t.className = `nav-item ${t.dataset.tab === tabName ? 'active' : ''}`; });
         localStorage.setItem('activeTab', tabName);
-        if (tabName === 'resources') searchYouTube('');
+        if (tabName === 'resources') loadResourcesTab();
         if (tabName === 'tasks') loadTasks();
+        if (tabName === 'projects') loadProjects();
         if (tabName === 'profile') loadProfile();
         if (tabName === 'placement') loadPlacementState();
+        if (tabName === 'mentorship') initMentorChat();
+        if (tabName === 'portfolio') loadPortfolioTab();
     }
     tabs.forEach(tab => tab.addEventListener('click', (e) => { e.preventDefault(); switchTab(tab.dataset.tab); }));
     switchTab(localStorage.getItem('activeTab') || 'dashboard');
@@ -1765,4 +1768,1121 @@ window.loadPlacementState = loadPlacementState;
 window.analyzeResume = analyzeResume;
 window.generateAIResume = generateAIResume;
 window.downloadResumePDF = downloadResumePDF;
+
+// ── LEARNING RESOURCES ───────────────────────────────────────
+let currentVideoData = null;
+
+async function loadResourcesTab() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('roadmap_data, goal')
+    .eq('id', session.user.id)
+    .single();
+
+  // Build quick topic chips from roadmap
+  const chips = document.getElementById('quick-topic-chips');
+  if (chips && profile?.roadmap_data?.phases) {
+    const allSkills = [];
+    profile.roadmap_data.phases.forEach(p => {
+      (p.skills || []).forEach(s => {
+        if (!allSkills.includes(s)) allSkills.push(s);
+      });
+    });
+
+    chips.innerHTML = allSkills
+      .slice(0, 10)
+      .map(skill => `
+        <button onclick="searchResources('${skill}')"
+          style="padding:5px 12px;
+          background:#F0FDF4;
+          border:1px solid #A7F3D0;
+          color:#059669;border-radius:20px;
+          font-size:12px;cursor:pointer;
+          transition:all 150ms;"
+          onmouseover="this.style.background='#D1FAE5'"
+          onmouseout="this.style.background='#F0FDF4'">
+          ${skill}
+        </button>
+      `).join('');
+  }
+
+  // Auto-load videos for user's goal
+  const goal = profile?.goal || 'software development';
+  await searchResources(goal + ' tutorial');
+
+  // Load saved videos
+  await loadSavedVideos(session.user.id);
+
+  // Load saved notes
+  const savedNotes = localStorage.getItem('user_notes_' + session.user.id);
+  if (savedNotes) {
+    const notesEl = document.getElementById('my-notes');
+    if (notesEl) notesEl.value = savedNotes;
+  }
+}
+
+async function searchResources(query) {
+  if (!query?.trim()) return;
+
+  const heading = document.getElementById('results-heading');
+  const grid = document.getElementById('video-results-grid');
+  const count = document.getElementById('results-count');
+
+  if (heading) heading.textContent = `Searching: "${query}"...`;
+  if (grid) grid.innerHTML = `
+    ${Array(6).fill(0).map(() => `
+      <div style="background:#F8FAFC;
+        border-radius:12px;
+        aspect-ratio:16/9;
+        animation:pulse 1.5s infinite;">
+      </div>
+    `).join('')}
+  `;
+
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search` +
+      `?part=snippet` +
+      `&q=${encodeURIComponent(query + ' tutorial')}` +
+      `&type=video` +
+      `&maxResults=9` +
+      `&relevanceLanguage=en` +
+      `&videoDuration=medium` +
+      `&key=${YOUTUBE_API_KEY}`
+    );
+
+    if (!res.ok) throw new Error('YouTube API error');
+    const data = await res.json();
+
+    if (!data.items?.length) {
+      if (grid) grid.innerHTML = `
+        <div style="grid-column:1/-1;
+          text-align:center;padding:40px;
+          color:#94A3B8;font-size:14px;">
+          No videos found for "${query}". 
+          Try different keywords.
+        </div>
+      `;
+      return;
+    }
+
+    if (heading) heading.textContent = `Results for: "${query}"`;
+    if (count) count.textContent = `${data.items.length} videos`;
+
+    if (grid) {
+      grid.innerHTML = data.items.map(item => `
+        <div style="background:white;
+          border-radius:12px;
+          border:1px solid #E2E8F0;
+          overflow:hidden;cursor:pointer;
+          transition:all 200ms;"
+          onclick="playVideo(
+            '${item.id.videoId}',
+            '${item.snippet.title.replace(/'/g,"\\'").substring(0,60)}',
+            '${item.snippet.channelTitle.replace(/'/g,"\\'")}',
+            '${item.snippet.thumbnails.medium.url}'
+          )"
+          onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+
+          <!-- Thumbnail -->
+          <div style="position:relative;
+            aspect-ratio:16/9;overflow:hidden;">
+            <img src="${item.snippet.thumbnails.medium.url}"
+              style="width:100%;height:100%;
+              object-fit:cover;"
+              loading="lazy">
+            <div style="position:absolute;
+              inset:0;background:rgba(0,0,0,0);
+              display:flex;align-items:center;
+              justify-content:center;
+              transition:background 200ms;"
+              onmouseover="this.style.background='rgba(0,0,0,0.3)'"
+              onmouseout="this.style.background='rgba(0,0,0,0)'">
+              <div style="width:44px;height:44px;
+                background:rgba(255,255,255,0.9);
+                border-radius:50%;
+                display:flex;align-items:center;
+                justify-content:center;
+                font-size:18px;opacity:0;
+                transition:opacity 200ms;"
+                onmouseover="this.style.opacity='1'"
+                onmouseout="this.style.opacity='0'">
+                ▶
+              </div>
+            </div>
+          </div>
+
+          <!-- Video info -->
+          <div style="padding:10px;">
+            <div style="font-size:13px;
+              font-weight:500;color:#0F172A;
+              line-height:1.4;margin-bottom:4px;
+              display:-webkit-box;
+              -webkit-line-clamp:2;
+              -webkit-box-orient:vertical;
+              overflow:hidden;">
+              ${item.snippet.title}
+            </div>
+            <div style="font-size:11px;
+              color:#94A3B8;">
+              ${item.snippet.channelTitle}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+  } catch(err) {
+    console.error('YouTube search error:', err);
+    if (grid) grid.innerHTML = `
+      <div style="grid-column:1/-1;
+        text-align:center;padding:40px;">
+        <div style="font-size:32px;
+          margin-bottom:12px;">📺</div>
+        <div style="font-size:14px;
+          font-weight:500;margin-bottom:6px;">
+          YouTube API error
+        </div>
+        <div style="font-size:13px;
+          color:#64748B;">
+          Could not load videos. Please check your connection or API key.
+        </div>
+      </div>
+    `;
+  }
+}
+
+function playVideo(videoId, title, channel, thumb) {
+  currentVideoData = { videoId, title, channel, thumb };
+  const overlay = document.getElementById('video-player-overlay');
+  const iframe = document.getElementById('yt-player');
+  const titleEl = document.getElementById('player-title');
+  const infoEl = document.getElementById('player-info');
+
+  if (iframe) {
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+  }
+  if (titleEl) titleEl.textContent = title;
+  if (infoEl) {
+    infoEl.innerHTML = `
+      <div style="display:flex;gap:10px;
+        align-items:center;">
+        <span style="font-size:13px;
+          color:rgba(255,255,255,0.7);">
+          📺 ${channel}
+        </span>
+      </div>
+    `;
+  }
+  if (overlay) overlay.style.display = 'flex';
+
+  const notes = document.getElementById('my-notes');
+  if (notes && !notes.value) {
+    notes.placeholder = `Notes for: ${title}\n\nKey points:\n- \n- \n- \n\nSummary:\n`;
+  }
+}
+
+function closeVideoPlayer() {
+  const overlay = document.getElementById('video-player-overlay');
+  const iframe = document.getElementById('yt-player');
+  if (iframe) iframe.src = '';
+  if (overlay) overlay.style.display = 'none';
+  currentVideoData = null;
+}
+
+async function saveCurrentVideo() {
+  if (!currentVideoData) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  const { error } = await supabase
+    .from('saved_resources')
+    .upsert({
+      user_id: session.user.id,
+      video_id: currentVideoData.videoId,
+      title: currentVideoData.title,
+      channel: currentVideoData.channel,
+      thumbnail: currentVideoData.thumb
+    });
+
+  if (!error) {
+    const btn = document.getElementById('save-video-btn');
+    if (btn) {
+      btn.textContent = '✅ Saved!';
+      btn.style.background = 'rgba(5,150,105,0.3)';
+    }
+    await loadSavedVideos(session.user.id);
+  }
+}
+
+async function loadSavedVideos(userId) {
+  const { data } = await supabase
+    .from('saved_resources')
+    .select('*')
+    .eq('user_id', userId)
+    .order('saved_at', { ascending: false })
+    .limit(10);
+
+  const list = document.getElementById('saved-videos-list');
+  if (!list) return;
+
+  if (!data || data.length === 0) {
+    list.innerHTML = `<div style="padding:16px;text-align:center;font-size:13px;color:#94A3B8;">No saved videos yet</div>`;
+    return;
+  }
+
+  list.innerHTML = data.map(v => `
+    <div style="display:flex;gap:8px;
+      padding:10px 12px;cursor:pointer;
+      border-bottom:1px solid #F8FAFC;
+      transition:background 150ms;"
+      onclick="playVideo('${v.video_id}',
+        '${v.title?.replace(/'/g,"\\'")}',
+        '${v.channel?.replace(/'/g,"\\'")}',
+        '${v.thumbnail}')"
+      onmouseover="this.style.background='#F8FAFC'"
+      onmouseout="this.style.background='white'">
+      <img src="${v.thumbnail}"
+        style="width:60px;height:34px;
+        border-radius:4px;object-fit:cover;
+        flex-shrink:0;">
+      <div style="flex:1;overflow:hidden;">
+        <div style="font-size:12px;
+          font-weight:500;color:#0F172A;
+          white-space:nowrap;overflow:hidden;
+          text-overflow:ellipsis;">
+          ${v.title}
+        </div>
+        <div style="font-size:11px;color:#94A3B8;">
+          ${v.channel}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveNotes() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  const notes = document.getElementById('my-notes')?.value;
+  localStorage.setItem('user_notes_' + session.user.id, notes || '');
+  showToast('📝 Notes saved!');
+}
+
+// Global click listener for closing overlay
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'video-player-overlay') {
+    closeVideoPlayer();
+  }
+});
+// ── PROJECTS SYSTEM ──────────────────────────────────────────
+const suggestedProjects = {
+  frontend: [
+    { title:'Personal Portfolio Website',
+      description:'Build a responsive portfolio showcasing your skills and projects with animations.',
+      tech_stack:['HTML','CSS','JavaScript'],
+      difficulty:'Beginner',
+      estimated_hours:8,
+      xp_reward:50,
+      checkpoints:[
+        'Setup project structure',
+        'Build navbar & hero section',
+        'Add projects section',
+        'Add contact form',
+        'Deploy to GitHub Pages'
+      ]
+    },
+    { title:'Weather Dashboard App',
+      description:'Real-time weather app with 5-day forecast using OpenWeather API.',
+      tech_stack:['JavaScript','APIs','CSS'],
+      difficulty:'Intermediate',
+      estimated_hours:12,
+      xp_reward:100,
+      checkpoints:[
+        'Setup OpenWeather API',
+        'Build search functionality',
+        'Display current weather',
+        'Add 5-day forecast',
+        'Add geolocation support'
+      ]
+    },
+    { title:'Full Stack Todo App',
+      description:'CRUD application with React frontend and Supabase backend.',
+      tech_stack:['React','Supabase','CSS'],
+      difficulty:'Intermediate',
+      estimated_hours:16,
+      xp_reward:150,
+      checkpoints:[
+        'Setup React project',
+        'Connect Supabase database',
+        'Build Create/Read operations',
+        'Add Update/Delete',
+        'Add user authentication'
+      ]
+    },
+    { title:'E-commerce Product Page',
+      description:'Pixel-perfect product page with cart functionality.',
+      tech_stack:['React','Context API','CSS'],
+      difficulty:'Advanced',
+      estimated_hours:20,
+      xp_reward:200,
+      checkpoints:[
+        'Design product layout',
+        'Add image gallery',
+        'Build cart context',
+        'Add to cart functionality',
+        'Checkout flow UI'
+      ]
+    }
+  ],
+  backend: [
+    { title:'REST API with Authentication',
+      description:'Build a secure REST API with JWT auth and PostgreSQL.',
+      tech_stack:['Node.js','Express','PostgreSQL'],
+      difficulty:'Intermediate',
+      estimated_hours:14,
+      xp_reward:120,
+      checkpoints:[
+        'Setup Express server',
+        'Connect PostgreSQL',
+        'Add user registration',
+        'Add JWT authentication',
+        'Build CRUD endpoints'
+      ]
+    },
+    { title:'Real-time Chat Application',
+      description:'WebSocket-based chat app with rooms and online status.',
+      tech_stack:['Node.js','Socket.io','React'],
+      difficulty:'Advanced',
+      estimated_hours:20,
+      xp_reward:200,
+      checkpoints:[
+        'Setup Socket.io server',
+        'Build chat rooms',
+        'Add online status',
+        'Message history',
+        'Deploy application'
+      ]
+    }
+  ]
+};
+
+async function loadProjects() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('goal, roadmap_data')
+    .eq('id', session.user.id)
+    .single();
+
+  const { data: dbProjects } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('user_id', session.user.id)
+    .order('status');
+
+  const goal = (profile?.goal || '').toLowerCase();
+  let suggested = suggestedProjects.frontend;
+  if (goal.includes('backend') || goal.includes('node') || goal.includes('python')) {
+    suggested = suggestedProjects.backend;
+  }
+
+  const roadmapProjects = [];
+  if (profile?.roadmap_data?.phases) {
+    profile.roadmap_data.phases.forEach(p => {
+      if (p.project) {
+        roadmapProjects.push({
+          title: p.project,
+          description: `Phase project: ${p.phase}`,
+          tech_stack: p.skills || [],
+          difficulty: 'Intermediate',
+          estimated_hours: 10,
+          xp_reward: 100,
+          from_roadmap: true,
+          phase: p.phase
+        });
+      }
+    });
+  }
+
+  const allProjects = [
+    ...(dbProjects || []),
+    ...roadmapProjects.filter(rp => !(dbProjects || []).find(dp => dp.title === rp.title)),
+    ...suggested.filter(sp => !(dbProjects || []).find(dp => dp.title === sp.title))
+  ];
+
+  window.allProjectsData = allProjects;
+  renderProjectsGrid(allProjects);
+}
+
+function renderProjectsGrid(projects) {
+  const grid = document.getElementById('projects-grid');
+  if (!grid) return;
+
+  if (!projects?.length) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94A3B8;">
+        No projects yet. Generate your roadmap to get project suggestions!
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = projects.map((proj, i) => {
+    const isDone = proj.status === 'completed';
+    const pct = proj.progress_pct || 0;
+    const diffColor = {
+      'Beginner':'#10B981',
+      'Intermediate':'#F59E0B',
+      'Advanced':'#EF4444'
+    }[proj.difficulty] || '#94A3B8';
+
+    return `
+      <div style="background:white;border-radius:14px;border:1px solid ${isDone?'#A7F3D0':'#E2E8F0'};overflow:hidden;transition:all 200ms;cursor:pointer;"
+        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)'"
+        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'"
+        onclick="openProjectDetail(${i})">
+        <div style="padding:16px;border-bottom:1px solid #F8FAFC;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${diffColor}20;color:${diffColor};font-weight:500;">
+                ${proj.difficulty || 'Intermediate'}
+              </span>
+              ${proj.from_roadmap ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:#EDE9FE;color:#7C3AED;font-weight:500;">Roadmap</span>` : ''}
+              ${proj.is_custom ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:#F0FDF4;color:#059669;font-weight:500;">Custom</span>` : ''}
+              ${isDone ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:#D1FAE5;color:#059669;font-weight:500;">✓ Done</span>` : ''}
+            </div>
+            <span style="font-size:13px;font-weight:700;color:#059669;">+${proj.xp_reward || 100} XP</span>
+          </div>
+          <h4 style="font-size:15px;font-weight:600;color:#0F172A;margin-bottom:6px;line-height:1.3;">${proj.title}</h4>
+          <p style="font-size:12px;color:#64748B;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${proj.description || ''}</p>
+        </div>
+        <div style="padding:10px 16px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #F8FAFC;">
+          ${(proj.tech_stack || []).map(t => `<span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:11px;">${t}</span>`).join('')}
+        </div>
+        <div style="padding:12px 16px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;">
+            <span>Progress</span><span>${pct}%</span>
+          </div>
+          <div style="height:4px;background:#F1F5F9;border-radius:2px;">
+            <div style="height:100%;width:${pct}%;background:#059669;border-radius:2px;transition:width 600ms ease;"></div>
+          </div>
+          <div style="font-size:11px;color:#94A3B8;margin-top:6px;">~${proj.estimated_hours || 10} hours</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function filterProjects(filter, btn) {
+  ['all','active','completed','custom'].forEach(f => {
+    const b = document.getElementById('proj-filter-' + f);
+    if (b) {
+      b.style.background = f === filter ? '#059669' : '#F1F5F9';
+      b.style.color = f === filter ? 'white' : '#64748B';
+    }
+  });
+  const all = window.allProjectsData || [];
+  const filtered = filter === 'all' ? all
+    : filter === 'active' ? all.filter(p => p.status === 'in_progress' || !p.status)
+    : filter === 'completed' ? all.filter(p => p.status === 'completed')
+    : all.filter(p => p.is_custom);
+  renderProjectsGrid(filtered);
+}
+
+async function openProjectDetail(index) {
+  const proj = window.allProjectsData?.[index];
+  if (!proj) return;
+  const modal = document.getElementById('project-detail-modal');
+  const content = document.getElementById('project-detail-content');
+  if (!modal || !content) return;
+
+  const checkpoints = proj.checkpoints || [];
+  content.innerHTML = `
+    <div style="padding:24px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+        <div style="flex:1;">
+          <h3 style="font-size:18px;font-weight:600;margin-bottom:6px;">${proj.title}</h3>
+          <p style="font-size:13px;color:#64748B;line-height:1.5;">${proj.description}</p>
+        </div>
+        <button onclick="closeProjectDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94A3B8;flex-shrink:0;margin-left:10px;">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+        <div style="background:#F8FAFC;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:16px;font-weight:600;color:#059669;">+${proj.xp_reward || 100}</div>
+          <div style="font-size:11px;color:#64748B;">XP Reward</div>
+        </div>
+        <div style="background:#F8FAFC;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:16px;font-weight:600;color:#0F172A;">~${proj.estimated_hours || 10}h</div>
+          <div style="font-size:11px;color:#64748B;">Estimated</div>
+        </div>
+        <div style="background:#F8FAFC;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:16px;font-weight:600;color:#0F172A;">${checkpoints.length}</div>
+          <div style="font-size:11px;color:#64748B;">Checkpoints</div>
+        </div>
+      </div>
+      ${checkpoints.length > 0 ? `
+        <div style="margin-bottom:20px;">
+          <h4 style="font-size:14px;font-weight:600;margin-bottom:12px;">📋 Checkpoints</h4>
+          ${checkpoints.map((cp, ci) => `
+            <div style="display:flex;gap:10px;align-items:center;padding:10px;background:#F8FAFC;border-radius:8px;margin-bottom:6px;">
+              <div style="width:20px;height:20px;border-radius:50%;border:2px solid #E2E8F0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;"></div>
+              <span style="font-size:13px;color:#0F172A;">${cp}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      <div style="margin-bottom:20px;">
+        <label style="font-size:12px;font-weight:500;color:#475569;margin-bottom:4px;display:block;">GitHub Repository URL</label>
+        <div style="display:flex;gap:8px;">
+          <input id="proj-github-input" value="${proj.github_url || ''}" placeholder="https://github.com/..." style="flex:1;padding:8px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;outline:none;">
+          <button onclick="saveGithubUrl(${index})" style="padding:8px 14px;background:#0F172A;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">Save</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${proj.status !== 'completed' ? `
+          <button onclick="markProjectComplete(${index})" style="padding:12px;background:#059669;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">✅ Mark Complete</button>
+        ` : `<div style="padding:12px;background:#D1FAE5;border-radius:10px;font-size:14px;font-weight:500;color:#059669;text-align:center;">✓ Completed!</div>`}
+        <button onclick="closeProjectDetail()" style="padding:12px;background:transparent;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;cursor:pointer;">Close</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+
+async function markProjectComplete(index) {
+  const proj = window.allProjectsData?.[index];
+  if (!proj) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  if (proj.id) {
+    await supabase.from('projects').update({ status: 'completed', progress_pct: 100, completed_at: new Date().toISOString() }).eq('id', proj.id);
+  } else {
+    await supabase.from('projects').insert({
+      user_id: session.user.id, title: proj.title, description: proj.description,
+      tech_stack: proj.tech_stack, difficulty: proj.difficulty, status: 'completed',
+      progress_pct: 100, xp_reward: proj.xp_reward || 100, completed_at: new Date().toISOString()
+    });
+  }
+  const { data: profile } = await supabase.from('profiles').select('xp').eq('id', session.user.id).single();
+  await supabase.from('profiles').update({ xp: (profile?.xp || 0) + (proj.xp_reward||100) }).eq('id', session.user.id);
+  closeProjectDetail();
+  showToast(`🎉 Project completed! +${proj.xp_reward||100} XP earned!`);
+  loadProjects();
+}
+
+async function createCustomProject() {
+  const title = document.getElementById('cp-title')?.value?.trim();
+  if (!title) { showToast('Please enter a project title'); return; }
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+  const tech = document.getElementById('cp-tech')?.value?.split(',').map(t => t.trim()).filter(Boolean) || [];
+  await supabase.from('projects').insert({
+    user_id: session.user.id, title, description: document.getElementById('cp-desc')?.value || '',
+    tech_stack: tech, difficulty: document.getElementById('cp-diff')?.value || 'Intermediate',
+    github_url: document.getElementById('cp-github')?.value || '',
+    status: 'in_progress', is_custom: true, xp_reward: 100
+  });
+  closeCreateProjectModal();
+  showToast('✅ Project created!');
+  loadProjects();
+}
+
+function openCreateProjectModal() { document.getElementById('create-project-modal').style.display = 'flex'; }
+function closeCreateProjectModal() { document.getElementById('create-project-modal').style.display = 'none'; }
+function closeProjectDetail() { document.getElementById('project-detail-modal').style.display = 'none'; }
+
+window.loadProjects = loadProjects;
+window.filterProjects = filterProjects;
+window.openProjectDetail = openProjectDetail;
+window.markProjectComplete = markProjectComplete;
+window.createCustomProject = createCustomProject;
+window.openCreateProjectModal = openCreateProjectModal;
+window.closeCreateProjectModal = closeCreateProjectModal;
+window.closeProjectDetail = closeProjectDetail;
+
+async function saveGithubUrl(index) {
+  const proj = window.allProjectsData?.[index];
+  if (!proj) return;
+  const url = document.getElementById('proj-github-input')?.value;
+  
+  if (proj.id) {
+    await supabase.from('projects').update({ github_url: url }).eq('id', proj.id);
+    showToast('🚀 GitHub URL updated!');
+    loadProjects();
+  } else {
+    showToast('Start the project first by marking a checkpoint or completing it!');
+  }
+}
+
+async function toggleCheckpoint(projIndex, cpIndex, id) {
+  const circle = document.getElementById(`cp-circle-${projIndex}-${cpIndex}`);
+  if (circle) {
+    const isDone = circle.style.background === 'rgb(16, 185, 129)'; // #10B981
+    circle.style.background = isDone ? 'transparent' : '#10B981';
+    circle.style.borderColor = isDone ? '#E2E8F0' : '#10B981';
+    circle.innerHTML = isDone ? '' : '✓';
+    circle.style.color = 'white';
+  }
+}
+
+window.saveGithubUrl = saveGithubUrl;
+window.toggleCheckpoint = toggleCheckpoint;
+
+// ══ AI MENTOR SYSTEM ══
+let mentorHistory = [];
+let mentorMsgCount = 0;
+let topicsCovered = new Set();
+
+async function initMentorChat() {
+  if (mentorHistory.length > 0) return; // Already initialized
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name,goal,current_level,roadmap_data,xp,level')
+    .eq('id', session.user.id)
+    .single();
+
+  // Build system context
+  window.mentorSystemPrompt = `
+You are Atlas, a friendly and knowledgeable AI career mentor for Indian tech students.
+
+Student profile:
+- Name: ${profile?.full_name || 'Student'}
+- Goal: ${profile?.goal || 'Software Developer'}
+- Current Level: ${profile?.current_level || 'Beginner'}
+- XP: ${profile?.xp || 0} | Level: ${profile?.level || 1}
+- Current roadmap: ${profile?.roadmap_data?.phases?.[0]?.phase || 'Not set yet'}
+
+Your personality:
+- Encouraging and motivating
+- Uses simple language + occasional Hindi phrases like "bilkul", "ekdum sahi"
+- Gives specific, actionable advice
+- Mentions real resources (LeetCode, YouTube etc.)
+- Knows Indian job market well (TCS, Infosys, startups, FAANG India)
+- Keeps responses concise (max 150 words)
+- Uses emojis occasionally
+
+Rules:
+- ONLY answer career, tech, learning, interview, resume related questions
+- If asked unrelated questions say: "Main sirf career aur tech questions answer kar sakta hoon! 😊"
+- Never make up fake company details
+- Always end with an actionable tip
+  `;
+
+  // Welcome message
+  const firstName = profile?.full_name?.split(' ')[0] || 'there';
+  addMentorMessage('ai', 
+    `Hey ${firstName}! 👋 I'm **Atlas**, your AI career mentor.\n\nI know your goal is to become a **${profile?.goal || 'Software Developer'}** and you're currently at ${profile?.current_level || 'beginner'} level.\n\nI'm here to guide you with roadmap advice, interview prep, resume tips, and more. What would you like to work on today? 🚀`
+  );
+}
+
+function addMentorMessage(role, text) {
+  const container = document.getElementById('mentor-messages');
+  if (!container) return;
+
+  const isAI = role === 'ai';
+  const div = document.createElement('div');
+  div.style.cssText = `
+    display:flex;gap:8px;
+    justify-content:${isAI?'flex-start':'flex-end'};
+    animation:fadeUp 300ms ease-out;
+    margin-bottom: 12px;
+  `;
+
+  // Format text with markdown-like styling
+  const formatted = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+
+  div.innerHTML = `
+    ${isAI ? `
+      <div style="width:32px;height:32px;
+        border-radius:50%;flex-shrink:0;
+        background:linear-gradient(
+          135deg,#059669,#34D399);
+        display:flex;align-items:center;
+        justify-content:center;font-size:14px;
+        margin-top:4px;">🤖</div>
+    ` : ''}
+    <div style="
+      max-width:70%;padding:12px 16px;
+      border-radius:16px;
+      border-${isAI?'bottom-left':'bottom-right'}-radius:4px;
+      background:${isAI?'white':'#059669'};
+      color:${isAI?'#0F172A':'white'};
+      font-size:14px;line-height:1.6;
+      border:${isAI?'1px solid #E2E8F0':'none'};
+      box-shadow:${isAI?'0 2px 8px rgba(0,0,0,0.06)':'none'};
+    ">${formatted}</div>
+    ${!isAI ? `
+      <div style="width:32px;height:32px;
+        border-radius:50%;flex-shrink:0;
+        background:#059669;
+        display:flex;align-items:center;
+        justify-content:center;font-size:14px;
+        color:white;font-weight:600;margin-top:4px;">
+        ${currentUserName?.charAt(0) || 'U'}
+      </div>
+    ` : ''}
+  `;
+
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+
+  // Update stats
+  mentorMsgCount++;
+  const countEl = document.getElementById('chat-msg-count');
+  if (countEl) countEl.textContent = mentorMsgCount;
+}
+
+async function sendMentorMessage() {
+  const input = document.getElementById('mentor-input');
+  const msg = input?.value?.trim();
+  if (!msg) return;
+
+  addMentorMessage('user', msg);
+  input.value = '';
+  mentorHistory.push({ role:'user', content:msg });
+
+  // Show typing
+  const typing = document.getElementById('mentor-typing');
+  if (typing) typing.style.display = 'block';
+
+  // Track topics
+  const topics = ['resume','interview','dsa','roadmap','career','project','skill'];
+  topics.forEach(t => {
+    if (msg.toLowerCase().includes(t)) {
+      topicsCovered.add(t);
+    }
+  });
+  const topicsEl = document.getElementById('chat-topics-count');
+  if (topicsEl) topicsEl.textContent = topicsCovered.size;
+
+  const messages = [
+    { role:'system', content: window.mentorSystemPrompt },
+    ...mentorHistory.slice(-6)
+  ];
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${OPENROUTER_KEY}`,
+        'HTTP-Referer': window.location.origin
+      },
+      body: JSON.stringify({
+        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        messages,
+        max_tokens: 400,
+        temperature: 0.7
+      })
+    });
+
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || 'Sorry, I had trouble responding. Please try again!';
+
+    if (typing) typing.style.display = 'none';
+    addMentorMessage('ai', reply);
+    mentorHistory.push({ role:'assistant', content:reply });
+
+  } catch(err) {
+    if (typing) typing.style.display = 'none';
+    addMentorMessage('ai', 'Network issue! Please check your connection and try again. 🔌');
+  }
+}
+
+function sendQuickQuestion(q) {
+  const input = document.getElementById('mentor-input');
+  if (input) input.value = q;
+  sendMentorMessage();
+}
+
+function clearMentorChat() {
+  mentorHistory = [];
+  mentorMsgCount = 0;
+  topicsCovered = new Set();
+  const container = document.getElementById('mentor-messages');
+  if (container) container.innerHTML = '';
+  const countEl = document.getElementById('chat-msg-count');
+  if (countEl) countEl.textContent = '0';
+  const topicsEl = document.getElementById('chat-topics-count');
+  if (topicsEl) topicsEl.textContent = '0';
+  initMentorChat();
+}
+
+window.sendMentorMessage = sendMentorMessage;
+window.sendQuickQuestion = sendQuickQuestion;
+window.clearMentorChat = clearMentorChat;
+window.initMentorChat = initMentorChat;
+
+// ══ PORTFOLIO SYSTEM ══
+async function loadPortfolioTab() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  // Fetch all user data in parallel
+  const [profileRes, tasksRes, projectsRes, certsRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+    supabase.from('tasks').select('*').eq('user_id', session.user.id).eq('status','completed'),
+    supabase.from('projects').select('*').eq('user_id', session.user.id).eq('status','completed'),
+    supabase.from('certificates').select('*').eq('user_id', session.user.id)
+  ]);
+
+  const profile = profileRes.data;
+  const tasks = tasksRes.data || [];
+  const projects = projectsRes.data || [];
+  const certs = certsRes.data || [];
+
+  // Extract unique skills from completed tasks
+  const skills = [...new Set(tasks.map(t => t.roadmap_phase).filter(Boolean))];
+
+  // Calculate overall score
+  const xp = profile?.xp || 0;
+  const level = profile?.level || 1;
+  const readiness = Math.min(95, Math.round((tasks.length * 2) + (projects.length * 15) + (certs.length * 10)));
+
+  renderPortfolioTab(profile, tasks, projects, certs, skills, readiness, xp, level);
+}
+
+function renderPortfolioTab(profile, tasks, projects, certs, skills, readiness, xp, level) {
+  const container = document.getElementById('tab-portfolio');
+  if (!container) return;
+
+  const name = profile?.full_name || 'Student';
+  const goal = profile?.goal || 'Software Developer';
+  const college = profile?.college_name || '';
+
+  container.innerHTML = `
+    <!-- Controls row -->
+    <div style="display:flex; justify-content:space-between; align-items:center;margin-bottom:20px;">
+      <div>
+        <h2 style="font-size:20px;font-weight:600; margin-bottom:4px;">🎨 Portfolio Builder</h2>
+        <p style="font-size:13px;color:#64748B;">Auto-generated from your real progress</p>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <select id="portfolio-theme" onchange="changePortfolioTheme(this.value)"
+          style="padding:8px 12px; border:1px solid #E2E8F0; border-radius:8px;font-size:13px; outline:none;cursor:pointer;">
+          <option value="modern">Modern</option>
+          <option value="minimal">Minimal</option>
+          <option value="dark">Dark</option>
+          <option value="creative">Creative</option>
+        </select>
+        <button onclick="downloadPortfolioPDF()"
+          style="padding:8px 18px; background:#059669;color:white; border:none;border-radius:8px; font-size:13px;font-weight:500; cursor:pointer;display:flex; align-items:center;gap:6px;">
+          ⬇️ Download PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Portfolio preview -->
+    <div id="portfolio-preview-card" style="background:white;border-radius:16px; border:1px solid #E2E8F0; overflow:hidden;margin-bottom:20px;">
+      <!-- Portfolio header -->
+      <div id="portfolio-header" style="background:linear-gradient(135deg,#0F172A,#059669); padding:32px;color:white; text-align:center;">
+        <div style="width:72px;height:72px; border-radius:50%; background:rgba(255,255,255,0.15); border:3px solid rgba(255,255,255,0.3); display:flex;align-items:center; justify-content:center; font-size:28px;font-weight:700; color:white;margin:0 auto 12px;">
+          ${name.charAt(0).toUpperCase()}
+        </div>
+        <h2 style="font-size:22px;font-weight:700; margin-bottom:4px;">${name}</h2>
+        <p style="font-size:15px; color:rgba(255,255,255,0.8); margin-bottom:6px;">${goal}</p>
+        ${college ? `<p style="font-size:13px; color:rgba(255,255,255,0.6);">📍 ${college}</p>` : ''}
+        <div style="display:flex;gap:20px; justify-content:center;margin-top:16px; flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="font-size:22px; font-weight:700;">${level}</div>
+            <div style="font-size:11px; opacity:0.7;">Level</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:22px; font-weight:700;">${xp}</div>
+            <div style="font-size:11px; opacity:0.7;">XP</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:22px; font-weight:700;">${readiness}%</div>
+            <div style="font-size:11px; opacity:0.7;">Job Ready</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:22px; font-weight:700;">${projects.length}</div>
+            <div style="font-size:11px; opacity:0.7;">Projects</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:24px;">
+        <div style="margin-bottom:24px;">
+          <h3 style="font-size:15px;font-weight:600; margin-bottom:12px; display:flex;align-items:center; gap:8px;">⚡ Skills & Progress</h3>
+          ${skills.length > 0 ? `<div style="display:flex;gap:8px; flex-wrap:wrap;">${skills.map(s => `<span style="background:#F0FDF4; border:1px solid #A7F3D0; color:#059669;padding:5px 12px; border-radius:20px;font-size:13px; font-weight:500;">✓ ${s}</span>`).join('')}</div>` : `<p style="font-size:13px;color:#94A3B8;">Complete tasks to add skills here</p>`}
+        </div>
+        ${projects.length > 0 ? `
+          <div style="margin-bottom:24px;">
+            <h3 style="font-size:15px; font-weight:600;margin-bottom:12px;">🛠️ Completed Projects</h3>
+            <div style="display:grid;gap:10px;">
+              ${projects.map(p => `
+                <div style="padding:14px; background:#F8FAFC; border-radius:10px; border:1px solid #E2E8F0;">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                      <div style="font-size:14px; font-weight:500; margin-bottom:4px;">${p.title}</div>
+                      <div style="display:flex; gap:6px;flex-wrap:wrap;">
+                        ${(p.tags||[]).map(t=>`<span style="font-size:11px; background:#E2E8F0; color:#475569; padding:2px 8px; border-radius:6px;">${t}</span>`).join('')}
+                      </div>
+                    </div>
+                    ${p.github_url ? `<a href="${p.github_url}" target="_blank" style="font-size:12px; color:#059669; text-decoration:none; white-space:nowrap;">GitHub →</a>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        ${certs.length > 0 ? `
+          <div style="margin-bottom:24px;">
+            <h3 style="font-size:15px; font-weight:600;margin-bottom:12px;">🏆 Certificates</h3>
+            <div style="display:grid;gap:8px;">
+              ${certs.map(c => `
+                <div style="display:flex; align-items:center;gap:10px; padding:10px 14px; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px;">
+                  <span style="font-size:20px;">🏅</span>
+                  <div style="flex:1;">
+                    <div style="font-size:13px; font-weight:500;">${c.phase_name}</div>
+                    <div style="font-size:11px; color:#94A3B8;">Issued: ${new Date(c.issued_date).toLocaleDateString('en-IN')}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+
+    <!-- Summary card -->
+    <div style="background:white; border-radius:14px; border:1px solid #E2E8F0;padding:20px;">
+      <h3 style="font-size:15px;font-weight:600; margin-bottom:14px;">📊 Portfolio Summary</h3>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px;">
+        ${[{label:'Tasks Done',val:tasks.length,icon:'✅'},{label:'Projects Built',val:projects.length,icon:'🛠️'},{label:'Certificates',val:certs.length,icon:'🏆'},{label:'Skills Learned',val:skills.length,icon:'⚡'},{label:'XP Earned',val:xp,icon:'🔥'},{label:'Job Readiness',val:readiness+'%',icon:'🎯'}].map(s => `
+          <div style="text-align:center; padding:12px;background:#F8FAFC; border-radius:10px;">
+            <div style="font-size:20px; margin-bottom:4px;">${s.icon}</div>
+            <div style="font-size:18px; font-weight:700;color:#0F172A;">${s.val}</div>
+            <div style="font-size:11px; color:#94A3B8;">${s.label}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+async function downloadPortfolioPDF() {
+  const { jsPDF } = window.jspdf;
+  if (!jsPDF) {
+    showToast('Loading PDF library...');
+    return;
+  }
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  const [profileRes, tasksRes, projectsRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+    supabase.from('tasks').select('*').eq('user_id', session.user.id).eq('status','completed'),
+    supabase.from('projects').select('*').eq('user_id', session.user.id).eq('status','completed')
+  ]);
+
+  const p = profileRes.data;
+  const tasks = tasksRes.data || [];
+  const projects = projectsRes.data || [];
+
+  const doc = new jsPDF();
+  let y = 20;
+
+  doc.setFillColor(15,23,42);
+  doc.rect(0,0,210,40,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica','bold');
+  doc.text(p?.full_name || 'Student', 20, 18);
+  doc.setFontSize(12);
+  doc.setFont('helvetica','normal');
+  doc.text(p?.goal || 'Software Developer', 20,28);
+  doc.setFontSize(10);
+  doc.text(p?.college_name || '', 20, 36);
+
+  y = 55;
+  doc.setTextColor(5,150,105);
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.text('PROFILE STATS', 20, y);
+  y += 8;
+  doc.setTextColor(71,85,105);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  doc.text(`Level: ${p?.level || 1}  |  XP: ${p?.xp || 0}  |  Tasks: ${tasks.length}  |  Projects: ${projects.length}`, 20, y);
+  y += 12;
+
+  doc.setTextColor(5,150,105);
+  doc.setFontSize(11);
+  doc.setFont('helvetica','bold');
+  doc.text('SKILLS LEARNED', 20, y);
+  y += 8;
+  doc.setTextColor(71,85,105);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
+  const phases = [...new Set(tasks.map(t => t.roadmap_phase).filter(Boolean))];
+  doc.text(phases.join(' · ') || 'In progress', 20, y);
+  y += 14;
+
+  if (projects.length > 0) {
+    doc.setTextColor(5,150,105);
+    doc.setFontSize(11);
+    doc.setFont('helvetica','bold');
+    doc.text('COMPLETED PROJECTS', 20, y);
+    y += 8;
+    projects.forEach(proj => {
+      doc.setTextColor(15,23,42);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.text('• ' + proj.title, 20, y);
+      y += 6;
+      doc.setTextColor(71,85,105);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(9);
+      doc.text('  Tech: ' + (proj.tags || []).join(', '), 20, y);
+      y += 8;
+    });
+    y += 4;
+  }
+
+  doc.setFillColor(5,150,105);
+  doc.rect(0,280,210,17,'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(9);
+  doc.text('Generated by SkillBridge AI · ' + new Date().toLocaleDateString('en-IN'), 20, 291);
+
+  doc.save(`${p?.full_name || 'Portfolio'}_SkillBridge.pdf`);
+  showToast('📄 Portfolio PDF downloaded!');
+}
+
+function changePortfolioTheme(theme) {
+  const header = document.getElementById('portfolio-header');
+  if (!header) return;
+  
+  if (theme === 'dark') {
+    header.style.background = 'linear-gradient(135deg, #020617, #1E293B)';
+  } else if (theme === 'minimal') {
+    header.style.background = '#F8FAFC';
+    header.style.color = '#0F172A';
+  } else if (theme === 'creative') {
+    header.style.background = 'linear-gradient(135deg, #4F46E5, #06B6D4)';
+  } else {
+    header.style.background = 'linear-gradient(135deg, #0F172A, #059669)';
+    header.style.color = 'white';
+  }
+}
+
+window.loadPortfolioTab = loadPortfolioTab;
+window.downloadPortfolioPDF = downloadPortfolioPDF;
+window.changePortfolioTheme = changePortfolioTheme;
 

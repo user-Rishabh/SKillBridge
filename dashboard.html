@@ -520,74 +520,697 @@
 
 
             <!-- ══ PROJECTS TAB ══ -->
-            <section id="tab-projects" style="display:none;">
-              <h3 class="card-title" style="margin-bottom:20px;">All Projects</h3>
-              <div id="all-projects-container" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;">
-                <div style="font-size:14px;color:var(--text-secondary);">No projects available.</div>
+            <!-- ══ PROJECTS TAB ══ -->
+            <div id="tab-projects" style="display:none;">
+
+              <!-- Header -->
+              <div style="display:flex;justify-content:
+                space-between;align-items:center;
+                margin-bottom:20px;">
+                <div>
+                  <h2 style="font-size:20px;font-weight:600;
+                    margin-bottom:4px;">
+                    🛠️ Projects
+                  </h2>
+                  <p style="font-size:13px;color:#64748B;">
+                    Build real projects. Track progress. 
+                    Earn XP. Boost your profile.
+                  </p>
+                </div>
+                <button onclick="openCreateProjectModal()"
+                  style="padding:10px 18px;
+                  background:#059669;color:white;
+                  border:none;border-radius:10px;
+                  font-size:13px;font-weight:500;
+                  cursor:pointer;display:flex;
+                  align-items:center;gap:6px;">
+                  ＋ Create Project
+                </button>
               </div>
-            </section>
+
+              <!-- Filter tabs -->
+              <div style="display:flex;gap:8px;
+                margin-bottom:20px;
+                border-bottom:1px solid #E2E8F0;
+                padding-bottom:12px;">
+                <button onclick="filterProjects('all',this)"
+                  id="proj-filter-all"
+                  style="padding:6px 16px;border-radius:20px;
+                  font-size:13px;border:none;
+                  background:#059669;color:white;
+                  cursor:pointer;">
+                  All
+                </button>
+                <button onclick="filterProjects('active',this)"
+                  id="proj-filter-active"
+                  style="padding:6px 16px;border-radius:20px;
+                  font-size:13px;border:none;
+                  background:#F1F5F9;color:#64748B;
+                  cursor:pointer;">
+                  In Progress
+                </button>
+                <button onclick="filterProjects('completed',this)"
+                  id="proj-filter-completed"
+                  style="padding:6px 16px;border-radius:20px;
+                  font-size:13px;border:none;
+                  background:#F1F5F9;color:#64748B;
+                  cursor:pointer;">
+                  Completed ✓
+                </button>
+                <button onclick="filterProjects('custom',this)"
+                  id="proj-filter-custom"
+                  style="padding:6px 16px;border-radius:20px;
+                  font-size:13px;border:none;
+                  background:#F1F5F9;color:#64748B;
+                  cursor:pointer;">
+                  My Projects
+                </button>
+              </div>
+
+              <!-- Projects grid -->
+              <div id="projects-grid" style="
+                display:grid;
+                grid-template-columns:repeat(
+                  auto-fill,minmax(300px,1fr));
+                gap:16px;">
+              </div>
+            </div>
+
+            <!-- Create Project Modal -->
+            <div id="create-project-modal" style="
+              display:none;position:fixed;inset:0;
+              background:rgba(0,0,0,0.6);
+              backdrop-filter:blur(8px);
+              z-index:9999;
+              align-items:center;justify-content:center;
+              padding:16px;">
+              <div style="background:white;
+                border-radius:20px;padding:28px;
+                max-width:500px;width:100%;
+                max-height:90vh;overflow-y:auto;">
+                <div style="display:flex;
+                  justify-content:space-between;
+                  margin-bottom:20px;">
+                  <h3 style="font-size:18px;font-weight:600;">
+                    Create New Project
+                  </h3>
+                  <button onclick="closeCreateProjectModal()"
+                    style="background:none;border:none;
+                    font-size:20px;cursor:pointer;
+                    color:#94A3B8;">✕</button>
+                </div>
+                
+                <div style="display:flex;flex-direction:column;
+                  gap:14px;">
+                  <div>
+                    <label style="font-size:12px;
+                      font-weight:500;color:#475569;
+                      margin-bottom:4px;display:block;">
+                      Project Title *
+                    </label>
+                    <input id="cp-title"
+                      placeholder="e.g. E-commerce Website"
+                      style="width:100%;padding:10px 12px;
+                      border:1px solid #E2E8F0;
+                      border-radius:8px;font-size:14px;
+                      outline:none;"
+                      onfocus="this.style.borderColor='#059669'"
+                      onblur="this.style.borderColor='#E2E8F0'">
+                  </div>
+                  
+                  <div>
+                    <label style="font-size:12px;
+                      font-weight:500;color:#475569;
+                      margin-bottom:4px;display:block;">
+                      Description
+                    </label>
+                    <textarea id="cp-desc"
+                      placeholder="What will you build?"
+                      style="width:100%;padding:10px 12px;
+                      border:1px solid #E2E8F0;
+                      border-radius:8px;font-size:14px;
+                      outline:none;min-height:80px;
+                      resize:vertical;font-family:inherit;"
+                      onfocus="this.style.borderColor='#059669'"
+                      onblur="this.style.borderColor='#E2E8F0'">
+                    </textarea>
+                  </div>
+
+                  <div>
+                    <label style="font-size:12px;
+                      font-weight:500;color:#475569;
+                      margin-bottom:4px;display:block;">
+                      Tech Stack (comma separated)
+                    </label>
+                    <input id="cp-tech"
+                      placeholder="React, Node.js, MongoDB"
+                      style="width:100%;padding:10px 12px;
+                      border:1px solid #E2E8F0;
+                      border-radius:8px;font-size:14px;
+                      outline:none;"
+                      onfocus="this.style.borderColor='#059669'"
+                      onblur="this.style.borderColor='#E2E8F0'">
+                  </div>
+
+                  <div>
+                    <label style="font-size:12px;
+                      font-weight:500;color:#475569;
+                      margin-bottom:4px;display:block;">
+                      Difficulty
+                    </label>
+                    <select id="cp-diff"
+                      style="width:100%;padding:10px 12px;
+                      border:1px solid #E2E8F0;
+                      border-radius:8px;font-size:14px;
+                      outline:none;">
+                      <option value="Beginner">
+                        Beginner
+                      </option>
+                      <option value="Intermediate" selected>
+                        Intermediate
+                      </option>
+                      <option value="Advanced">Advanced</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style="font-size:12px;
+                      font-weight:500;color:#475569;
+                      margin-bottom:4px;display:block;">
+                      GitHub URL (optional)
+                    </label>
+                    <input id="cp-github"
+                      placeholder="https://github.com/..."
+                      style="width:100%;padding:10px 12px;
+                      border:1px solid #E2E8F0;
+                      border-radius:8px;font-size:14px;
+                      outline:none;"
+                      onfocus="this.style.borderColor='#059669'"
+                      onblur="this.style.borderColor='#E2E8F0'">
+                  </div>
+
+                  <button onclick="createCustomProject()"
+                    style="width:100%;padding:12px;
+                    background:#059669;color:white;
+                    border:none;border-radius:10px;
+                    font-size:14px;font-weight:500;
+                    cursor:pointer;">
+                    Create Project →
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Project Detail Modal -->
+            <div id="project-detail-modal" style="
+              display:none;position:fixed;inset:0;
+              background:rgba(0,0,0,0.6);
+              backdrop-filter:blur(8px);
+              z-index:9999;
+              align-items:center;justify-content:center;
+              padding:16px;">
+              <div id="project-detail-content"
+                style="background:white;border-radius:20px;
+                max-width:600px;width:100%;
+                max-height:90vh;overflow-y:auto;">
+              </div>
+            </div>
 
             <!-- ══ MENTORSHIP TAB ══ -->
-            <section id="tab-mentorship" style="display:none;max-width:900px;">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
-                <div>
-                  <div class="hero-card" style="margin-bottom:20px;">
-                    <h3 class="card-title" style="font-size:14px;margin-bottom:16px;">Your Assigned Mentor</h3>
-                    <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">
-                      <div style="width:56px;height:56px;border-radius:50%;background:#E2E8F0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#059669;">S</div>
-                      <div><div style="font-weight:700;font-size:16px;">Siddharth V.</div><div style="font-size:13px;color:var(--text-secondary);">Senior SDE @ Google · 6 yrs exp</div><div style="font-size:12px;color:#059669;margin-top:2px;">⭐ 4.9 · 120+ students mentored</div></div>
+            <div id="tab-mentorship" style="display:none;">
+
+              <!-- Two column layout -->
+              <div style="display:grid;
+                grid-template-columns:280px 1fr;
+                gap:20px;height:calc(100vh - 180px);">
+
+                <!-- Left: Mentor persona + quick actions -->
+                <div style="display:flex;flex-direction:column;
+                  gap:14px;">
+
+                  <!-- Mentor card -->
+                  <div style="background:linear-gradient(
+                    135deg,#0F172A,#1E293B);
+                    border-radius:16px;padding:20px;
+                    color:white;text-align:center;">
+                    
+                    <!-- Animated avatar -->
+                    <div style="position:relative;
+                      width:80px;height:80px;margin:0 auto 12px;">
+                      <div style="width:80px;height:80px;
+                        border-radius:50%;
+                        background:linear-gradient(
+                          135deg,#059669,#34D399);
+                        display:flex;align-items:center;
+                        justify-content:center;
+                        font-size:36px;
+                        box-shadow:0 0 30px rgba(5,150,105,0.5);">
+                        🤖
+                      </div>
+                      <!-- Online indicator -->
+                      <div style="position:absolute;
+                        bottom:2px;right:2px;
+                        width:16px;height:16px;
+                        background:#10B981;border-radius:50%;
+                        border:2px solid #0F172A;">
+                      </div>
                     </div>
-                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">"Your React project structure is solid. Focus on optimizing your custom hooks this week."</p>
-                    <button class="btn-primary" style="width:100%;justify-content:center;">📅 Schedule Session</button>
+
+                    <div style="font-size:16px;font-weight:600;
+                      margin-bottom:2px;">
+                      Atlas AI
+                    </div>
+                    <div style="font-size:12px;
+                      color:rgba(255,255,255,0.6);
+                      margin-bottom:12px;">
+                      Your Personal Career Mentor
+                    </div>
+
+                    <!-- Expertise pills -->
+                    <div style="display:flex;gap:6px;
+                      flex-wrap:wrap;justify-content:center;
+                      margin-bottom:14px;">
+                      <span style="background:rgba(5,150,105,0.2);border:1px solid rgba(5,150,105,0.3);color:#34D399;padding:3px 10px;border-radius:20px;font-size:11px;">Career</span>
+                      <span style="background:rgba(5,150,105,0.2);border:1px solid rgba(5,150,105,0.3);color:#34D399;padding:3px 10px;border-radius:20px;font-size:11px;">Tech</span>
+                      <span style="background:rgba(5,150,105,0.2);border:1px solid rgba(5,150,105,0.3);color:#34D399;padding:3px 10px;border-radius:20px;font-size:11px;">DSA</span>
+                      <span style="background:rgba(5,150,105,0.2);border:1px solid rgba(5,150,105,0.3);color:#34D399;padding:3px 10px;border-radius:20px;font-size:11px;">Resume</span>
+                      <span style="background:rgba(5,150,105,0.2);border:1px solid rgba(5,150,105,0.3);color:#34D399;padding:3px 10px;border-radius:20px;font-size:11px;">Interviews</span>
+                    </div>
+
+                    <div style="font-size:12px;
+                      color:rgba(255,255,255,0.5);">
+                      Powered by Llama 3.1 · Free
+                    </div>
                   </div>
-                  <div class="panel-card">
-                    <h3 class="card-title" style="font-size:14px;margin-bottom:16px;">Past Sessions</h3>
-                    <div style="display:flex;flex-direction:column;gap:12px;">
-                      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#F8FAFC;border-radius:8px;"><div><div style="font-size:13px;font-weight:600;">React Performance Review</div><div style="font-size:12px;color:var(--text-secondary);">Apr 28 · 45 min</div></div><span style="font-size:11px;background:#F0FDF4;color:#059669;padding:3px 8px;border-radius:20px;font-weight:600;">Completed</span></div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#F8FAFC;border-radius:8px;"><div><div style="font-size:13px;font-weight:600;">System Design Basics</div><div style="font-size:12px;color:var(--text-secondary);">Apr 20 · 60 min</div></div><span style="font-size:11px;background:#F0FDF4;color:#059669;padding:3px 8px;border-radius:20px;font-weight:600;">Completed</span></div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#F8FAFC;border-radius:8px;"><div><div style="font-size:13px;font-weight:600;">Resume & Portfolio Review</div><div style="font-size:12px;color:var(--text-secondary);">Apr 12 · 30 min</div></div><span style="font-size:11px;background:#F0FDF4;color:#059669;padding:3px 8px;border-radius:20px;font-weight:600;">Completed</span></div>
+
+                  <!-- Quick questions -->
+                  <div style="background:white;
+                    border-radius:14px;
+                    border:1px solid #E2E8F0;
+                    overflow:hidden;">
+                    <div style="padding:12px 14px;
+                      border-bottom:1px solid #F1F5F9;
+                      font-size:13px;font-weight:600;">
+                      💡 Quick Questions
                     </div>
+                    <div style="padding:8px;">
+                      <button onclick="sendQuickQuestion('How do I improve my resume?')"
+                        style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;border-radius:8px;font-size:12px;color:#475569;cursor:pointer;transition:background 150ms;"
+                        onmouseover="this.style.background='#F0FDF4';this.style.color='#059669'"
+                        onmouseout="this.style.background='transparent';this.style.color='#475569'">
+                        → How do I improve my resume?
+                      </button>
+                      <button onclick="sendQuickQuestion('What skills should I learn next?')"
+                        style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;border-radius:8px;font-size:12px;color:#475569;cursor:pointer;transition:background 150ms;"
+                        onmouseover="this.style.background='#F0FDF4';this.style.color='#059669'"
+                        onmouseout="this.style.background='transparent';this.style.color='#475569'">
+                        → What skills should I learn next?
+                      </button>
+                      <button onclick="sendQuickQuestion('How to prepare for interviews?')"
+                        style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;border-radius:8px;font-size:12px;color:#475569;cursor:pointer;transition:background 150ms;"
+                        onmouseover="this.style.background='#F0FDF4';this.style.color='#059669'"
+                        onmouseout="this.style.background='transparent';this.style.color='#475569'">
+                        → How to prepare for interviews?
+                      </button>
+                      <button onclick="sendQuickQuestion('Explain my current roadmap phase')"
+                        style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;border-radius:8px;font-size:12px;color:#475569;cursor:pointer;transition:background 150ms;"
+                        onmouseover="this.style.background='#F0FDF4';this.style.color='#059669'"
+                        onmouseout="this.style.background='transparent';this.style.color='#475569'">
+                        → Explain my current roadmap phase
+                      </button>
+                      <button onclick="sendQuickQuestion('How long to get placed?')"
+                        style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;border-radius:8px;font-size:12px;color:#475569;cursor:pointer;transition:background 150ms;"
+                        onmouseover="this.style.background='#F0FDF4';this.style.color='#059669'"
+                        onmouseout="this.style.background='transparent';this.style.color='#475569'">
+                        → How long to get placed?
+                      </button>
+                      <button onclick="sendQuickQuestion('Best resources for DSA?')"
+                        style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;border-radius:8px;font-size:12px;color:#475569;cursor:pointer;transition:background 150ms;"
+                        onmouseover="this.style.background='#F0FDF4';this.style.color='#059669'"
+                        onmouseout="this.style.background='transparent';this.style.color='#475569'">
+                        → Best resources for DSA?
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Chat stats -->
+                  <div style="background:white;
+                    border-radius:14px;
+                    border:1px solid #E2E8F0;padding:14px;">
+                    <div style="font-size:12px;color:#94A3B8;
+                      margin-bottom:8px;font-weight:500;">
+                      SESSION
+                    </div>
+                    <div style="display:flex;
+                      justify-content:space-between;
+                      font-size:13px;">
+                      <span style="color:#64748B;">Messages</span>
+                      <span id="chat-msg-count"
+                        style="font-weight:500;">0</span>
+                    </div>
+                    <div style="display:flex;
+                      justify-content:space-between;
+                      font-size:13px;margin-top:4px;">
+                      <span style="color:#64748B;">
+                        Topics covered
+                      </span>
+                      <span id="chat-topics-count"
+                        style="font-weight:500;">0</span>
+                    </div>
+                    <button onclick="clearMentorChat()"
+                      style="width:100%;margin-top:10px;
+                      padding:6px;background:transparent;
+                      border:1px solid #E2E8F0;
+                      border-radius:8px;font-size:12px;
+                      color:#94A3B8;cursor:pointer;">
+                      Clear Chat
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <h3 class="card-title" style="margin-bottom:16px;">Available Mentors</h3>
-                  <div style="display:flex;flex-direction:column;gap:12px;">
-                    <div class="panel-card" style="display:flex;align-items:center;gap:12px;">
-                      <div style="width:44px;height:44px;border-radius:50%;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#2563EB;flex-shrink:0;">A</div>
-                      <div style="flex:1;"><div style="font-weight:700;font-size:14px;">Ananya R.</div><div style="font-size:12px;color:var(--text-secondary);">Frontend Lead @ Razorpay</div><div style="font-size:11px;color:#059669;">⭐ 4.8 · Available</div></div>
-                      <button class="btn-primary" style="font-size:12px;padding:6px 12px;">Request</button>
+
+                <!-- Right: Chat interface -->
+                <div style="background:white;
+                  border-radius:16px;border:1px solid #E2E8F0;
+                  display:flex;flex-direction:column;
+                  overflow:hidden;">
+
+                  <!-- Chat header -->
+                  <div style="padding:14px 20px;
+                    border-bottom:1px solid #F1F5F9;
+                    display:flex;align-items:center;gap:10px;
+                    background:#FAFAFA;">
+                    <div style="width:36px;height:36px;
+                      border-radius:50%;
+                      background:linear-gradient(
+                        135deg,#059669,#34D399);
+                      display:flex;align-items:center;
+                      justify-content:center;font-size:18px;">
+                      🤖
                     </div>
-                    <div class="panel-card" style="display:flex;align-items:center;gap:12px;">
-                      <div style="width:44px;height:44px;border-radius:50%;background:#F3E8FF;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#7C3AED;flex-shrink:0;">K</div>
-                      <div style="flex:1;"><div style="font-weight:700;font-size:14px;">Karan M.</div><div style="font-size:12px;color:var(--text-secondary);">SDE-2 @ Microsoft</div><div style="font-size:11px;color:#059669;">⭐ 4.7 · Available</div></div>
-                      <button class="btn-primary" style="font-size:12px;padding:6px 12px;">Request</button>
+                    <div>
+                      <div style="font-size:14px;
+                        font-weight:600;color:#0F172A;">
+                        Atlas AI Mentor
+                      </div>
+                      <div style="display:flex;
+                        align-items:center;gap:4px;
+                        font-size:12px;color:#10B981;">
+                        <span style="width:6px;height:6px;
+                          background:#10B981;border-radius:50%;
+                          animation:pulse 1.5s infinite;
+                          display:inline-block;"></span>
+                        Online — Ready to help
+                      </div>
                     </div>
-                    <div class="panel-card" style="display:flex;align-items:center;gap:12px;">
-                      <div style="width:44px;height:44px;border-radius:50%;background:#FEF3C7;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#D97706;flex-shrink:0;">P</div>
-                      <div style="flex:1;"><div style="font-weight:700;font-size:14px;">Priya S.</div><div style="font-size:12px;color:var(--text-secondary);">Staff Eng @ Flipkart</div><div style="font-size:11px;color:#94A3B8;">⭐ 4.9 · Waitlisted</div></div>
-                      <button class="btn-primary" style="font-size:12px;padding:6px 12px;background:#F1F5F9;color:#64748B;cursor:default;">Waitlist</button>
+                  </div>
+
+                  <!-- Messages -->
+                  <div id="mentor-messages" style="
+                    flex:1;overflow-y:auto;padding:20px;
+                    display:flex;flex-direction:column;
+                    gap:12px;background:#FAFAFA;">
+                    <!-- Welcome message loaded by JS -->
+                  </div>
+
+                  <!-- Typing indicator -->
+                  <div id="mentor-typing" style="
+                    display:none;padding:0 20px 8px;
+                    background:#FAFAFA;">
+                    <div style="display:flex;gap:4px;
+                      align-items:center;">
+                      <div style="width:32px;height:32px;
+                        border-radius:50%;
+                        background:linear-gradient(
+                          135deg,#059669,#34D399);
+                        display:flex;align-items:center;
+                        justify-content:center;font-size:14px;
+                        flex-shrink:0;">🤖</div>
+                      <div style="background:white;
+                        border:1px solid #E2E8F0;
+                        border-radius:12px;
+                        border-bottom-left-radius:4px;
+                        padding:10px 14px;
+                        display:flex;gap:4px;">
+                        <span style="width:6px;height:6px;
+                          background:#059669;border-radius:50%;
+                          animation:bounce 1.2s infinite;">
+                        </span>
+                        <span style="width:6px;height:6px;
+                          background:#059669;border-radius:50%;
+                          animation:bounce 1.2s infinite;
+                          animation-delay:0.2s;">
+                        </span>
+                        <span style="width:6px;height:6px;
+                          background:#059669;border-radius:50%;
+                          animation:bounce 1.2s infinite;
+                          animation-delay:0.4s;">
+                        </span>
+                      </div>
                     </div>
+                  </div>
+
+                  <!-- Input -->
+                  <div style="padding:14px 20px;
+                    border-top:1px solid #F1F5F9;
+                    background:white;
+                    display:flex;gap:10px;align-items:center;">
+                    <input id="mentor-input"
+                      type="text"
+                      placeholder="Ask anything about your career..."
+                      style="flex:1;padding:10px 16px;
+                      border:1px solid #E2E8F0;
+                      border-radius:24px;font-size:14px;
+                      outline:none;transition:border 200ms;"
+                      onfocus="this.style.borderColor='#059669'"
+                      onblur="this.style.borderColor='#E2E8F0'"
+                      onkeydown="if(event.key==='Enter')
+                        sendMentorMessage()">
+                    <button onclick="sendMentorMessage()"
+                      style="width:42px;height:42px;
+                      background:#059669;border:none;
+                      border-radius:50%;cursor:pointer;
+                      font-size:18px;color:white;
+                      display:flex;align-items:center;
+                      justify-content:center;
+                      transition:all 200ms;flex-shrink:0;"
+                      onmouseover="this.style.transform=
+                        'scale(1.05)';
+                        this.style.background='#047857'"
+                      onmouseout="this.style.transform=
+                        'scale(1)';
+                        this.style.background='#059669'">
+                      →
+                    </button>
                   </div>
                 </div>
               </div>
-            </section>
+            </div>
 
             <!-- ══ RESOURCES TAB ══ -->
-            <section id="tab-resources" style="display:none;">
-              <div class="hero-card">
-                <h2 style="margin-bottom:8px;">Learning Resources</h2>
-                <p id="resources-goal-text" style="color:var(--text-secondary);margin-bottom:20px;">Curated for your goals</p>
-                
-                <!-- Search bar -->
-                <div style="display:flex;gap:12px;margin-bottom:24px;">
-                  <input id="resource-search" placeholder="Search topics..." style="flex:1;padding:10px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:14px;font-family:inherit;outline:none;">
-                  <button class="btn-primary" onclick="searchYouTube(document.getElementById('resource-search').value)">Search</button>
-                </div>
-                
-                <!-- Auto-loaded resources -->
-                <div id="youtube-results" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));gap:20px;"></div>
+            <div id="tab-resources" style="display:none;">
+
+              <!-- Header -->
+              <div style="margin-bottom:20px;">
+                <h2 style="font-size:20px;font-weight:600;
+                  margin-bottom:4px;">
+                  📚 Learning Resources
+                </h2>
+                <p style="font-size:13px;color:#64748B;">
+                  Curated videos for your roadmap — 
+                  plays right here, no redirect
+                </p>
               </div>
-            </section>
+
+              <!-- Search + filter bar -->
+              <div style="background:white;
+                border-radius:14px;
+                border:1px solid #E2E8F0;
+                padding:16px;margin-bottom:20px;">
+                <div style="display:flex;gap:10px;
+                  margin-bottom:12px;">
+                  <input id="resource-search-input"
+                    type="text"
+                    placeholder="Search any topic..."
+                    style="flex:1;padding:10px 14px;
+                    border:1px solid #E2E8F0;
+                    border-radius:10px;font-size:14px;
+                    outline:none;transition:border 200ms;"
+                    onfocus="this.style.borderColor='#059669'"
+                    onblur="this.style.borderColor='#E2E8F0'"
+                    onkeydown="if(event.key==='Enter')
+                      searchResources(this.value)">
+                  <button onclick="searchResources(
+                    document.getElementById(
+                    'resource-search-input').value)"
+                    style="padding:10px 20px;
+                    background:#059669;color:white;
+                    border:none;border-radius:10px;
+                    font-size:14px;cursor:pointer;
+                    white-space:nowrap;">
+                    🔍 Search
+                  </button>
+                </div>
+
+                <!-- Quick topic chips from roadmap -->
+                <div style="font-size:12px;color:#94A3B8;
+                  margin-bottom:8px;">
+                  Quick topics from your roadmap:
+                </div>
+                <div id="quick-topic-chips"
+                  style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <!-- Loaded from user roadmap -->
+                </div>
+              </div>
+
+              <!-- Video player modal overlay -->
+              <div id="video-player-overlay" style="
+                display:none;position:fixed;inset:0;
+                background:rgba(0,0,0,0.85);
+                backdrop-filter:blur(8px);
+                z-index:9999;
+                align-items:center;justify-content:center;
+                padding:20px;">
+                <div style="background:#0F172A;
+                  border-radius:20px;overflow:hidden;
+                  width:100%;max-width:900px;
+                  box-shadow:0 32px 80px rgba(0,0,0,0.5);">
+                  
+                  <!-- Player header -->
+                  <div style="padding:14px 20px;
+                    display:flex;justify-content:space-between;
+                    align-items:center;
+                    border-bottom:1px solid rgba(255,255,255,0.1);">
+                    <div id="player-title" style="
+                      font-size:14px;font-weight:500;
+                      color:white;max-width:600px;
+                      white-space:nowrap;overflow:hidden;
+                      text-overflow:ellipsis;">
+                    </div>
+                    <div style="display:flex;gap:10px;
+                      align-items:center;">
+                      <button id="save-video-btn"
+                        onclick="saveCurrentVideo()"
+                        style="padding:6px 14px;
+                        background:rgba(255,255,255,0.1);
+                        border:1px solid rgba(255,255,255,0.2);
+                        color:white;border-radius:8px;
+                        font-size:12px;cursor:pointer;">
+                        🔖 Save
+                      </button>
+                      <button onclick="closeVideoPlayer()"
+                        style="width:32px;height:32px;
+                        background:rgba(255,255,255,0.1);
+                        border:none;border-radius:50%;
+                        color:white;font-size:16px;
+                        cursor:pointer;">
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- YouTube embed -->
+                  <div style="position:relative;
+                    padding-bottom:56.25%;height:0;">
+                    <iframe id="yt-player"
+                      style="position:absolute;
+                      top:0;left:0;width:100%;height:100%;
+                      border:none;"
+                      allow="accelerometer;autoplay;
+                      clipboard-write;encrypted-media;
+                      gyroscope;picture-in-picture"
+                      allowfullscreen>
+                    </iframe>
+                  </div>
+
+                  <!-- Video info bar -->
+                  <div id="player-info" style="
+                    padding:14px 20px;
+                    background:rgba(255,255,255,0.05);">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Main content: 2 columns -->
+              <div style="display:grid;
+                grid-template-columns:1fr 300px;
+                gap:20px;">
+
+                <!-- Left: Video results -->
+                <div>
+                  <div style="display:flex;
+                    justify-content:space-between;
+                    align-items:center;margin-bottom:12px;">
+                    <h3 id="results-heading"
+                      style="font-size:15px;font-weight:600;">
+                      Loading your roadmap videos...
+                    </h3>
+                    <div id="results-count"
+                      style="font-size:12px;color:#94A3B8;">
+                    </div>
+                  </div>
+                  <div id="video-results-grid" style="
+                    display:grid;
+                    grid-template-columns:
+                      repeat(auto-fill,minmax(240px,1fr));
+                    gap:14px;">
+                  </div>
+                </div>
+
+                <!-- Right: Saved + Notes -->
+                <div>
+                  <!-- Saved videos -->
+                  <div style="background:white;
+                    border-radius:14px;
+                    border:1px solid #E2E8F0;
+                    margin-bottom:16px;overflow:hidden;">
+                    <div style="padding:12px 14px;
+                      border-bottom:1px solid #F1F5F9;
+                      font-size:13px;font-weight:600;">
+                      🔖 Saved Videos
+                    </div>
+                    <div id="saved-videos-list"
+                      style="max-height:250px;
+                      overflow-y:auto;">
+                      <div style="padding:16px;
+                        text-align:center;
+                        font-size:13px;color:#94A3B8;">
+                        No saved videos yet
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quick notes -->
+                  <div style="background:white;
+                    border-radius:14px;
+                    border:1px solid #E2E8F0;
+                    overflow:hidden;">
+                    <div style="padding:12px 14px;
+                      border-bottom:1px solid #F1F5F9;
+                      display:flex;justify-content:space-between;
+                      align-items:center;">
+                      <span style="font-size:13px;
+                        font-weight:600;">
+                        📝 My Notes
+                      </span>
+                      <button onclick="saveNotes()"
+                        style="font-size:11px;color:#059669;
+                        border:none;background:none;
+                        cursor:pointer;font-weight:500;">
+                        Save
+                      </button>
+                    </div>
+                    <textarea id="my-notes"
+                      placeholder="Write notes while watching..."
+                      style="width:100%;min-height:160px;
+                      padding:12px;border:none;
+                      font-size:13px;resize:none;
+                      font-family:inherit;outline:none;
+                      color:#0F172A;line-height:1.6;">
+                    </textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- ══ TASKS TAB ══ -->
             <section id="tab-tasks" style="display:none;">
@@ -599,42 +1222,59 @@
             </section>
 
             <!-- ══ PORTFOLIO TAB ══ -->
-            <section id="tab-portfolio" style="display:none;">
-              <div class="hero-card">
-                <h3 class="card-title" style="margin-bottom:20px;">Your Portfolio Preview</h3>
-                <!-- Live preview -->
-                <div id="portfolio-preview" style="border:0.5px solid var(--color-border);border-radius:12px;padding:32px;margin-bottom:24px;background:var(--bg-main);">
-                  <div style="text-align:center;">
-                    <h2 id="port-name" style="margin-bottom:4px;">[User Name]</h2>
-                    <p id="port-goal" style="color:#059669;font-weight:500;">[User Goal] Developer</p>
-                  </div>
-                  <hr style="margin:24px 0;border:0;border-top:1px solid #E2E8F0;">
-                  <div id="portfolio-skills-section">
-                    <h4 style="margin-bottom:12px;">Skills & Progress</h4>
-                    <div id="portfolio-skills" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-                  </div>
-                  <div id="portfolio-projects-section" style="margin-top:24px;">
-                    <h4 style="margin-bottom:12px;">Completed Milestones</h4>
-                    <div id="portfolio-projects"></div>
-                  </div>
+            <div id="tab-portfolio" style="display:none;">
+              <!-- Controls row -->
+              <div style="display:flex;
+                justify-content:space-between;
+                align-items:center;margin-bottom:20px;">
+                <div>
+                  <h2 style="font-size:20px;font-weight:600;
+                    margin-bottom:4px;">
+                    🎨 Portfolio Builder
+                  </h2>
+                  <p style="font-size:13px;color:#64748B;">
+                    Auto-generated from your real progress
+                  </p>
                 </div>
-                
-                <!-- Controls -->
-                <div style="display:flex;justify-content:space-between;align-items:center;background:#F8FAFC;padding:16px;border-radius:12px;">
-                  <div>
-                    <label style="font-size:13px;font-weight:600;margin-right:8px;">Theme:</label>
-                    <select onchange="changeTheme(this.value)" style="padding:6px 12px;border-radius:6px;border:1px solid #E2E8F0;font-family:inherit;">
-                      <option value="modern">Modern</option>
-                      <option value="minimal">Minimal</option>
-                      <option value="dark">Dark</option>
-                    </select>
-                  </div>
-                  <button class="btn-primary" onclick="downloadPortfolio()">
-                    <i data-lucide="download" class="w-4 h-4"></i> Download Portfolio PDF
+                <div style="display:flex;gap:10px;">
+                  <select id="portfolio-theme"
+                    onchange="changePortfolioTheme(this.value)"
+                    style="padding:8px 12px;
+                    border:1px solid #E2E8F0;
+                    border-radius:8px;font-size:13px;
+                    outline:none;cursor:pointer;">
+                    <option value="modern">Modern</option>
+                    <option value="minimal">Minimal</option>
+                    <option value="dark">Dark</option>
+                    <option value="creative">Creative</option>
+                  </select>
+                  <button onclick="downloadPortfolioPDF()"
+                    style="padding:8px 18px;
+                    background:#059669;color:white;
+                    border:none;border-radius:8px;
+                    font-size:13px;font-weight:500;
+                    cursor:pointer;display:flex;
+                    align-items:center;gap:6px;">
+                    ⬇️ Download PDF
                   </button>
                 </div>
               </div>
-            </section>
+
+              <!-- Portfolio preview -->
+              <div id="portfolio-preview-card" style="
+                background:white;border-radius:16px;
+                border:1px solid #E2E8F0;
+                overflow:hidden;margin-bottom:20px;">
+                <!-- Content injected by JS -->
+              </div>
+
+              <!-- Summary card -->
+              <div id="portfolio-summary-card" style="background:white;
+                border-radius:14px;
+                border:1px solid #E2E8F0;padding:20px;">
+                <!-- Content injected by JS -->
+              </div>
+            </div>
 
             <!-- ══ RESUME TAB (REACTIVE STYLE) ══ -->
             <section id="tab-resume" style="display:none;">
