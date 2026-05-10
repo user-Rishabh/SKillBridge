@@ -97,7 +97,7 @@ async function checkOnboarding() {
 
   const { data: profile, error } = await supabase
       .from('profiles')
-      .select('onboarding_completed, full_name, goal, roadmap_data, xp, level')
+      .select('onboarding_completed, full_name, goal, roadmap_data, xp, level, notifications, session_history')
       .eq('id', session.user.id)
       .single();
 
@@ -107,12 +107,13 @@ async function checkOnboarding() {
     console.log('✅ Onboarding already completed');
     const overlay = document.getElementById('onboarding-overlay');
     if (overlay) overlay.style.display = 'none';
-    loadDashboard(profile);
+    initDashboard(profile);
   } else {
     console.log('🚀 Starting onboarding flow...');
     showOnboarding(profile);
   }
 }
+
 
 async function showOnboarding(profile) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -810,18 +811,329 @@ async function loadXPDisplay() {
 }
 
 // ── Dashboard Loading ────────────────────────────────────────
-async function loadDashboard(profile) {
+async function initDashboard(profile) {
     currentUserName = profile.full_name || 'Student';
-    updateProfileUI(profile, '');
-    loadDashboardStats();
-    renderDashboard();
-    loadTasks();
-    loadXPDisplay();
+    
+    // Set basic profile text
+    setText('greeting-text', `Welcome back, ${currentUserName.split(' ')[0]} 👋`);
+    setText('greeting-sub', profile.goal ? `Path: ${profile.goal}` : 'Select a goal to start');
+
+    // Run secondary loads in parallel for performance
+    Promise.all([
+        loadDashboardStats(),
+        loadNotifications(profile.notifications),
+        updateStreakDisplay(currentUserId),
+        loadXPDisplay(profile),
+        loadTodaysFocus(),
+        buildActivityHeatmap(currentUserId),
+        loadShortRoadmap(profile.roadmap_data)
+    ]);
+
     recordTodayLogin(currentUserId);
-    updateStreakDisplay(currentUserId);
-    buildActivityHeatmap(currentUserId);
     if (window.lucide) lucide.createIcons();
 }
+
+// ── Notifications System ─────────────────────────────────────
+function toggleNotifications() {
+  const dropdown = document.getElementById('notif-dropdown');
+  const isVisible = dropdown.style.display === 'block';
+  dropdown.style.display = isVisible ? 'none' : 'block';
+}
+
+async function loadNotifications(notifs) {
+  const list = document.getElementById('notif-list');
+  const count = document.getElementById('notif-count');
+  
+  const data = notifs || [];
+  if (data.length > 0) {
+    count.textContent = data.length;
+    count.style.display = 'flex';
+    list.innerHTML = data.map(n => `
+      <div style="padding:12px 16px; border-bottom:1px solid #F1F5F9; cursor:pointer;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='white'">
+        <div style="font-size:13px; font-weight:500; color:#0F172A; margin-bottom:2px;">${n.title}</div>
+        <div style="font-size:12px; color:#64748B;">${n.message}</div>
+        <div style="font-size:10px; color:#94A3B8; margin-top:4px;">${n.time || 'Just now'}</div>
+      </div>
+    `).join('');
+  } else {
+    count.style.display = 'none';
+    list.innerHTML = `<div style="padding:30px; text-align:center; color:#94A3B8; font-size:13px;">No new notifications</div>`;
+  }
+}
+
+async function clearNotifications() {
+  await supabase.from('profiles').update({ notifications: [] }).eq('id', currentUserId);
+  loadNotifications([]);
+}
+
+// ── Theme Management ─────────────────────────────────────────
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const target = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', target);
+  localStorage.setItem('theme', target);
+  document.getElementById('theme-toggle').textContent = target === 'light' ? '☀️' : '🌙';
+  showToast(`Switched to ${target} mode`);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = saved === 'light' ? '☀️' : '🌙';
+}
+
+// ── XP & Progression ─────────────────────────────────────────
+function loadXPDisplay(profile) {
+  const xp = profile?.xp || 0;
+  const level = profile?.level || 1;
+  const text = document.getElementById('xp-display-text');
+  if (text) text.textContent = `Level ${level} · ${xp} XP`;
+}
+
+function showXPDetails() {
+  alert("Feature coming soon: Detailed XP breakdown and rewards!");
+}
+
+// ── Session History ──────────────────────────────────────────
+async function startNewSession() {
+  const startTime = new Date().toISOString();
+  const sessionName = prompt("What are you focusing on this session?", "Learning React");
+  if (!sessionName) return;
+
+  showToast("Session started! Timer is running.");
+  
+  // Update profiles session_history
+  const { data: profile } = await supabase.from('profiles').select('session_history').eq('id', currentUserId).single();
+  const history = profile.session_history || [];
+  history.unshift({ name: sessionName, started: startTime, status: 'active' });
+  
+  await supabase.from('profiles').update({ session_history: history }).eq('id', currentUserId);
+}
+
+// ── Today's Focus ────────────────────────────────────────────
+async function loadTodaysFocus() {
+  const container = document.getElementById('todays-focus');
+  const { data: tasks } = await supabase.from('tasks')
+    .select('*')
+    .eq('user_id', currentUserId)
+    .eq('status', 'pending')
+    .limit(3);
+
+  if (tasks && tasks.length > 0) {
+    container.innerHTML = tasks.map(t => `
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+        <button onclick="completeFocusTask('${t.id}')" style="width:18px; height:18px; border:2px solid #059669; border-radius:4px; background:none; cursor:pointer;"></button>
+        <span style="font-size:13px; color:#1E293B;">${t.title}</span>
+      </div>
+    `).join('');
+  } else {
+    container.innerHTML = `<div style="font-size:13px; color:#94A3B8; text-align:center;">No tasks for today. ✨</div>`;
+  }
+}
+
+async function completeFocusTask(id) {
+  await supabase.from('tasks').update({ status: 'completed' }).eq('id', id);
+  showToast("Task completed! +10 XP");
+  loadTodaysFocus();
+  loadDashboardStats();
+}
+
+// ── Activity Heatmap ─────────────────────────────────────────
+async function buildActivityHeatmap(userId) {
+  const grid = document.getElementById('heatmap-grid');
+  if (!grid) return;
+
+  const { data } = await supabase.from('user_activity')
+    .select('activity_date')
+    .eq('user_id', userId)
+    .order('activity_date', { ascending: true });
+
+  const activeDates = new Set((data || []).map(d => d.activity_date));
+  const today = new Date();
+  grid.innerHTML = '';
+
+  for (let i = 0; i < 12; i++) {
+    const col = document.createElement('div');
+    col.style.display = 'flex';
+    col.style.flexDirection = 'column';
+    col.style.gap = '3px';
+
+    for (let j = 0; j < 7; j++) {
+      const date = new Date();
+      date.setDate(today.getDate() - ((11 - i) * 7 + (6 - j)));
+      const ds = date.toISOString().split('T')[0];
+      const isActive = activeDates.has(ds);
+      
+      const cell = document.createElement('div');
+      cell.style.width = '12px';
+      cell.style.height = '12px';
+      cell.style.borderRadius = '2px';
+      cell.style.background = isActive ? '#059669' : '#F1F5F9';
+      cell.title = ds;
+      col.appendChild(cell);
+    }
+    grid.appendChild(col);
+  }
+  
+  const activeCount = document.getElementById('active-days-count');
+  if (activeCount) activeCount.textContent = `${activeDates.size} Days Active`;
+}
+
+// ── Short Roadmap Card ───────────────────────────────────────
+function loadShortRoadmap(roadmap) {
+  const title = document.getElementById('roadmap-title-short');
+  const phases = document.getElementById('roadmap-phases-short');
+  const progress = document.getElementById('overall-progress-section');
+
+  if (!roadmap || !roadmap.phases) {
+    title.textContent = "No Roadmap Generated";
+    return;
+  }
+
+  title.textContent = roadmap.title || "Career Roadmap";
+  progress.style.display = 'block';
+  
+  // Calculate overall progress
+  const totalTasks = roadmap.phases.reduce((sum, p) => sum + (p.tasks?.length || 0), 0);
+  const completedTasks = roadmap.phases.reduce((sum, p) => sum + (p.tasks?.filter(t => t.status === 'completed').length || 0), 0);
+  const pct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  
+  document.getElementById('overall-pct').textContent = pct + '%';
+  document.getElementById('overall-bar').style.width = pct + '%';
+
+  phases.innerHTML = roadmap.phases.slice(0, 3).map(p => {
+    const completed = p.tasks?.filter(t => t.status === 'completed').length || 0;
+    const total = p.tasks?.length || 0;
+    const phasePct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    return `
+      <div style="background:#F8FAFC; border-radius:10px; padding:12px; border:1px solid #E2E8F0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:13px; font-weight:600; color:#0F172A;">${p.phase}</span>
+          <span style="font-size:11px; color:#64748B;">${completed}/${total} Tasks</span>
+        </div>
+        <div style="height:4px; background:#E2E8F0; border-radius:2px;">
+          <div style="height:100%; width:${phasePct}%; background:#059669; border-radius:2px;"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Full Roadmap Generation ──────────────────────────────────
+async function generateNewRoadmap() {
+  const goalInput = document.getElementById('roadmap-goal-input');
+  const goal = goalInput?.value || currentUserName;
+  
+  if (!goal) {
+    showToast("Please enter a career goal first", "error");
+    return;
+  }
+
+  const status = document.getElementById('roadmap-gen-status');
+  const display = document.getElementById('full-roadmap-display');
+  const btn = document.getElementById('generate-roadmap-btn');
+
+  status.style.display = 'block';
+  display.style.display = 'none';
+  if (btn) btn.disabled = true;
+
+  try {
+    const prompt = getRoadmapPrompt(goal);
+    const response = await callAI(prompt, 2000);
+    
+    if (response) {
+      const jsonStr = response.match(/\{[\s\S]*\}/)[0];
+      const roadmap = JSON.parse(jsonStr);
+      
+      // Save to Supabase
+      await supabase.from('profiles').update({ roadmap_data: roadmap }).eq('id', currentUserId);
+      
+      renderFullRoadmap(roadmap);
+      loadShortRoadmap(roadmap);
+      showToast("✨ Roadmap generated successfully!");
+    }
+  } catch (err) {
+    console.error("Roadmap Gen Error:", err);
+    showToast("Failed to generate roadmap. Try again.", "error");
+  } finally {
+    status.style.display = 'none';
+    display.style.display = 'block';
+    if (btn) btn.disabled = false;
+  }
+}
+
+function renderFullRoadmap(roadmap) {
+  const display = document.getElementById('full-roadmap-display');
+  if (!display) return;
+
+  display.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+      <h2 style="font-size:24px; font-weight:700; color:#0F172A;">${roadmap.title}</h2>
+      <button onclick="downloadRoadmapPDF()" style="padding:10px 18px; background:white; border:1px solid #E2E8F0; border-radius:10px; font-size:14px; cursor:pointer;">
+        📥 Download PDF
+      </button>
+    </div>
+    <div style="display:grid; gap:20px;">
+      ${roadmap.phases.map((p, pIdx) => `
+        <div style="background:white; border:1px solid #E2E8F0; border-radius:16px; padding:24px;">
+          <div style="font-size:12px; font-weight:700; color:#059669; text-transform:uppercase; margin-bottom:8px;">Phase ${pIdx + 1}</div>
+          <h3 style="font-size:18px; font-weight:600; margin-bottom:12px;">${p.phase}</h3>
+          <p style="font-size:14px; color:#64748B; margin-bottom:20px;">${p.description || ''}</p>
+          
+          <div style="display:grid; gap:12px;">
+            ${p.tasks.map((t, tIdx) => `
+              <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#F8FAFC; border-radius:12px; border:1px solid #E2E8F0;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <button onclick="completeRoadmapTask(${pIdx}, ${tIdx})" style="width:20px; height:20px; border-radius:50%; border:2px solid ${t.status === 'completed' ? '#059669' : '#CBD5E1'}; background:${t.status === 'completed' ? '#059669' : 'none'}; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    ${t.status === 'completed' ? '✓' : ''}
+                  </button>
+                  <span style="font-size:14px; font-weight:500; color:${t.status === 'completed' ? '#94A3B8' : '#1E293B'}; text-decoration:${t.status === 'completed' ? 'line-through' : 'none'};">${t.title}</span>
+                </div>
+                <div style="font-size:11px; font-weight:600; padding:4px 8px; border-radius:6px; background:${t.difficulty === 'Hard' ? '#FEE2E2' : t.difficulty === 'Medium' ? '#FEF3C7' : '#DCFCE7'}; color:${t.difficulty === 'Hard' ? '#EF4444' : t.difficulty === 'Medium' ? '#D97706' : '#059669'};">${t.difficulty}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function getRoadmapPrompt(goal) {
+  return `Act as a career coach and create a high-fidelity learning roadmap for the role: "${goal}".
+  Format the response as a valid JSON object.
+  The JSON should have:
+  - "title": A catchy title for the roadmap.
+  - "phases": An array of 4 objects.
+    - Each phase has: "phase" (name), "description", and "tasks" (array of 4 specific learning tasks).
+    - Each task has: "title", "difficulty" (Easy/Medium/Hard), "status" (default to "pending").
+  
+  RETURN ONLY THE JSON OBJECT.`;
+}
+
+async function completeRoadmapTask(pIdx, tIdx) {
+  const { data: profile } = await supabase.from('profiles').select('roadmap_data').eq('id', currentUserId).single();
+  const roadmap = profile.roadmap_data;
+  
+  const task = roadmap.phases[pIdx].tasks[tIdx];
+  task.status = task.status === 'completed' ? 'pending' : 'completed';
+  
+  await supabase.from('profiles').update({ roadmap_data: roadmap }).eq('id', currentUserId);
+  renderFullRoadmap(roadmap);
+  loadShortRoadmap(roadmap);
+  
+  if (task.status === 'completed') {
+    showToast("Checkpoint reached! +25 XP");
+    // Could update XP here
+  }
+}
+
+function downloadRoadmapPDF() {
+  window.print(); // Simple fallback
+}
+
 
 async function callAI(prompt, maxTokens = 800) {
     try {

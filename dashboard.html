@@ -100,26 +100,142 @@
         <!-- Main Content Area (Cream) -->
         <main class="main-content">
             <!-- Navbar -->
-            <header class="navbar">
-                <div class="welcome-msg">
-                    Welcome back, <span id="greeting-name">Rishabh</span> 👋
+            <div style="
+              display:flex;justify-content:space-between;
+              align-items:center;padding:16px 24px;
+              background:white;
+              border-bottom:1px solid #E2E8F0;
+              position:sticky;top:0;z-index:100;
+              backdrop-filter:blur(10px);
+            ">
+              <!-- Left: greeting -->
+              <div>
+                <h2 id="greeting-text" style="
+                  font-size:18px;font-weight:600;
+                  color:#0F172A;margin:0;">
+                  Welcome back 👋
+                </h2>
+                <p id="greeting-sub" style="
+                  font-size:12px;color:#94A3B8;margin:0;">
+                  Loading your progress...
+                </p>
+              </div>
+
+              <!-- Right: all actions -->
+              <div style="display:flex;align-items:center;
+                gap:10px;">
+
+                <!-- Streak -->
+                <div id="streak-badge" style="
+                  display:flex;align-items:center;gap:6px;
+                  padding:6px 12px;
+                  background:#FEF3C7;
+                  border-radius:20px;
+                  font-size:13px;font-weight:500;
+                  color:#D97706;cursor:default;">
+                  🔥 <span id="streak-num">0</span> Day Streak
                 </div>
-                <div class="nav-actions">
-                    <div class="streak-badge" id="streak-badge">
-                        🔥 0 Day Streak
+
+                <!-- XP Level -->
+                <div id="xp-badge" style="
+                  display:flex;align-items:center;gap:6px;
+                  padding:6px 12px;
+                  background:#FEF3C7;
+                  border:1px solid #FDE68A;
+                  border-radius:20px;
+                  font-size:13px;font-weight:500;
+                  color:#D97706;cursor:pointer;"
+                  onclick="showXPDetails()">
+                  ⚡ <span id="xp-display-text">
+                    Level 1 · 0 XP
+                  </span>
+                </div>
+
+                <!-- Notifications bell -->
+                <div style="position:relative;">
+                  <button id="notif-btn"
+                    onclick="toggleNotifications()"
+                    style="
+                      width:38px;height:38px;
+                      border-radius:50%;border:none;
+                      background:#F1F5F9;cursor:pointer;
+                      font-size:18px;
+                      display:flex;align-items:center;
+                      justify-content:center;
+                      transition:background 200ms;
+                      position:relative;"
+                    onmouseover="this.style.background='#E2E8F0'"
+                    onmouseout="this.style.background='#F1F5F9'">
+                    🔔
+                    <span id="notif-count" style="
+                      position:absolute;top:-2px;right:-2px;
+                      width:16px;height:16px;
+                      background:#EF4444;color:white;
+                      border-radius:50%;font-size:10px;
+                      font-weight:600;
+                      display:none;
+                      align-items:center;justify-content:center;">
+                      3
+                    </span>
+                  </button>
+
+                  <!-- Notifications dropdown -->
+                  <div id="notif-dropdown" style="
+                    position:absolute;top:46px;right:0;
+                    width:320px;background:white;
+                    border:1px solid #E2E8F0;
+                    border-radius:14px;
+                    box-shadow:0 8px 24px rgba(0,0,0,0.1);
+                    z-index:999;display:none;
+                    overflow:hidden;">
+                    <div style="padding:14px 16px;
+                      border-bottom:1px solid #E2E8F0;
+                      display:flex;justify-content:space-between;
+                      align-items:center;">
+                      <span style="font-size:14px;
+                        font-weight:600;">Notifications</span>
+                      <button onclick="clearNotifications()"
+                        style="font-size:12px;color:#059669;
+                        border:none;background:none;
+                        cursor:pointer;">
+                        Clear all
+                      </button>
                     </div>
-                    <button class="icon-btn" title="Notifications">
-                        <i data-lucide="bell" class="w-4 h-4"></i>
-                    </button>
-                    <button class="icon-btn" id="theme-toggle" title="Toggle Theme">
-                        <i data-lucide="sun" class="w-4 h-4"></i>
-                    </button>
-                    <button class="btn-primary" id="new-session-btn">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        New Session
-                    </button>
+                    <div id="notif-list" style="
+                      max-height:300px;overflow-y:auto;">
+                    </div>
+                  </div>
                 </div>
-            </header>
+
+                <!-- Theme toggle -->
+                <button id="theme-toggle"
+                  onclick="toggleTheme()"
+                  style="width:38px;height:38px;
+                  border-radius:50%;border:none;
+                  background:#F1F5F9;cursor:pointer;
+                  font-size:16px;
+                  transition:background 200ms;"
+                  onmouseover="this.style.background='#E2E8F0'"
+                  onmouseout="this.style.background='#F1F5F9'">
+                  ☀️
+                </button>
+
+                <!-- New Session button -->
+                <button onclick="startNewSession()"
+                  style="display:flex;align-items:center;
+                  gap:6px;padding:8px 16px;
+                  background:#059669;color:white;
+                  border:none;border-radius:10px;
+                  font-size:13px;font-weight:500;
+                  cursor:pointer;
+                  transition:all 200ms;"
+                  onmouseover="this.style.background='#047857'"
+                  onmouseout="this.style.background='#059669'">
+                  ＋ New Session
+                </button>
+              </div>
+            </div>
+
 
             <!-- Tab Content -->
             <div style="padding: 24px; overflow-y: auto; flex: 1;">
@@ -128,15 +244,85 @@
             <section id="tab-dashboard">
               <div class="dashboard-view">
                 <div class="main-section">
-                  <section class="hero-card fade-in">
-                    <h3 class="card-title"><i data-lucide="sparkles" class="text-emerald w-5 h-5"></i> Your AI Career Roadmap</h3>
-                    <p style="font-size:14px;color:var(--text-secondary);margin-bottom:24px;" id="roadmap-focus-text">Complete onboarding to generate your personalized roadmap.</p>
-                    <div class="roadmap-viz">
-                      <div class="roadmap-line"><div class="roadmap-line-progress" id="roadmap-progress-bar" style="width:0%"></div></div>
-                      <div id="roadmap-nodes-dashboard" style="display:contents;"></div>
+                  <div style="
+                    background:white;border-radius:16px;
+                    border:1px solid #E2E8F0;
+                    padding:24px;margin-bottom:20px;
+                    grid-column:1/-1;">
+
+                    <!-- Header row -->
+                    <div style="display:flex;justify-content:
+                      space-between;align-items:flex-start;
+                      margin-bottom:20px;">
+                      <div>
+                        <div style="font-size:11px;
+                          font-weight:500;color:#059669;
+                          text-transform:uppercase;
+                          letter-spacing:0.05em;
+                          margin-bottom:4px;">
+                          AI Career Roadmap
+                        </div>
+                        <h3 id="roadmap-title-short" style="
+                          font-size:18px;font-weight:600;
+                          color:#0F172A;margin:0;">
+                          Loading your roadmap...
+                        </h3>
+                        <p id="roadmap-subtitle" style="
+                          font-size:13px;color:#64748B;
+                          margin-top:4px;">
+                        </p>
+                      </div>
+                      <div style="display:flex;gap:8px;">
+                        <button onclick="switchTab('roadmap')"
+                          style="padding:8px 16px;
+                          background:transparent;
+                          border:1px solid #059669;
+                          color:#059669;border-radius:8px;
+                          font-size:13px;cursor:pointer;">
+                          View Full →
+                        </button>
+                        <button onclick="generateNewRoadmap()"
+                          style="padding:8px 16px;
+                          background:#059669;color:white;
+                          border:none;border-radius:8px;
+                          font-size:13px;cursor:pointer;">
+                          ✨ Generate
+                        </button>
+                      </div>
                     </div>
-                    <button class="btn-primary" id="generate-roadmap-btn" style="margin-top:24px;padding:10px 24px;">Generate AI Roadmap</button>
-                  </section>
+
+                    <!-- Phase progress bars -->
+                    <div id="roadmap-phases-short" style="
+                      display:grid;gap:10px;">
+                      <div style="text-align:center;
+                        padding:20px;color:#94A3B8;
+                        font-size:13px;">
+                        Click Generate to create your 
+                        personalized roadmap
+                      </div>
+                    </div>
+
+                    <!-- Overall progress bar -->
+                    <div id="overall-progress-section"
+                      style="margin-top:16px;display:none;">
+                      <div style="display:flex;
+                        justify-content:space-between;
+                        font-size:12px;color:#64748B;
+                        margin-bottom:6px;">
+                        <span>Overall Progress</span>
+                        <span id="overall-pct">0%</span>
+                      </div>
+                      <div style="height:6px;background:#F1F5F9;
+                        border-radius:3px;">
+                        <div id="overall-bar" style="
+                          height:100%;background:#059669;
+                          border-radius:3px;width:0%;
+                          transition:width 800ms ease;">
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   <section class="stats-grid">
                     <div class="stat-card fade-in" style="animation-delay:.1s"><span class="stat-label">Progress</span><span class="stat-value" id="stat-progress" data-stat="progress">0%</span></div>
                     <div class="stat-card fade-in" style="animation-delay:.2s"><span class="stat-label">Projects Completed</span><span class="stat-value" id="stat-projects" data-stat="projects">0</span></div>
@@ -151,58 +337,187 @@
                   </div>
                 </div>
                 <aside class="right-panel">
-                  <div class="fade-in" style="animation-delay:.2s;background:white;border-radius:12px;padding:16px;border:1px solid #E2E8F0;">
-                    <div style="font-size:13px;font-weight:600;color:#0F172A;margin-bottom:12px;">Weekly Activity</div>
-                    <div id="activity-heatmap"></div>
-                    <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:#94A3B8;">
+                  <div style="background:white;
+                    border-radius:14px;
+                    border:1px solid #E2E8F0;
+                    padding:16px;margin-bottom:16px;">
+                    
+                    <div style="display:flex;
+                      justify-content:space-between;
+                      align-items:center;margin-bottom:12px;">
+                      <div style="font-size:14px;font-weight:600;
+                        color:#0F172A;">
+                        📅 Weekly Activity
+                      </div>
+                      <div id="active-days-count" style="
+                        font-size:12px;color:#059669;
+                        font-weight:500;">
+                        Loading...
+                      </div>
+                    </div>
+
+                    <!-- Day labels -->
+                    <div style="display:flex;gap:3px;
+                      margin-bottom:4px;padding-left:18px;">
+                      ${['S','M','T','W','T','F','S'].map(d => `
+                        <div style="width:12px;font-size:9px;
+                          color:#94A3B8;text-align:center;
+                          flex-shrink:0;">
+                          ${d}
+                        </div>
+                      `).join('')}
+                    </div>
+
+                    <!-- Heatmap grid -->
+                    <div id="heatmap-grid" style="
+                      display:flex;gap:3px;">
+                    </div>
+
+                    <!-- Legend -->
+                    <div style="display:flex;align-items:center;
+                      gap:6px;margin-top:10px;
+                      justify-content:flex-end;font-size:11px;
+                      color:#94A3B8;">
                       <span>Less</span>
-                      <div style="width:10px;height:10px;border-radius:2px;background:#E2E8F0;"></div>
-                      <div style="width:10px;height:10px;border-radius:2px;background:#6EE7B7;"></div>
-                      <div style="width:10px;height:10px;border-radius:2px;background:#059669;"></div>
+                      <div style="width:10px;height:10px;
+                        border-radius:2px;background:#F1F5F9;">
+                      </div>
+                      <div style="width:10px;height:10px;
+                        border-radius:2px;background:#A7F3D0;">
+                      </div>
+                      <div style="width:10px;height:10px;
+                        border-radius:2px;background:#059669;">
+                      </div>
                       <span>More</span>
                     </div>
                   </div>
+
                   <div class="panel-card fade-in" style="animation-delay:.3s;">
                     <h3 class="card-title" style="font-size:14px;margin-bottom:16px;">Skill Progress</h3>
                     <div id="skill-progress-container">
                       <div style="font-size:12px;color:var(--text-secondary);">No data yet.</div>
                     </div>
                   </div>
-                  <div class="panel-card fade-in" style="animation-delay:.4s;">
-                    <h3 class="card-title" style="font-size:14px;margin-bottom:16px;">Assigned Mentor</h3>
-                    <div class="mentor-card">
-                      <div class="mentor-avatar" style="display:flex;align-items:center;justify-content:center;background:var(--bg-main);"><i data-lucide="user" class="w-5 h-5 text-muted"></i></div>
-                      <div><div style="font-weight:700;font-size:13px;">Siddharth V.</div><div class="mentor-role">Senior SDE @ Google</div></div>
+                  <div style="
+                    background:white;border-radius:14px;
+                    border:1px solid #E2E8F0;
+                    overflow:hidden;margin-bottom:16px;">
+                    <div style="padding:14px 16px;
+                      border-bottom:1px solid #F1F5F9;">
+                      <div style="font-size:14px;font-weight:600;
+                        color:#0F172A;margin-bottom:2px;">
+                        🎯 Today's Focus
+                      </div>
+                      <div style="font-size:12px;color:#64748B;">
+                        Your priority tasks for today
+                      </div>
                     </div>
-                    <p class="mentor-feedback">"Your React project structure is solid. Focus on optimizing your custom hooks this week."</p>
-                    <button class="btn-primary" style="width:100%;justify-content:center;font-size:12px;">Schedule Session</button>
+                    <div id="todays-focus" style="padding:14px 16px;">
+                      <div style="font-size:13px;color:#94A3B8;
+                        text-align:center;padding:10px;">
+                        Loading tasks...
+                      </div>
+                    </div>
                   </div>
+
                 </aside>
               </div>
             </section>
 
             <!-- ══ ROADMAP TAB ══ -->
-            <section id="tab-roadmap" style="display:none;">
-              <div style="max-width:800px;">
-                <div class="hero-card" style="margin-bottom:24px;">
-                  <h3 class="card-title" style="margin-bottom:16px;"><i data-lucide="sparkles" class="text-emerald w-5 h-5"></i> Generate Your AI Roadmap</h3>
-                  <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">Enter your dream job and we'll generate a personalised roadmap with skill checkpoints.</p>
-                  <div style="display:flex;gap:12px;">
-                    <input id="roadmap-goal-input" type="text" placeholder="e.g. Full-Stack Engineer at a FAANG company" style="flex:1;padding:10px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:14px;font-family:inherit;outline:none;">
-                    <button class="btn-primary" style="padding:10px 20px;">Generate</button>
+            <div id="tab-roadmap" style="display:none;">
+
+              <!-- Goal input (pre-filled from profile) -->
+              <div style="background:white;
+                border-radius:14px;border:1px solid #E2E8F0;
+                padding:20px;margin-bottom:20px;">
+                <div style="display:flex;
+                  justify-content:space-between;
+                  align-items:center;margin-bottom:14px;">
+                  <div>
+                    <h3 style="font-size:16px;font-weight:600;
+                      margin-bottom:2px;">
+                      🤖 AI Career Roadmap Generator
+                    </h3>
+                    <p style="font-size:13px;color:#64748B;">
+                      Your profile data is pre-loaded. 
+                      Customize and generate.
+                    </p>
                   </div>
                 </div>
-                <div class="hero-card" style="margin-bottom:24px;">
-                  <h3 class="card-title" style="margin-bottom:20px;">Current Progress</h3>
-                  <div class="roadmap-viz">
-                    <div class="roadmap-line"><div class="roadmap-line-progress" id="roadmap-tab-progress-bar" style="width:0%;"></div></div>
-                    <div id="roadmap-nodes-tab" style="display:contents;"></div>
-                  </div>
-                  <div id="roadmap-phase-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px;"></div>
-                  <button id="regenerate-roadmap-btn" class="btn-primary" style="margin-top:20px;background:white;color:#059669;border:1px solid #059669;">🔄 Regenerate Roadmap</button>
+
+                <!-- Pre-filled goal from profile -->
+                <div style="display:grid;
+                  grid-template-columns:1fr auto;
+                  gap:10px;align-items:center;">
+                  <input id="roadmap-goal-input"
+                    type="text"
+                    placeholder="e.g. Frontend Developer at Google"
+                    style="padding:12px 16px;
+                    border:1px solid #E2E8F0;
+                    border-radius:10px;font-size:14px;
+                    outline:none;width:100%;
+                    transition:border 200ms;"
+                    onfocus="this.style.borderColor='#059669'"
+                    onblur="this.style.borderColor='#E2E8F0'">
+                  <button onclick="generateNewRoadmap()"
+                    id="generate-roadmap-btn"
+                    style="padding:12px 20px;
+                    background:#059669;color:white;
+                    border:none;border-radius:10px;
+                    font-size:14px;font-weight:500;
+                    cursor:pointer;white-space:nowrap;">
+                    Generate Roadmap
+                  </button>
+                </div>
+
+                <!-- Quick goal chips -->
+                <div style="display:flex;gap:8px;
+                  flex-wrap:wrap;margin-top:12px;">
+                  <button onclick="document.getElementById('roadmap-goal-input').value='Frontend Developer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">Frontend Developer</button>
+                  <button onclick="document.getElementById('roadmap-goal-input').value='Backend Developer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">Backend Developer</button>
+                  <button onclick="document.getElementById('roadmap-goal-input').value='Full Stack Developer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">Full Stack Developer</button>
+                  <button onclick="document.getElementById('roadmap-goal-input').value='Data Scientist'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">Data Scientist</button>
+                  <button onclick="document.getElementById('roadmap-goal-input').value='ML Engineer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">ML Engineer</button>
+                  <button onclick="document.getElementById('roadmap-goal-input').value='DevOps Engineer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">DevOps Engineer</button>
                 </div>
               </div>
-            </section>
+
+              <!-- Generation status -->
+              <div id="roadmap-gen-status"
+                style="display:none;text-align:center;
+                padding:40px;background:white;
+                border-radius:14px;
+                border:1px solid #E2E8F0;
+                margin-bottom:20px;">
+                <div style="font-size:32px;margin-bottom:12px;">
+                  🤖
+                </div>
+                <div style="font-size:16px;font-weight:500;
+                  margin-bottom:6px;"
+                  id="gen-status-text">
+                  Generating your roadmap...
+                </div>
+                <div style="font-size:13px;color:#64748B;">
+                  Analyzing job market data for your goal
+                </div>
+                <div style="margin-top:16px;height:4px;
+                  background:#F1F5F9;border-radius:2px;
+                  overflow:hidden;">
+                  <div style="height:100%;background:#059669;
+                    border-radius:2px;
+                    animation:slideIn 2s ease-in-out infinite;">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Full Roadmap display -->
+              <div id="full-roadmap-display"
+                style="display:none;">
+              </div>
+
+            </div>
+
 
             <!-- ══ PROJECTS TAB ══ -->
             <section id="tab-projects" style="display:none;">
