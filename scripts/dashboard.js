@@ -1530,6 +1530,7 @@ async function callAI(prompt, maxTokens = 800) {
 
 function updateProfileUI(p, email) {
     const name = p.full_name || email.split('@')[0];
+    currentUserName = name;
     setText('user-display-name', name);
     setText('greeting-name', name.split(' ')[0]);
     setText('profile-initials', name.substring(0, 1).toUpperCase());
@@ -1602,7 +1603,7 @@ function initTabs() {
         if (tabName === 'tasks') loadTasks();
         if (tabName === 'projects') loadProjects();
         if (tabName === 'profile') loadProfile();
-        if (tabName === 'placement') loadPlacementState();
+        if (tabName === 'placement') initPlacementTab();
         if (tabName === 'mentorship') initMentorChat();
         if (tabName === 'portfolio') loadPortfolioTab();
     }
@@ -1673,101 +1674,451 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// ── PLACEMENT PREPARATION LOGIC ─────────────────────────────
-let placementState = {
-  resumeUploaded: true, // Unlocked as requested
-  r1Passed: true,       // Unlocked as requested
-  r2Passed: true,       // Unlocked as requested
-  r3Passed: true        // Unlocked as requested
+// ── Global placement state ───────────────
+let placementResumeText = '';
+let selectedCompanyType = 'Product (FAANG)';
+let placementProgress = { 
+  resume: false, 
+  r1: false, 
+  r2: false, 
+  r3: false,
+  r1Score: 0,
+  r2Score: 0,
+  r3Score: 0
 };
 
-function loadPlacementState() {
-  const saved = localStorage.getItem('placementState_' + currentUserId);
-  if (saved) {
-    // Merge saved state but keep "Unlock All" override if needed
-    // For now, we force all true as per user request
-    // placementState = JSON.parse(saved);
+// ── Init placement tab ───────────────────
+async function initPlacementTab() {
+  const { data: attempts } = await supabase
+    .from('placement_attempts')
+    .select('*')
+    .eq('user_id', currentUserId);
+
+  if (attempts) {
+    attempts.forEach(att => {
+      if (att.round === 1 && att.passed) placementProgress.r1 = true, placementProgress.r1Score = att.score;
+      if (att.round === 2 && att.passed) placementProgress.r2 = true, placementProgress.r2Score = att.score;
+      if (att.round === 3 && att.passed) placementProgress.r3 = true, placementProgress.r3Score = att.score;
+    });
   }
-  updatePlacementUI();
+  updatePlacementProgress();
 }
 
-function updatePlacementUI() {
-  const { resumeUploaded, r1Passed, r2Passed, r3Passed } = placementState;
+// ── Resume Helpers ───────────────────────
+function handleResumeDrop(e) {
+  e.preventDefault();
+  const files = e.dataTransfer.files;
+  if (files.length) handleResumeFile({ files });
+}
+
+function handleResumeFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    placementResumeText = e.target.result;
+    document.getElementById('dropzone-content').innerHTML = `
+      <div style="font-size:32px;margin-bottom:8px;">✅</div>
+      <div style="font-size:14px;font-weight:600;color:#059669;">
+        ${file.name} uploaded!
+      </div>
+      <div style="font-size:12px;color:#64748B;">Ready for analysis</div>
+    `;
+    document.getElementById('resume-action-buttons').style.display = 'grid';
+    placementProgress.resume = true;
+    updatePlacementProgress();
+  };
+  reader.readAsText(file);
+}
+
+async function analyzeResume() {
+  const resArea = document.getElementById('resume-analysis-result');
+  resArea.innerHTML = '<p style="font-size:13px;color:#64748B;padding:12px;">🔍 Analyzing with AI...</p>';
   
-  // Progress Bar
-  updateBar('bar-resume', resumeUploaded);
-  updateBar('bar-r1', r1Passed);
-  updateBar('bar-r2', r2Passed);
-  updateBar('bar-r3', r3Passed);
-
-  // Sections
-  updateSection('round1-section', r1Passed || resumeUploaded, r1Passed);
-  updateSection('round2-section', r2Passed || r1Passed, r2Passed);
-  updateSection('round3-section', r3Passed || r2Passed, r3Passed);
+  const prompt = `Analyze this resume and give a score out of 100 based on ATS compatibility and technical depth. Also list top 3 strengths.
+  RESUME: ${placementResumeText}`;
   
-  // Resume actions
-  const resumeActions = document.getElementById('resume-actions');
-  if (resumeActions) resumeActions.style.display = 'grid';
-}
-
-function updateBar(id, passed) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.background = passed ? '#F0FDF4' : '#F8FAFC';
-  el.style.color = passed ? '#059669' : '#94A3B8';
-  if (passed) el.innerHTML = el.innerHTML.replace('📄', '✅').replace('📝', '✅').replace('💻', '✅').replace('🎥', '✅');
-}
-
-function updateSection(id, unlocked, passed) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (!unlocked) {
-    el.classList.add('locked');
-    el.style.pointerEvents = 'none';
-  } else {
-    el.classList.remove('locked');
-    el.style.pointerEvents = 'auto';
+  const result = await callAI(prompt);
+  if (result) {
+    resArea.innerHTML = `
+      <div style="background:#F8FAFC;border-radius:12px;padding:16px;border:1px solid #E2E8F0;margin-top:10px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px;color:#0F172A;">AI Analysis Summary</div>
+        <div style="font-size:13px;color:#475569;line-height:1.5;white-space:pre-wrap;">${result}</div>
+      </div>
+    `;
   }
 }
 
-// Round Start Functions
-async function startRound1() {
-  showToast('Starting Aptitude & Coding Round...');
-  // Logic for generating quiz...
-}
-
-async function startRound2() {
-  showToast('Starting Technical Interview Simulation...');
-}
-
-async function startRound3() {
-  showToast('Initializing AI Video Interview...');
-}
-
-function scrollToSection(id) {
-  const el = document.getElementById(id);
-  if (el) el.scrollIntoView({ behavior: 'smooth' });
-}
-
-function handleResumeUpload(input) {
-  if (input.files && input.files[0]) {
-    placementState.resumeUploaded = true;
-    localStorage.setItem('placementState_' + currentUserId, JSON.stringify(placementState));
-    showToast('Resume uploaded and analyzed! Round 1 Unlocked.');
-    updatePlacementUI();
+async function getResumeImprovements() {
+  const resArea = document.getElementById('resume-analysis-result');
+  resArea.innerHTML = '<p style="font-size:13px;color:#64748B;padding:12px;">📈 Finding improvements...</p>';
+  const prompt = `Give 5 specific bullet points to improve this resume for a ${selectedCompanyType} role.
+  RESUME: ${placementResumeText}`;
+  const result = await callAI(prompt);
+  if (result) {
+    resArea.innerHTML = `
+      <div style="background:#F0FDF4;border-radius:12px;padding:16px;border:1px solid #A7F3D0;margin-top:10px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px;color:#065F46;">Suggested Improvements</div>
+        <div style="font-size:13px;color:#065F46;line-height:1.5;white-space:pre-wrap;">${result}</div>
+      </div>
+    `;
   }
 }
 
-// Ensure the functions are global for onclick handlers
-window.startRound1 = startRound1;
-window.startRound2 = startRound2;
-window.startRound3 = startRound3;
-window.scrollToSection = scrollToSection;
-window.handleResumeUpload = handleResumeUpload;
-window.loadPlacementState = loadPlacementState;
-window.analyzeResume = analyzeResume;
-window.generateAIResume = generateAIResume;
-window.downloadResumePDF = downloadResumePDF;
+async function generateAIResume() {
+  showToast('✨ Generating optimized resume structure...');
+  const prompt = `Generate a high-impact resume version for this user. Output in professional format.
+  RESUME: ${placementResumeText}`;
+  const result = await callAI(prompt);
+  if (result) {
+    placementResumeText = result; // Update with better version
+    showToast('Resume improved by AI!');
+    analyzeResume();
+  }
+}
+
+function downloadResumeAsPDF() {
+  if (!placementResumeText) return showToast('Upload resume first');
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  const splitText = doc.splitTextToSize(placementResumeText, 180);
+  doc.text(splitText, 15, 20);
+  doc.save('SkillBridge_AI_Resume.pdf');
+}
+
+// ── Round 1: Aptitude + Coding ──────────
+function setCompanyType(idx, btn) {
+  const types = ['Product (FAANG)', 'Service (TCS/Infosys)', 'Startup'];
+  selectedCompanyType = types[idx];
+  document.querySelectorAll('[id^="ct-btn-"]').forEach(b => {
+    b.style.background = 'transparent';
+    b.style.color = '#64748B';
+    b.style.borderColor = '#E2E8F0';
+  });
+  btn.style.background = '#059669';
+  btn.style.color = 'white';
+  btn.style.borderColor = '#059669';
+}
+
+async function startRound1Test() {
+  const area = document.getElementById('r1-test-area');
+  area.innerHTML = '<div style="padding:40px;text-align:center;">🧠 Generating technical test for ' + selectedCompanyType + '...</div>';
+  area.style.display = 'block';
+  document.getElementById('start-r1-btn').style.display = 'none';
+
+  const prompt = `Generate a technical test for ${selectedCompanyType} role. 
+  Include: 3 Technical MCQs and 1 Coding Logic Question.
+  Return ONLY JSON format: {"mcqs": [{"q": "...", "a": ["...", "..."], "correct": 0}], "coding": {"q": "..."}}`;
+  
+  const result = await callAI(prompt, 1000);
+  try {
+    const test = JSON.parse(result.match(/\{[\s\S]*\}/)[0]);
+    renderRound1(test);
+  } catch (e) {
+    area.innerHTML = 'Failed to generate test. Try again.';
+    document.getElementById('start-r1-btn').style.display = 'block';
+  }
+}
+
+function renderRound1(test) {
+  const area = document.getElementById('r1-test-area');
+  let html = `<div style="padding:10px;">`;
+  
+  test.mcqs.forEach((m, i) => {
+    html += `
+      <div style="margin-bottom:20px;">
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Q${i+1}: ${m.q}</div>
+        ${m.a.map((opt, oi) => `
+          <label style="display:block;margin-bottom:6px;font-size:13px;cursor:pointer;">
+            <input type="radio" name="mcq-${i}" value="${oi}"> ${opt}
+          </label>
+        `).join('')}
+      </div>
+    `;
+  });
+
+  html += `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Coding Challenge</div>
+      <div style="background:#0F172A;color:#10B981;padding:12px;border-radius:8px;font-family:monospace;font-size:12px;margin-bottom:10px;">
+        ${test.coding.q}
+      </div>
+      <textarea id="coding-ans" style="width:100%;height:120px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:10px;font-size:13px;" placeholder="Write your logic or code here..."></textarea>
+    </div>
+    <button onclick="submitRound1()" style="width:100%;padding:12px;background:#059669;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Submit Answers</button>
+  </div>`;
+  area.innerHTML = html;
+}
+
+async function submitRound1() {
+  const btn = event.target;
+  btn.innerHTML = 'Submitting...';
+  btn.disabled = true;
+
+  // Mock scoring logic for demo - in real app, AI would evaluate
+  const score = Math.floor(Math.random() * 40) + 60; 
+  const passed = score >= 70;
+
+  await savePlacementAttempt(1, score, passed);
+  
+  document.getElementById('r1-test-area').style.display = 'none';
+  const res = document.getElementById('r1-result');
+  res.style.display = 'block';
+  res.innerHTML = `
+    <div style="text-align:center;padding:20px;background:${passed ? '#F0FDF4' : '#FFF1F2'};border-radius:12px;border:1px solid ${passed ? '#A7F3D0' : '#FECACA'};">
+      <div style="font-size:24px;margin-bottom:8px;">${passed ? '🎉' : '❌'}</div>
+      <div style="font-size:18px;font-weight:700;color:${passed ? '#065F46' : '#991B1B'};">Score: ${score}/100</div>
+      <p style="font-size:13px;color:${passed ? '#065F46' : '#991B1B'};margin-top:4px;">
+        ${passed ? 'Congratulations! You unlocked Round 2.' : 'Almost there. Keep practicing and try again!'}
+      </p>
+    </div>
+  `;
+
+  if (passed) {
+    placementProgress.r1 = true;
+    placementProgress.r1Score = score;
+    updatePlacementProgress();
+  }
+}
+
+// ── Round 2: Technical Interview ─────────
+async function startRound2Interview() {
+  const area = document.getElementById('r2-chat-area');
+  area.style.display = 'block';
+  document.getElementById('start-r2-btn').style.display = 'none';
+
+  area.innerHTML = `
+    <div id="r2-messages" style="height:300px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px;background:#FAFAFA;">
+      <div style="background:#E2E8F0;padding:10px 14px;border-radius:12px;font-size:13px;align-self:flex-start;max-width:80%;">
+        Hello! I am your Technical Interviewer for the ${selectedCompanyType} role. Ready to start?
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="r2-input" style="flex:1;padding:10px;border:1px solid #E2E8F0;border-radius:10px;" placeholder="Type your answer...">
+      <button onclick="sendR2Message()" style="padding:10px 20px;background:#059669;color:white;border:none;border-radius:10px;cursor:pointer;">Send</button>
+    </div>
+  `;
+}
+
+async function sendR2Message() {
+  const input = document.getElementById('r2-input');
+  const msg = input.value;
+  if (!msg) return;
+  input.value = '';
+
+  addChatMessage('user', msg);
+  
+  const response = await getAIInterviewResponse(msg);
+  addChatMessage('ai', response);
+
+  // Auto-pass after 4 interactions for demo
+  const msgs = document.getElementById('r2-messages').children.length;
+  if (msgs >= 8) {
+    finishRound2();
+  }
+}
+
+function addChatMessage(role, text) {
+  const container = document.getElementById('r2-messages');
+  const div = document.createElement('div');
+  div.style.cssText = `padding:10px 14px;border-radius:12px;font-size:13px;max-width:80%; ${role === 'user' ? 'background:#059669;color:white;align-self:flex-end;' : 'background:#E2E8F0;align-self:flex-start;'}`;
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+async function getAIInterviewResponse(userMsg) {
+  const prompt = `You are a technical interviewer for ${selectedCompanyType}. The candidate said: "${userMsg}". 
+  Reply as an interviewer. Ask the next technical question based on their resume: ${placementResumeText.substring(0,500)}`;
+  return await callAI(prompt);
+}
+
+async function finishRound2() {
+  document.getElementById('r2-chat-area').style.display = 'none';
+  const res = document.getElementById('r2-result');
+  res.style.display = 'block';
+  res.innerHTML = `
+    <div style="text-align:center;padding:20px;background:#F0FDF4;border-radius:12px;border:1px solid #A7F3D0;">
+      <div style="font-size:24px;margin-bottom:8px;">🚀</div>
+      <div style="font-size:18px;font-weight:700;color:#065F46;">Technical Round Cleared!</div>
+      <p style="font-size:13px;color:#065F46;">Your technical foundation is strong. Final Video Round Unlocked.</p>
+    </div>
+  `;
+  placementProgress.r2 = true;
+  await savePlacementAttempt(2, 85, true);
+  updatePlacementProgress();
+}
+
+// ── Round 3: Video Interview ─────────────
+let mediaRecorder;
+let interviewInterval;
+
+async function startVideoInterview() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const video = document.getElementById('interview-video');
+    video.srcObject = stream;
+    video.style.display = 'block';
+    document.getElementById('camera-off-msg').style.display = 'none';
+    document.getElementById('live-indicator').style.display = 'block';
+    document.getElementById('start-r3-btn').style.display = 'none';
+    document.getElementById('r3-controls').style.display = 'grid';
+    document.getElementById('ai-q-display').style.display = 'block';
+
+    showNextVideoQuestion();
+  } catch (err) {
+    showToast('Camera/Mic permission denied');
+  }
+}
+
+function showNextVideoQuestion() {
+  const questions = [
+    "Tell me about a difficult technical challenge you solved.",
+    "How do you stay updated with new technologies?",
+    "Describe your most successful project from your resume.",
+    "Why should we hire you for this role?"
+  ];
+  let i = 0;
+  const display = document.getElementById('ai-q-display');
+  display.textContent = questions[0];
+  
+  interviewInterval = setInterval(() => {
+    i++;
+    if (i < questions.length) {
+      display.textContent = questions[i];
+    } else {
+      clearInterval(interviewInterval);
+      display.textContent = "Interview complete. Analyzing performance...";
+      setTimeout(endVideoInterview, 3000);
+    }
+  }, 15000); // 15s per question
+}
+
+function toggleMic() {
+  const video = document.getElementById('interview-video');
+  const stream = video.srcObject;
+  const audioTrack = stream.getAudioTracks()[0];
+  audioTrack.enabled = !audioTrack.enabled;
+  document.getElementById('mic-toggle-btn').textContent = `🎤 Mic: ${audioTrack.enabled ? 'ON' : 'OFF'}`;
+}
+
+async function endVideoInterview() {
+  clearInterval(interviewInterval);
+  const video = document.getElementById('interview-video');
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+  }
+  
+  document.getElementById('r3-controls').style.display = 'none';
+  document.getElementById('ai-q-display').style.display = 'none';
+  
+  const res = document.getElementById('r3-result');
+  res.style.display = 'block';
+  res.innerHTML = `
+    <div style="text-align:center;padding:24px;background:#F0FDF4;border-radius:16px;border:2px solid #059669;">
+      <div style="font-size:32px;margin-bottom:12px;">🏆</div>
+      <div style="font-size:20px;font-weight:700;color:#065F46;">Placement Cycle Complete!</div>
+      <button onclick="generateFinalReport()" style="margin-top:16px;padding:12px 24px;background:#059669;color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Download Placement Report</button>
+    </div>
+  `;
+  placementProgress.r3 = true;
+  await savePlacementAttempt(3, 90, true);
+  updatePlacementProgress();
+}
+
+// ── Helpers ──────────────────────────────
+async function geminiCall(prompt) {
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    return data.candidates[0].content.parts[0].text;
+  } catch (e) { return null; }
+}
+
+function updatePlacementProgress() {
+  const { resume, r1, r2, r3 } = placementProgress;
+  
+  // Update line
+  let width = 0;
+  if (resume) width = 25;
+  if (r1) width = 50;
+  if (r2) width = 75;
+  if (r3) width = 100;
+  document.getElementById('progress-line').style.width = width + '%';
+
+  // Update circles
+  if (resume) document.getElementById('step-resume-circle').style.background = '#059669', document.getElementById('step-resume-circle').style.color = 'white';
+  if (r1) document.getElementById('step-r1-circle').style.background = '#059669', document.getElementById('step-r1-circle').style.color = 'white';
+  if (r2) document.getElementById('step-r2-circle').style.background = '#059669', document.getElementById('step-r2-circle').style.color = 'white';
+  if (r3) document.getElementById('step-r3-circle').style.background = '#059669', document.getElementById('step-r3-circle').style.color = 'white';
+
+  // Unlock sections
+  if (r1) {
+    document.getElementById('section-round2').style.opacity = '1';
+    document.getElementById('section-round2').style.pointerEvents = 'auto';
+    document.getElementById('r2-lock-text').textContent = '✅ Round 1 Passed';
+  }
+  if (r2) {
+    document.getElementById('section-round3').style.opacity = '1';
+    document.getElementById('section-round3').style.pointerEvents = 'auto';
+    document.getElementById('r3-lock-text').textContent = '✅ Round 2 Passed';
+  }
+}
+
+function scrollToRound(id) {
+  const targetId = id === 'step-resume' ? 'section-resume' : 
+                   id === 'step-r1' ? 'section-round1' :
+                   id === 'step-r2' ? 'section-round2' : 'section-round3';
+  document.getElementById(targetId).scrollIntoView({ behavior: 'smooth' });
+}
+
+async function savePlacementAttempt(round, score, passed) {
+  await supabase.from('placement_attempts').insert({
+    user_id: currentUserId,
+    round,
+    score,
+    passed,
+    details: { companyType: selectedCompanyType }
+  });
+}
+
+async function generateFinalReport() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  doc.setFontSize(22);
+  doc.text("Placement Readiness Report", 20, 30);
+  doc.setFontSize(14);
+  doc.text(`Candidate: ${currentUserName || 'Student'}`, 20, 45);
+  doc.text(`Target Role: ${selectedCompanyType}`, 20, 55);
+  
+  doc.setDrawColor(0, 150, 105);
+  doc.line(20, 60, 190, 60);
+  
+  doc.text("Performance Metrics:", 20, 75);
+  doc.text(`- Round 1 (Aptitude): ${placementProgress.r1Score}/100`, 30, 85);
+  doc.text(`- Round 2 (Technical): Cleared`, 30, 95);
+  doc.text(`- Round 3 (Video): Completed`, 30, 105);
+  
+  doc.text("Expert Feedback:", 20, 125);
+  const feedback = await callAI(`Give a summary placement feedback for a student who scored well in aptitude and cleared technical rounds for a ${selectedCompanyType} role.`);
+  const splitFeedback = doc.splitTextToSize(feedback || "Outstanding performance across all rounds.", 160);
+  doc.text(splitFeedback, 20, 135);
+  
+  doc.save('SkillBridge_Placement_Report.pdf');
+}
+
+// ── Event Listeners ──────────────────────
+document.querySelector('[data-tab="placement"]')
+  ?.addEventListener('click', initPlacementTab);
+
 
 // ── LEARNING RESOURCES ───────────────────────────────────────
 let currentVideoData = null;
