@@ -9,85 +9,104 @@ const GEMINI_KEY = 'AIzaSyDS7TYMoat41MabOAIXGAEgOc_4s7hQSts';
 const YOUTUBE_API_KEY = 'AIzaSyDE3b7vCrg4HMwQLtjCcbmGMLp6-vZ4Lao';
 
 let supabase;
+try {
+  const lib = window.supabase || window.supabasejs;
+  if (lib) {
+    supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase client initialized at top-level');
+  }
+} catch (err) {
+  console.error('❌ Error initializing Supabase at top-level:', err);
+}
 let currentUserId;
 let currentUserName;
 
 // Onboarding State
 let currentStep = 0;
 let onboardingData = {
-    name: '',
-    goal: '',
-    currentLevel: '',
-    skills: '',
-    timeline: '',
-    learningStyle: '',
-    educationLevel: ''
+  name: '',
+  goal: '',
+  currentLevel: '',
+  skills: '',
+  timeline: '',
+  learningStyle: '',
+  educationLevel: ''
 };
 
 const conversation = [
-    { 
-        key: 'goal', 
-        question: (d) => `Nice to meet you, ${d.name}! What is your target career role? (e.g. Frontend Developer, Data Scientist)`, 
-        quickReplies: ['Frontend Developer', 'Backend Developer', 'Data Scientist', 'UI/UX Designer'] 
-    },
-    { 
-        key: 'currentLevel', 
-        question: () => `What is your current skill level in this field?`, 
-        quickReplies: ['Beginner', 'Intermediate', 'Advanced'] 
-    },
-    { 
-        key: 'skills', 
-        question: () => `What existing skills do you already have? (e.g. HTML, Python, None)`, 
-        quickReplies: ['HTML/CSS', 'JavaScript', 'Python', 'None'] 
-    },
-    { 
-        key: 'timeline', 
-        question: () => `How many hours can you commit to learning every day?`, 
-        quickReplies: ['1-2 Hours', '3-4 Hours', '5+ Hours'] 
-    },
-    { 
-        key: 'learningStyle', 
-        question: () => `What is your preferred learning style?`, 
-        quickReplies: ['Video tutorials', 'Reading docs', 'Hands-on projects', 'Mixed'] 
-    },
-    { 
-        key: 'educationLevel', 
-        question: () => `What is your current education level?`, 
-        quickReplies: ['School (10th/12th)', 'College 1st/2nd year', 'College 3rd/4th year', 'Graduate'] 
-    }
+  {
+    key: 'goal',
+    question: (d) => `Nice to meet you, ${d.name}! What is your target career role? (e.g. Frontend Developer, Data Scientist)`,
+    quickReplies: ['Frontend Developer', 'Backend Developer', 'Data Scientist', 'UI/UX Designer']
+  },
+  {
+    key: 'currentLevel',
+    question: () => `What is your current skill level in this field?`,
+    quickReplies: ['Beginner', 'Intermediate', 'Advanced']
+  },
+  {
+    key: 'skills',
+    question: () => `What existing skills do you already have? (e.g. HTML, Python, None)`,
+    quickReplies: ['HTML/CSS', 'JavaScript', 'Python', 'None']
+  },
+  {
+    key: 'timeline',
+    question: () => `How many hours can you commit to learning every day?`,
+    quickReplies: ['1-2 Hours', '3-4 Hours', '5+ Hours']
+  },
+  {
+    key: 'learningStyle',
+    question: () => `What is your preferred learning style?`,
+    quickReplies: ['Video tutorials', 'Reading docs', 'Hands-on projects', 'Mixed']
+  },
+  {
+    key: 'educationLevel',
+    question: () => `What is your current education level?`,
+    quickReplies: ['School (10th/12th)', 'College 1st/2nd year', 'College 3rd/4th year', 'Graduate']
+  }
 ];
 
 console.log('🚀 SkillBridge Dashboard JS Loading...');
 
 // ── INITIALIZATION ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 SkillBridge Dashboard: DOM Ready');
-    initTheme();
-    initInteractions();
-    initTabs();
-    initSupabase();
-    checkOnboarding();
+  console.log('🚀 SkillBridge Dashboard: DOM Ready');
+  initTheme();
+  initInteractions();
+  initTabs();
+  initSupabase();
+  checkOnboarding();
 });
 
 // ── Supabase Init ────────────────────────────────────────────
 function initSupabase() {
-    try {
-        const lib = window.supabase || window.supabasejs;
-        if (lib) {
-            supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase client initialized');
-        } else {
-            console.error('❌ Supabase library not found!');
-        }
-    } catch (err) {
-        console.error('❌ Error initializing Supabase:', err);
+  try {
+    const lib = window.supabase || window.supabasejs;
+    if (lib) {
+      supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log('✅ Supabase client initialized');
+    } else {
+      console.error('❌ Supabase library not found!');
     }
+  } catch (err) {
+    console.error('❌ Error initializing Supabase:', err);
+  }
 }
 
 // ── Onboarding Check ─────────────────────────────────────────
 async function checkOnboarding() {
+  if (!supabase) {
+    console.log('⚠️ supabase not initialized yet, trying to initialize now...');
+    initSupabase();
+    if (!supabase) {
+      console.error('❌ supabase could not be initialized! Delaying checkOnboarding...');
+      setTimeout(checkOnboarding, 500);
+      return;
+    }
+  }
+
   const { data: { session } } = await supabase.auth.getSession();
-  
+
   if (!session) {
     window.location.href = 'auth.html';
     return;
@@ -96,10 +115,10 @@ async function checkOnboarding() {
   currentUserId = session.user.id;
 
   const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('onboarding_completed, full_name, goal, roadmap_data, xp, level, notifications, session_history')
-      .eq('id', session.user.id)
-      .single();
+    .from('profiles')
+    .select('onboarding_completed, full_name, goal, roadmap_data, xp, level, notifications, session_history')
+    .eq('id', session.user.id)
+    .single();
 
   console.log('Profile check result:', { profile, error });
 
@@ -116,107 +135,107 @@ async function checkOnboarding() {
 
 
 async function showOnboarding(profile) {
-    const { data: { session } } = await supabase.auth.getSession();
-    const meta = session?.user?.user_metadata;
-    onboardingData.name = profile?.full_name?.split(' ')[0] || meta?.full_name?.split(' ')[0] || meta?.name?.split(' ')[0] || 'there';
-    currentUserName = onboardingData.name;
+  const { data: { session } } = await supabase.auth.getSession();
+  const meta = session?.user?.user_metadata;
+  onboardingData.name = profile?.full_name?.split(' ')[0] || meta?.full_name?.split(' ')[0] || meta?.name?.split(' ')[0] || 'there';
+  currentUserName = onboardingData.name;
 
-    const overlay = document.getElementById('onboarding-overlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        overlay.style.opacity = '0';
-        requestAnimationFrame(() => {
-            overlay.style.transition = 'opacity 400ms ease';
-            overlay.style.opacity = '1';
-        });
-    }
-  
-    addMessage('Hey ' + onboardingData.name + '! 👋 Welcome to SkillBridge AI.<br><br>I\'ll build your personalized career roadmap in just 2 minutes.<br><br>Ready? Let\'s go! 🚀');
-  
-    setTimeout(() => {
-        addMessage(conversation[0].question(onboardingData));
-        showQuickReplies(conversation[0].quickReplies);
-    }, 800);
+  const overlay = document.getElementById('onboarding-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    overlay.style.opacity = '0';
+    requestAnimationFrame(() => {
+      overlay.style.transition = 'opacity 400ms ease';
+      overlay.style.opacity = '1';
+    });
+  }
+
+  addMessage('Hey ' + onboardingData.name + '! 👋 Welcome to SkillBridge AI.<br><br>I\'ll build your personalized career roadmap in just 2 minutes.<br><br>Ready? Let\'s go! 🚀');
+
+  setTimeout(() => {
+    addMessage(conversation[0].question(onboardingData));
+    showQuickReplies(conversation[0].quickReplies);
+  }, 800);
 }
 
 function addMessage(text, isUser = false) {
-    const chat = document.getElementById('chat-messages');
-    if (!chat) return;
-    const d = document.createElement('div');
-    d.style.cssText = `padding: 12px 16px; border-radius: 16px; max-width: 85%; font-size: 14px; line-height: 1.5; margin-bottom: 8px; align-self: ${isUser ? 'flex-end' : 'flex-start'}; background: ${isUser ? '#059669' : 'rgba(255,255,255,0.06)'}; color: ${isUser ? 'white' : '#E2E8F0'}; ${isUser ? '' : 'border: 1px solid rgba(255,255,255,0.1);'} animation: fadeUp 300ms ease-out both;`;
-    d.innerHTML = text;
-    chat.appendChild(d);
-    chat.scrollTop = chat.scrollHeight;
+  const chat = document.getElementById('chat-messages');
+  if (!chat) return;
+  const d = document.createElement('div');
+  d.style.cssText = `padding: 12px 16px; border-radius: 16px; max-width: 85%; font-size: 14px; line-height: 1.5; margin-bottom: 8px; align-self: ${isUser ? 'flex-end' : 'flex-start'}; background: ${isUser ? '#059669' : 'rgba(255,255,255,0.06)'}; color: ${isUser ? 'white' : '#E2E8F0'}; ${isUser ? '' : 'border: 1px solid rgba(255,255,255,0.1);'} animation: fadeUp 300ms ease-out both;`;
+  d.innerHTML = text;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
 }
 
 function showQuickReplies(replies) {
-    const area = document.getElementById('quick-replies');
-    if (!area) return;
-    area.innerHTML = '';
-    replies.forEach((reply, i) => {
-        const btn = document.createElement('button');
-        btn.textContent = reply;
-        btn.style.cssText = `background: rgba(5,150,105,0.08); border: 1px solid rgba(5,150,105,0.25); color: #34D399; padding: 7px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 200ms; animation: fadeUp 300ms ease-out; animation-delay: ${i * 60}ms; animation-fill-mode: both; white-space: nowrap;`;
-        btn.onmouseover = () => { btn.style.background = 'rgba(5,150,105,0.2)'; btn.style.borderColor = 'rgba(5,150,105,0.5)'; btn.style.transform = 'scale(1.03)'; };
-        btn.onmouseout = () => { btn.style.background = 'rgba(5,150,105,0.08)'; btn.style.borderColor = 'rgba(5,150,105,0.25)'; btn.style.transform = 'scale(1)'; };
-        btn.onclick = () => { document.getElementById('chat-input').value = reply; sendChatAnswer(); };
-        area.appendChild(btn);
-    });
+  const area = document.getElementById('quick-replies');
+  if (!area) return;
+  area.innerHTML = '';
+  replies.forEach((reply, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = reply;
+    btn.style.cssText = `background: rgba(5,150,105,0.08); border: 1px solid rgba(5,150,105,0.25); color: #34D399; padding: 7px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 200ms; animation: fadeUp 300ms ease-out; animation-delay: ${i * 60}ms; animation-fill-mode: both; white-space: nowrap;`;
+    btn.onmouseover = () => { btn.style.background = 'rgba(5,150,105,0.2)'; btn.style.borderColor = 'rgba(5,150,105,0.5)'; btn.style.transform = 'scale(1.03)'; };
+    btn.onmouseout = () => { btn.style.background = 'rgba(5,150,105,0.08)'; btn.style.borderColor = 'rgba(5,150,105,0.25)'; btn.style.transform = 'scale(1)'; };
+    btn.onclick = () => { document.getElementById('chat-input').value = reply; sendChatAnswer(); };
+    area.appendChild(btn);
+  });
 }
 
 function updateOnboardingProgress() {
-    const pct = Math.round((currentStep / conversation.length) * 100);
-    const bar = document.getElementById('onboarding-progress');
-    if (bar) bar.style.width = pct + '%';
-    const indicator = document.getElementById('step-indicator');
-    if (indicator) indicator.textContent = `Step ${Math.min(currentStep + 1, conversation.length)} of ${conversation.length}`;
+  const pct = Math.round((currentStep / conversation.length) * 100);
+  const bar = document.getElementById('onboarding-progress');
+  if (bar) bar.style.width = pct + '%';
+  const indicator = document.getElementById('step-indicator');
+  if (indicator) indicator.textContent = `Step ${Math.min(currentStep + 1, conversation.length)} of ${conversation.length}`;
 }
 
 async function sendChatAnswer() {
-    const input = document.getElementById('chat-input');
-    const val = input.value.trim();
-    if (!val) return;
-    input.value = '';
-    addMessage(val, true);
-    onboardingData[conversation[currentStep].key] = val;
-    currentStep++;
-    updateOnboardingProgress();
-    const area = document.getElementById('quick-replies');
-    if (area) area.innerHTML = '';
-    if (currentStep < conversation.length) {
-        setTimeout(() => {
-            const nextQ = conversation[currentStep];
-            addMessage(nextQ.question(onboardingData));
-            showQuickReplies(nextQ.quickReplies);
-        }, 600);
-    } else {
-        await finishOnboarding();
-    }
+  const input = document.getElementById('chat-input');
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = '';
+  addMessage(val, true);
+  onboardingData[conversation[currentStep].key] = val;
+  currentStep++;
+  updateOnboardingProgress();
+  const area = document.getElementById('quick-replies');
+  if (area) area.innerHTML = '';
+  if (currentStep < conversation.length) {
+    setTimeout(() => {
+      const nextQ = conversation[currentStep];
+      addMessage(nextQ.question(onboardingData));
+      showQuickReplies(nextQ.quickReplies);
+    }, 600);
+  } else {
+    await finishOnboarding();
+  }
 }
 
 async function finishOnboarding() {
-    // Use upsert instead of update to handle new users (especially OAuth)
-    const { error } = await supabase.from('profiles').upsert({
-        id: currentUserId,
-        goal: onboardingData.goal,
-        current_level: onboardingData.currentLevel,
-        skills: onboardingData.skills,
-        timeline: onboardingData.timeline,
-        learning_style: onboardingData.learningStyle,
-        education_level: onboardingData.educationLevel,
-        onboarding_completed: true,
-        updated_at: new Date().toISOString()
-    });
+  // Use upsert instead of update to handle new users (especially OAuth)
+  const { error } = await supabase.from('profiles').upsert({
+    id: currentUserId,
+    goal: onboardingData.goal,
+    current_level: onboardingData.currentLevel,
+    skills: onboardingData.skills,
+    timeline: onboardingData.timeline,
+    learning_style: onboardingData.learningStyle,
+    education_level: onboardingData.educationLevel,
+    onboarding_completed: true,
+    updated_at: new Date().toISOString()
+  });
 
-    if (error) {
-        console.error('Error saving onboarding data:', error);
-        showToast('Failed to save your preferences. Please try again.');
-        const overlay = document.getElementById('onboarding-overlay');
-        if (overlay) overlay.style.display = 'none';
-        return;
-    }
+  if (error) {
+    console.error('Error saving onboarding data:', error);
+    showToast('Failed to save your preferences. Please try again.', 'error');
+    const overlay = document.getElementById('onboarding-overlay');
+    if (overlay) overlay.style.display = 'none';
+    return;
+  }
 
-    await generateRoadmapWithAI();
+  await generateRoadmapWithAI();
 }
 
 // ── FIX 5: ROADMAP GENERATION DEBUG ──────────────────────────
@@ -224,7 +243,7 @@ async function generateRoadmapWithAI() {
   console.log('Starting roadmap generation...');
   console.log('Goal:', onboardingData.goal);
   console.log('Level:', onboardingData.currentLevel);
-  
+
   hideTyping();
   addMessage('🧠 Perfect! I have everything I need.<br><br>Building your personalized roadmap...<br>⏳ This takes about 15 seconds');
   showTyping();
@@ -251,19 +270,19 @@ Return ONLY the JSON. No explanation.`;
   try {
     console.log('Calling OpenRouter API...');
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_KEY}`,
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'SkillBridge'
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-8b-instruct:free',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1500,
-          temperature: 0.3
-        })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_KEY}`,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'SkillBridge'
+      },
+      body: JSON.stringify({
+        model: 'openrouter/free',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1500,
+        temperature: 0.3
+      })
     });
 
     if (!response.ok) {
@@ -293,19 +312,19 @@ Return ONLY the JSON. No explanation.`;
 }
 
 function showTyping() {
-    const chat = document.getElementById('chat-messages');
-    if (!chat || document.getElementById('typing-indicator')) return;
-    const d = document.createElement('div');
-    d.id = 'typing-indicator';
-    d.style.cssText = `padding: 12px 16px; border-radius: 16px; max-width: 80px; margin-bottom: 8px; align-self: flex-start; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: flex; gap: 4px; align-items: center; justify-content: center; animation: fadeUp 300ms ease-out both;`;
-    d.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
-    chat.appendChild(d);
-    chat.scrollTop = chat.scrollHeight;
+  const chat = document.getElementById('chat-messages');
+  if (!chat || document.getElementById('typing-indicator')) return;
+  const d = document.createElement('div');
+  d.id = 'typing-indicator';
+  d.style.cssText = `padding: 12px 16px; border-radius: 16px; max-width: 80px; margin-bottom: 8px; align-self: flex-start; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: flex; gap: 4px; align-items: center; justify-content: center; animation: fadeUp 300ms ease-out both;`;
+  d.innerHTML = `<div class="dot"></div><div class="dot"></div><div class="dot"></div>`;
+  chat.appendChild(d);
+  chat.scrollTop = chat.scrollHeight;
 }
 
 function hideTyping() {
-    const el = document.getElementById('typing-indicator');
-    if (el) el.remove();
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
 }
 
 async function saveAndShowRoadmap(roadmap) {
@@ -313,11 +332,11 @@ async function saveAndShowRoadmap(roadmap) {
   if (!session) return;
 
   const { error } = await supabase.from('profiles').update({
-      goal: onboardingData.goal,
-      current_level: onboardingData.currentLevel,
-      timeline: onboardingData.timeline,
-      roadmap_data: roadmap,
-      onboarding_completed: true
+    goal: onboardingData.goal,
+    current_level: onboardingData.currentLevel,
+    timeline: onboardingData.timeline,
+    roadmap_data: roadmap,
+    onboarding_completed: true
   }).eq('id', session.user.id);
 
   if (error) console.error('Save error:', error);
@@ -328,13 +347,13 @@ async function saveAndShowRoadmap(roadmap) {
   // Save Projects
   if (roadmap.phases) {
     const projects = roadmap.phases.map(p => ({
-        user_id: session.user.id,
-        name: p.project || 'Phase Project',
-        description: `Final project for ${p.phase}`,
-        status: 'Upcoming',
-        progress: 0,
-        roadmap_phase: p.phase || p.name,
-        tags: p.skills
+      user_id: session.user.id,
+      name: p.project || 'Phase Project',
+      description: `Final project for ${p.phase}`,
+      status: 'Upcoming',
+      progress: 0,
+      roadmap_phase: p.phase || p.name,
+      tags: p.skills
     }));
     await supabase.from('projects').delete().eq('user_id', session.user.id);
     await supabase.from('projects').insert(projects);
@@ -342,16 +361,16 @@ async function saveAndShowRoadmap(roadmap) {
 
   // Final success message
   addMessage('✅ Your roadmap is ready! Redirecting to your personalized dashboard...');
-  
+
   const overlay = document.getElementById('onboarding-overlay');
   if (overlay) {
     setTimeout(() => {
-        overlay.style.opacity = '0';
-        overlay.style.transition = 'opacity 500ms';
-        setTimeout(() => { 
-            overlay.style.display = 'none'; 
-            window.location.reload(); 
-        }, 500);
+      overlay.style.opacity = '0';
+      overlay.style.transition = 'opacity 500ms';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        window.location.reload();
+      }, 500);
     }, 1500); // Give user time to see the success message
   }
 }
@@ -432,7 +451,7 @@ function filterTasks(filter) {
   const list = document.getElementById('tasks-list');
   if (!list) return;
 
-  ['all','pending','completed'].forEach(f => {
+  ['all', 'pending', 'completed'].forEach(f => {
     const btn = document.getElementById('filter-' + f);
     if (!btn) return;
     if (f === filter) {
@@ -451,7 +470,7 @@ function filterTasks(filter) {
   tasks.forEach((task) => {
     const isDone = task.status === 'completed';
     const isVisible = filter === 'all' || (isCompletedView ? isDone : !isDone);
-    
+
     if (isVisible) {
       list.innerHTML += renderTaskCard(task, previousCompleted);
     }
@@ -502,7 +521,7 @@ function renderTaskCard(task, isUnlocked = true) {
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
-          ${isActive ? `<button onclick="event.stopPropagation();startQuiz('${task.id}','${task.title.replace(/'/g,"\\'")}','${task.roadmap_phase || ''}')" style="background:#059669;color:white;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 200ms;" onmouseover="this.style.background='#047857';this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669';this.style.transform='scale(1)'"><span>🎯</span> Take Quiz</button>` : isLocked ? `<div style="display:flex;align-items:center;gap:6px;color:#94A3B8;font-size:12px;font-weight:500;"><span>🔒</span> Locked</div>` : `<div style="color:#059669;font-size:20px;">★</div>`}
+          ${isActive ? `<button onclick="event.stopPropagation();startQuiz('${task.id}','${task.title.replace(/'/g, "\\'")}','${task.roadmap_phase || ''}')" style="background:#059669;color:white;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 200ms;" onmouseover="this.style.background='#047857';this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669';this.style.transform='scale(1)'"><span>🎯</span> Take Quiz</button>` : isLocked ? `<div style="display:flex;align-items:center;gap:6px;color:#94A3B8;font-size:12px;font-weight:500;"><span>🔒</span> Locked</div>` : `<div style="color:#059669;font-size:20px;">★</div>`}
         </div>
       </div>
     </div>
@@ -510,29 +529,29 @@ function renderTaskCard(task, isUnlocked = true) {
 }
 
 // ── DEPRECATED: MANUAL ACTIONS REMOVED ──────────────────────
-async function undoTask(taskId) { 
-  console.log('Manual undo disabled. Quiz Mastery required.'); 
+async function undoTask(taskId) {
+  console.log('Manual undo disabled. Quiz Mastery required.');
 }
 
 async function recalculateStats(userId) {
-    const { data: tasks } = await supabase.from('tasks').select('status').eq('user_id', userId);
-    const completed = tasks?.filter(t => t.status === 'completed').length || 0;
-    const total = tasks?.length || 1;
-    const progress = Math.round((completed / total) * 100);
-    await supabase.from('profiles').update({ progress_percent: progress, skills_learned: completed }).eq('id', userId);
-    loadDashboardStats();
+  const { data: tasks } = await supabase.from('tasks').select('status').eq('user_id', userId);
+  const completed = tasks?.filter(t => t.status === 'completed').length || 0;
+  const total = tasks?.length || 1;
+  const progress = Math.round((completed / total) * 100);
+  await supabase.from('profiles').update({ progress_percent: progress, skills_learned: completed }).eq('id', userId);
+  loadDashboardStats();
 }
 
 // ── FIX 3: AI QUIZ + XP SYSTEM ──────────────────────────────
 function openTaskDetail(taskId) {
   const task = window.allTasks?.find(t => t.id === taskId);
   if (!task) return;
-  
+
   const modal = document.createElement('div');
   modal.id = 'task-detail-modal';
   modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;`;
-  
-  const diffColor = { 'Easy':'#10B981', 'Medium':'#F59E0B', 'Hard':'#EF4444' }[task.difficulty] || '#94A3B8';
+
+  const diffColor = { 'Easy': '#10B981', 'Medium': '#F59E0B', 'Hard': '#EF4444' }[task.difficulty] || '#94A3B8';
 
   modal.innerHTML = `
     <div style="
@@ -581,7 +600,7 @@ function openTaskDetail(taskId) {
           </a>
 
           <!-- Link 2: AI Course Notes -->
-          <button onclick="generateCourseNotes('${task.id}', '${task.title.replace(/'/g,"\\'")}')"
+          <button onclick="generateCourseNotes('${task.id}', '${task.title.replace(/'/g, "\\'")}')"
             style="display:flex;flex-direction:column;gap:8px;padding:16px;background:#F0FDF4;border-radius:16px;border:1px solid #059669;cursor:pointer;text-align:left;transition:all 200ms;"
             onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(5,150,105,0.1)'"
             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'"
@@ -607,12 +626,12 @@ function openTaskDetail(taskId) {
             <div style="font-size:12px;color:#047857;margin-top:2px;">Must score 80% to unlock next step</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:24px;font-weight:800;color:#059669;">+${task.difficulty==='Hard'?50:task.difficulty==='Medium'?30:15} XP</div>
+            <div style="font-size:24px;font-weight:800;color:#059669;">+${task.difficulty === 'Hard' ? 50 : task.difficulty === 'Medium' ? 30 : 15} XP</div>
           </div>
         </div>
       </div>
 
-      <button onclick="document.getElementById('task-detail-modal').remove();startQuiz('${task.id}','${task.title.replace(/'/g,"\\'")}','${task.roadmap_phase||''}')" 
+      <button onclick="document.getElementById('task-detail-modal').remove();startQuiz('${task.id}','${task.title.replace(/'/g, "\\'")}','${task.roadmap_phase || ''}')" 
         style="width:100%;background:#059669;color:white;border:none;padding:16px;border-radius:16px;font-size:15px;font-weight:700;cursor:pointer;transition:all 200ms;box-shadow: 0 4px 12px rgba(5,150,105,0.25);"
         onmouseover="this.style.background='#047857';this.style.transform='translateY(-2px)'"
         onmouseout="this.style.background='#059669';this.style.transform='translateY(0)'"
@@ -627,7 +646,7 @@ async function generateCourseNotes(taskId, title) {
   const viewer = document.createElement('div');
   viewer.id = 'course-viewer-modal';
   viewer.style.cssText = `position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:10000;display:flex;flex-direction:column;padding:0;overflow-y:auto;font-family:'Inter',sans-serif;`;
-  
+
   viewer.innerHTML = `
     <nav style="padding:20px 40px;background:white;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;">
       <div style="display:flex;align-items:center;gap:12px;">
@@ -732,13 +751,13 @@ async function startQuiz(taskId, taskTitle, phase) {
   const prompt = `Create a quiz for a student learning: Topic: "${taskTitle}" Phase: "${phase}" Generate exactly 5 multiple choice questions. Return ONLY valid JSON: { "questions": [ { "q": "question text", "options": ["A","B","C","D"], "answer": 0, "explanation": "why this is correct" } ] } answer is 0-indexed. Make questions practical and relevant to Indian job interviews.`;
   const result = await callAI(prompt, 600);
   let quiz;
-  try { const match = result?.match(/\{[\s\S]*\}/); quiz = JSON.parse(match?.[0] || '{}'); } catch(e) { quiz = getFallbackQuiz(taskTitle); }
+  try { const match = result?.match(/\{[\s\S]*\}/); quiz = JSON.parse(match?.[0] || '{}'); } catch (e) { quiz = getFallbackQuiz(taskTitle); }
   if (!quiz.questions?.length) quiz = getFallbackQuiz(taskTitle);
   showQuizModal(taskId, taskTitle, quiz);
 }
 
 function getFallbackQuiz(topic) {
-  return { questions: [ { q: `What is the primary purpose of ${topic}?`, options: ["To improve code readability", "To solve specific technical problems", "To increase application speed", "All of the above"], answer: 3, explanation: "All these are valid goals!" }, { q: `Which is a best practice in ${topic}?`, options: ["Write clean, documented code", "Avoid using version control", "Skip testing", "Hardcode all values"], answer: 0, explanation: "Clean code is always best practice" }, { q: `${topic} is commonly used in:`, options: ["Frontend development", "Backend development", "Full stack development", "All of the above"], answer: 3, explanation: "Modern dev uses all paradigms" }, { q: `What should you do after learning ${topic}?`, options: ["Build a project to practice", "Just read more theory", "Skip to next topic", "Memorize syntax only"], answer: 0, explanation: "Hands-on practice is key!" }, { q: `How do you verify your ${topic} skills?`, options: ["Build real projects", "Take interviews", "Contribute to open source", "All of the above"], answer: 3, explanation: "All help verify skills!" } ] };
+  return { questions: [{ q: `What is the primary purpose of ${topic}?`, options: ["To improve code readability", "To solve specific technical problems", "To increase application speed", "All of the above"], answer: 3, explanation: "All these are valid goals!" }, { q: `Which is a best practice in ${topic}?`, options: ["Write clean, documented code", "Avoid using version control", "Skip testing", "Hardcode all values"], answer: 0, explanation: "Clean code is always best practice" }, { q: `${topic} is commonly used in:`, options: ["Frontend development", "Backend development", "Full stack development", "All of the above"], answer: 3, explanation: "Modern dev uses all paradigms" }, { q: `What should you do after learning ${topic}?`, options: ["Build a project to practice", "Just read more theory", "Skip to next topic", "Memorize syntax only"], answer: 0, explanation: "Hands-on practice is key!" }, { q: `How do you verify your ${topic} skills?`, options: ["Build real projects", "Take interviews", "Contribute to open source", "All of the above"], answer: 3, explanation: "All help verify skills!" }] };
 }
 
 function showQuizLoading() {
@@ -760,10 +779,10 @@ function showQuizModal(taskId, title, quiz) {
   function renderQuestion() {
     const q = quiz.questions[currentQ];
     const progress = ((currentQ) / quiz.questions.length) * 100;
-    modal.innerHTML = `<div style="background:white;border-radius:20px;padding:28px;max-width:540px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.3);"><div style="margin-bottom:20px;"><div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;"><span>Question ${currentQ+1} of ${quiz.questions.length}</span><span>Score: ${score}/${currentQ}</span></div><div style="height:4px;background:#F1F5F9;border-radius:2px;"><div style="height:100%;width:${progress}%;background:#059669;border-radius:2px;transition:width 300ms;"></div></div></div><div style="font-size:16px;font-weight:500;line-height:1.5;margin-bottom:20px;color:#0F172A;">${q.q}</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">${q.options.map((opt, i) => `<button onclick="selectAnswer(${i}, ${q.answer}, '${q.explanation.replace(/'/g,"\\'")}', this)" style="text-align:left;padding:12px 16px;border-radius:10px;border:1.5px solid #E2E8F0;background:white;cursor:pointer;font-size:14px;transition:all 150ms;display:flex;align-items:center;gap:10px;" onmouseover="if(!this.disabled)this.style.borderColor='#059669';if(!this.disabled)this.style.background='#F0FDF4'" onmouseout="if(!this.disabled)this.style.borderColor='#E2E8F0';if(!this.disabled)this.style.background='white'"><span style="width:28px;height:28px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">${['A','B','C','D'][i]}</span>${opt}</button>`).join('')}</div><div id="explanation-area"></div></div>`;
+    modal.innerHTML = `<div style="background:white;border-radius:20px;padding:28px;max-width:540px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.3);"><div style="margin-bottom:20px;"><div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;"><span>Question ${currentQ + 1} of ${quiz.questions.length}</span><span>Score: ${score}/${currentQ}</span></div><div style="height:4px;background:#F1F5F9;border-radius:2px;"><div style="height:100%;width:${progress}%;background:#059669;border-radius:2px;transition:width 300ms;"></div></div></div><div style="font-size:16px;font-weight:500;line-height:1.5;margin-bottom:20px;color:#0F172A;">${q.q}</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">${q.options.map((opt, i) => `<button onclick="selectAnswer(${i}, ${q.answer}, '${q.explanation.replace(/'/g, "\\'")}', this)" style="text-align:left;padding:12px 16px;border-radius:10px;border:1.5px solid #E2E8F0;background:white;cursor:pointer;font-size:14px;transition:all 150ms;display:flex;align-items:center;gap:10px;" onmouseover="if(!this.disabled)this.style.borderColor='#059669';if(!this.disabled)this.style.background='#F0FDF4'" onmouseout="if(!this.disabled)this.style.borderColor='#E2E8F0';if(!this.disabled)this.style.background='white'"><span style="width:28px;height:28px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">${['A', 'B', 'C', 'D'][i]}</span>${opt}</button>`).join('')}</div><div id="explanation-area"></div></div>`;
   }
 
-  window.selectAnswer = function(selected, correct, explanation, btn) {
+  window.selectAnswer = function (selected, correct, explanation, btn) {
     modal.querySelectorAll('button[onclick*="selectAnswer"]').forEach(b => b.disabled = true);
     const isCorrect = selected === correct; if (isCorrect) score++;
     answers.push({ selected, correct });
@@ -771,7 +790,7 @@ function showQuizModal(taskId, title, quiz) {
     const exp = document.getElementById('explanation-area');
     if (exp) { exp.innerHTML = `<div style="padding:12px;border-radius:10px;background:${isCorrect ? '#F0FDF4' : '#FEF2F2'};border:1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'};font-size:13px;color:${isCorrect ? '#065F46' : '#991B1B'};margin-bottom:16px;">${isCorrect ? '✓ Correct! ' : '✗ Wrong. '}${explanation}</div><button onclick="nextQuestion()" style="width:100%;background:#059669;color:white;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">${currentQ + 1 < quiz.questions.length ? 'Next Question →' : 'See Results 🏆'}</button>`; }
   };
-  window.nextQuestion = function() { currentQ++; if (currentQ < quiz.questions.length) { renderQuestion(); } else { showQuizResults(taskId, score, quiz.questions.length); } };
+  window.nextQuestion = function () { currentQ++; if (currentQ < quiz.questions.length) { renderQuestion(); } else { showQuizResults(taskId, score, quiz.questions.length); } };
   renderQuestion();
   document.body.appendChild(modal);
 }
@@ -779,7 +798,7 @@ function showQuizModal(taskId, title, quiz) {
 async function showQuizResults(taskId, score, total) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
-  const pct = Math.round((score/total)*100);
+  const pct = Math.round((score / total) * 100);
   const baseXP = 15;
   let xpEarned = baseXP;
   if (pct === 100) xpEarned = baseXP * 3; else if (pct >= 80) xpEarned = baseXP * 2; else if (pct >= 60) xpEarned = Math.round(baseXP * 1.5);
@@ -790,7 +809,7 @@ async function showQuizResults(taskId, score, total) {
   if (pct >= 80) await completeTask(taskId, false);
   const modal = document.getElementById('quiz-modal'); if (!modal) return;
   const levelUp = newLevel > (profile?.level || 1);
-  modal.innerHTML = `<div style="background:white;border-radius:20px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.3);"><div style="width:100px;height:100px;border-radius:50%;background:${pct>=80 ? 'linear-gradient(135deg,#059669,#34D399)' : pct>=60 ? 'linear-gradient(135deg,#F59E0B,#FCD34D)' : 'linear-gradient(135deg,#EF4444,#FCA5A5)'};display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(5,150,105,0.3);"><div style="font-size:28px;font-weight:700;color:white;">${pct}%</div><div style="font-size:11px;color:rgba(255,255,255,0.8);">${score}/${total}</div></div><h3 style="font-size:20px;margin-bottom:6px;">${pct>=80 ? '🎉 Excellent!' : pct>=60 ? '👍 Good Job!' : '💪 Keep Practicing!'}</h3><p style="color:#64748B;font-size:14px;margin-bottom:20px;">${pct>=80 ? 'Task marked as complete!' : 'Score 80%+ to complete the task'}</p><div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px;margin-bottom:16px;"><div style="font-size:28px;font-weight:700;color:#D97706;">+${xpEarned} XP</div><div style="font-size:13px;color:#92400E;margin-top:4px;">Total XP: ${newXP} | Level ${newLevel}</div>${levelUp ? `<div style="margin-top:8px;font-size:13px;color:#059669;font-weight:600;">🎊 Level Up! You reached Level ${newLevel}!</div>` : ''}</div><button onclick="document.getElementById('quiz-modal').remove();loadTasks();" style="width:100%;background:#059669;color:white;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">${pct>=80 ? '🏠 Back to Tasks' : '🔄 Try Again Later'}</button></div>`;
+  modal.innerHTML = `<div style="background:white;border-radius:20px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.3);"><div style="width:100px;height:100px;border-radius:50%;background:${pct >= 80 ? 'linear-gradient(135deg,#059669,#34D399)' : pct >= 60 ? 'linear-gradient(135deg,#F59E0B,#FCD34D)' : 'linear-gradient(135deg,#EF4444,#FCA5A5)'};display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(5,150,105,0.3);"><div style="font-size:28px;font-weight:700;color:white;">${pct}%</div><div style="font-size:11px;color:rgba(255,255,255,0.8);">${score}/${total}</div></div><h3 style="font-size:20px;margin-bottom:6px;">${pct >= 80 ? '🎉 Excellent!' : pct >= 60 ? '👍 Good Job!' : '💪 Keep Practicing!'}</h3><p style="color:#64748B;font-size:14px;margin-bottom:20px;">${pct >= 80 ? 'Task marked as complete!' : 'Score 80%+ to complete the task'}</p><div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px;margin-bottom:16px;"><div style="font-size:28px;font-weight:700;color:#D97706;">+${xpEarned} XP</div><div style="font-size:13px;color:#92400E;margin-top:4px;">Total XP: ${newXP} | Level ${newLevel}</div>${levelUp ? `<div style="margin-top:8px;font-size:13px;color:#059669;font-weight:600;">🎊 Level Up! You reached Level ${newLevel}!</div>` : ''}</div><button onclick="document.getElementById('quiz-modal').remove();loadTasks();" style="width:100%;background:#059669;color:white;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">${pct >= 80 ? '🏠 Back to Tasks' : '🔄 Try Again Later'}</button></div>`;
   loadXPDisplay();
 }
 
@@ -812,25 +831,25 @@ async function loadXPDisplay() {
 
 // ── Dashboard Loading ────────────────────────────────────────
 async function initDashboard(profile) {
-    currentUserName = profile.full_name || 'Student';
-    
-    // Set basic profile text
-    setText('greeting-text', `Welcome back, ${currentUserName.split(' ')[0]} 👋`);
-    setText('greeting-sub', profile.goal ? `Path: ${profile.goal}` : 'Select a goal to start');
+  currentUserName = profile.full_name || 'Student';
 
-    // Run secondary loads in parallel for performance
-    Promise.all([
-        loadDashboardStats(),
-        loadNotifications(profile.notifications),
-        updateStreakDisplay(currentUserId),
-        loadXPDisplay(profile),
-        loadTodaysFocus(),
-        buildActivityHeatmap(currentUserId),
-        loadShortRoadmap(profile.roadmap_data)
-    ]);
+  // Set basic profile text
+  setText('greeting-text', `Welcome back, ${currentUserName.split(' ')[0]} 👋`);
+  setText('greeting-sub', profile.goal ? `Path: ${profile.goal}` : 'Select a goal to start');
 
-    recordTodayLogin(currentUserId);
-    if (window.lucide) lucide.createIcons();
+  // Run secondary loads in parallel for performance
+  Promise.all([
+    loadDashboardStats(),
+    loadNotifications(profile.notifications),
+    updateStreakDisplay(currentUserId),
+    loadXPDisplay(profile),
+    loadTodaysFocus(),
+    buildActivityHeatmap(currentUserId),
+    loadShortRoadmap(profile.roadmap_data)
+  ]);
+
+  recordTodayLogin(currentUserId);
+  if (window.lucide) lucide.createIcons();
 }
 
 // ── Notifications System ─────────────────────────────────────
@@ -843,7 +862,7 @@ function toggleNotifications() {
 async function loadNotifications(notifs) {
   const list = document.getElementById('notif-list');
   const count = document.getElementById('notif-count');
-  
+
   const data = notifs || [];
   if (data.length > 0) {
     count.textContent = data.length;
@@ -902,12 +921,12 @@ async function startNewSession() {
   if (!sessionName) return;
 
   showToast("Session started! Timer is running.");
-  
+
   // Update profiles session_history
   const { data: profile } = await supabase.from('profiles').select('session_history').eq('id', currentUserId).single();
   const history = profile.session_history || [];
   history.unshift({ name: sessionName, started: startTime, status: 'active' });
-  
+
   await supabase.from('profiles').update({ session_history: history }).eq('id', currentUserId);
 }
 
@@ -964,7 +983,7 @@ async function buildActivityHeatmap(userId) {
       date.setDate(today.getDate() - ((11 - i) * 7 + (6 - j)));
       const ds = date.toISOString().split('T')[0];
       const isActive = activeDates.has(ds);
-      
+
       const cell = document.createElement('div');
       cell.style.width = '12px';
       cell.style.height = '12px';
@@ -975,7 +994,7 @@ async function buildActivityHeatmap(userId) {
     }
     grid.appendChild(col);
   }
-  
+
   const activeCount = document.getElementById('active-days-count');
   if (activeCount) activeCount.textContent = `${activeDates.size} Days Active`;
 }
@@ -993,12 +1012,12 @@ function loadShortRoadmap(roadmap) {
 
   title.textContent = roadmap.title || "Career Roadmap";
   progress.style.display = 'block';
-  
+
   // Calculate overall progress
   const totalTasks = roadmap.phases.reduce((sum, p) => sum + (p.tasks?.length || 0), 0);
   const completedTasks = roadmap.phases.reduce((sum, p) => sum + (p.tasks?.filter(t => t.status === 'completed').length || 0), 0);
   const pct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-  
+
   document.getElementById('overall-pct').textContent = pct + '%';
   document.getElementById('overall-bar').style.width = pct + '%';
 
@@ -1006,7 +1025,7 @@ function loadShortRoadmap(roadmap) {
     const completed = p.tasks?.filter(t => t.status === 'completed').length || 0;
     const total = p.tasks?.length || 0;
     const phasePct = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
+
     return `
       <div style="background:#F8FAFC; border-radius:10px; padding:12px; border:1px solid #E2E8F0;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -1025,7 +1044,7 @@ function loadShortRoadmap(roadmap) {
 async function generateNewRoadmap() {
   const goalInput = document.getElementById('roadmap-goal-input');
   const goal = goalInput?.value || currentUserName;
-  
+
   if (!goal) {
     showToast("Please enter a career goal first", "error");
     return;
@@ -1042,18 +1061,22 @@ async function generateNewRoadmap() {
   try {
     const prompt = getRoadmapPrompt(goal);
     const response = await callAI(prompt, 2000);
-    
-    if (response) {
-      const jsonStr = response.match(/\{[\s\S]*\}/)[0];
-      const roadmap = JSON.parse(jsonStr);
-      
-      // Save to Supabase
-      await supabase.from('profiles').update({ roadmap_data: roadmap }).eq('id', currentUserId);
-      
-      renderFullRoadmap(roadmap);
-      loadShortRoadmap(roadmap);
-      showToast("✨ Roadmap generated successfully!");
+
+    if (!response) {
+      throw new Error("AI returned empty or invalid response");
     }
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Could not parse JSON from AI response");
+    }
+    const roadmap = JSON.parse(jsonMatch[0]);
+
+    // Save to Supabase
+    await supabase.from('profiles').update({ roadmap_data: roadmap }).eq('id', currentUserId);
+
+    renderFullRoadmap(roadmap);
+    loadShortRoadmap(roadmap);
+    showToast("✨ Roadmap generated successfully!", "success");
   } catch (err) {
     console.error("Roadmap Gen Error:", err);
     showToast("Failed to generate roadmap. Try again.", "error");
@@ -1116,14 +1139,14 @@ function getRoadmapPrompt(goal) {
 async function completeRoadmapTask(pIdx, tIdx) {
   const { data: profile } = await supabase.from('profiles').select('roadmap_data').eq('id', currentUserId).single();
   const roadmap = profile.roadmap_data;
-  
+
   const task = roadmap.phases[pIdx].tasks[tIdx];
   task.status = task.status === 'completed' ? 'pending' : 'completed';
-  
+
   await supabase.from('profiles').update({ roadmap_data: roadmap }).eq('id', currentUserId);
   renderFullRoadmap(roadmap);
   loadShortRoadmap(roadmap);
-  
+
   if (task.status === 'completed') {
     showToast("Checkpoint reached! +25 XP");
     // Could update XP here
@@ -1136,37 +1159,37 @@ function downloadRoadmapPDF() {
 
 
 async function callAI(prompt, maxTokens = 800) {
-    try {
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json', 
-              'Authorization': `Bearer ${OPENROUTER_KEY}`, 
-              'HTTP-Referer': window.location.origin, 
-              'X-Title': 'SkillBridge' 
-            },
-            body: JSON.stringify({ 
-              model: 'google/gemma-2-9b-it:free', 
-              messages: [{ role: 'user', content: prompt }], 
-              max_tokens: maxTokens, 
-              temperature: 0.7 
-            })
-        });
-        
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          console.error('OpenRouter API Error:', res.status, errorData);
-          window.lastAIError = { status: res.status, data: errorData };
-          return null;
-        }
-        
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content || null;
-    } catch (e) { 
-      console.error('AI Call failed:', e);
-      window.lastAIError = { status: 'Network Error', data: e.message };
-      return null; 
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_KEY}`,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'SkillBridge'
+      },
+      body: JSON.stringify({
+        model: 'openrouter/free',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: maxTokens,
+        temperature: 0.7
+      })
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('OpenRouter API Error:', res.status, errorData);
+      window.lastAIError = { status: res.status, data: errorData };
+      return null;
     }
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || null;
+  } catch (e) {
+    console.error('AI Call failed:', e);
+    window.lastAIError = { status: 'Network Error', data: e.message };
+    return null;
+  }
 }
 
 // ── RESUME & PORTFOLIO FUNCTIONS ─────────────────────────────
@@ -1191,7 +1214,7 @@ function addResumeItem(type) {
   const item = document.createElement('div');
   item.className = 'resume-item-card';
   item.dataset.id = id;
-  
+
   if (type === 'experience') {
     item.innerHTML = `
       <input type="text" placeholder="Company" class="form-input" oninput="updateResumePreview()">
@@ -1252,8 +1275,8 @@ function updateResumePreview() {
     <div style="margin-bottom:20px;">
       <h3 style="font-size:14px;border-bottom:1px solid #EEE;padding-bottom:5px;margin-bottom:10px;text-transform:uppercase;">Experience</h3>
       ${Array.from(document.querySelectorAll('#experience-list .resume-item-card')).map(card => {
-        const inputs = card.querySelectorAll('input, textarea');
-        return `
+    const inputs = card.querySelectorAll('input, textarea');
+    return `
           <div style="margin-bottom:12px;">
             <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:12px;">
               <span>${inputs[0].value}</span>
@@ -1263,20 +1286,20 @@ function updateResumePreview() {
             <p style="font-size:11px;margin:0;">${inputs[3].value}</p>
           </div>
         `;
-      }).join('')}
+  }).join('')}
     </div>
 
     <div style="margin-bottom:20px;">
       <h3 style="font-size:14px;border-bottom:1px solid #EEE;padding-bottom:5px;margin-bottom:10px;text-transform:uppercase;">Education</h3>
       ${Array.from(document.querySelectorAll('#education-list .resume-item-card')).map(card => {
-        const inputs = card.querySelectorAll('input');
-        return `
+    const inputs = card.querySelectorAll('input');
+    return `
           <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
             <span><strong>${inputs[0].value}</strong> - ${inputs[1].value}</span>
             <span>${inputs[2].value}</span>
           </div>
         `;
-      }).join('')}
+  }).join('')}
     </div>
   `;
   page.innerHTML = html;
@@ -1289,7 +1312,7 @@ function downloadResumePDF() {
     console.error('Resume page element not found');
     return;
   }
-  
+
   try {
     const { jsPDF } = window.jspdf || {};
     if (!jsPDF) {
@@ -1301,12 +1324,12 @@ function downloadResumePDF() {
     const doc = new jsPDF('p', 'pt', 'a4');
     doc.setFont('times', 'normal');
     doc.setFontSize(11);
-    
+
     // Header
     const name = document.getElementById('res-name')?.value || 'RESUME';
     const text = page.innerText;
     const lines = doc.splitTextToSize(text, 500);
-    
+
     doc.text(lines, 40, 50);
     doc.save(`${name.replace(/\s+/g, '_')}_Resume.pdf`);
     showToast('Resume PDF downloaded!');
@@ -1326,9 +1349,9 @@ async function generateAIResume() {
   try {
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
     const { data: tasks } = await supabase.from('tasks').select('title').eq('user_id', currentUserId).eq('status', 'completed');
-    
+
     const skillsList = (tasks || []).map(t => t.title).join(', ') || 'Web Development, Problem Solving';
-    
+
     const prompt = `Generate a JSON object for a professional resume.
     USER: ${profile.full_name}
     GOAL: ${profile.goal}
@@ -1345,14 +1368,14 @@ async function generateAIResume() {
       "experience": [{"company": "Project A", "role": "Developer", "years": "2024", "desc": "Built a web app..."}],
       "education": [{"school": "${profile.college_name || 'University'}", "degree": "${profile.branch || 'B.Tech'}", "year": "2025"}]
     }`;
-    
+
     const result = await callAI(prompt, 1200);
     if (result) {
       const jsonMatch = result.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('No JSON found in response');
-      
+
       const data = JSON.parse(jsonMatch[0]);
-      
+
       // Populate basics
       document.getElementById('res-name').value = data.name || '';
       document.getElementById('res-email').value = data.email || '';
@@ -1360,7 +1383,7 @@ async function generateAIResume() {
       document.getElementById('res-location').value = data.location || '';
       document.getElementById('res-summary').value = data.summary || '';
       document.getElementById('res-skills-input').value = (data.skills || []).join(', ');
-      
+
       // Experience
       const expList = document.getElementById('experience-list');
       expList.innerHTML = '';
@@ -1391,7 +1414,7 @@ async function generateAIResume() {
         `;
         eduList.appendChild(item);
       });
-      
+
       updateResumePreview();
       showToast('Resume auto-filled successfully!');
     }
@@ -1492,9 +1515,9 @@ async function saveProfile() {
     updated_at: new Date().toISOString()
   };
   const { error } = await supabase.from('profiles').update(updates).eq('id', currentUserId);
-  if (error) showToast('Failed to save profile');
+  if (error) showToast('Failed to save profile', 'error');
   else {
-    showToast('Profile updated!');
+    showToast('Profile updated!', 'success');
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
     if (profile) updateProfileUI(profile, '');
   }
@@ -1507,156 +1530,280 @@ function changeTheme(theme) {
 
 // ── Task Completion ──────────────────────────────────────────
 async function completeTask(taskId, refresh = true) {
-    await supabase.from('tasks').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', taskId);
-    if (refresh) {
-        await recalculateStats(currentUserId);
-        loadTasks();
-    }
+  await supabase.from('tasks').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', taskId);
+  if (refresh) {
+    await recalculateStats(currentUserId);
+    loadTasks();
+  }
 }
 
-// ── Common Logic ─────────────────────────────────────────────
-async function callAI(prompt, maxTokens = 800) {
-    try {
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENROUTER_KEY}`, 'HTTP-Referer': window.location.origin, 'X-Title': 'SkillBridge' },
-            body: JSON.stringify({ model: 'meta-llama/llama-3.1-8b-instruct:free', messages: [{ role: 'user', content: prompt }], max_tokens: maxTokens, temperature: 0.7 })
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content || null;
-    } catch (e) { return null; }
-}
+// ── Common Logic (Unified callAI defined above) ───────────────
 
 function updateProfileUI(p, email) {
-    const name = p.full_name || email.split('@')[0];
-    currentUserName = name;
-    setText('user-display-name', name);
-    setText('greeting-name', name.split(' ')[0]);
-    setText('profile-initials', name.substring(0, 1).toUpperCase());
-    setText('profile-name', name);
-    setText('profile-goal', p.goal || 'Set your goal');
-    setText('profile-college', (p.college_name || '') + (p.branch ? ' · ' + p.branch : ''));
-    const avatar = document.getElementById('profile-avatar'); if (avatar) avatar.textContent = name.substring(0, 1).toUpperCase();
+  const name = p.full_name || email.split('@')[0];
+  currentUserName = name;
+  setText('user-display-name', name);
+  setText('greeting-name', name.split(' ')[0]);
+  setText('profile-initials', name.substring(0, 1).toUpperCase());
+  setText('profile-name', name);
+  setText('profile-goal', p.goal || 'Set your goal');
+  setText('profile-college', (p.college_name || '') + (p.branch ? ' · ' + p.branch : ''));
+  const avatar = document.getElementById('profile-avatar'); if (avatar) avatar.textContent = name.substring(0, 1).toUpperCase();
 }
 
 async function loadDashboardStats() {
-    if (!supabase || !currentUserId) return;
-    const [tasks, projects, certs] = await Promise.all([
-        supabase.from('tasks').select('status').eq('user_id', currentUserId),
-        supabase.from('projects').select('status').eq('user_id', currentUserId),
-        supabase.from('certificates').select('id').eq('user_id', currentUserId)
-    ]);
-    const completedTasks = tasks.data?.filter(t => t.status === 'completed').length || 0;
-    const totalTasks = tasks.data?.length || 1;
-    const completedProjects = projects.data?.filter(p => p.status === 'completed').length || 0;
-    const certsCount = certs.data?.length || 0;
-    const progress = Math.round((completedTasks / totalTasks) * 100);
-    const readiness = Math.min(95, Math.round(progress * 0.6 + completedProjects * 8 + certsCount * 5));
-    setText('stat-progress', progress + '%');
-    setText('stat-projects', completedProjects);
-    setText('stat-skills', completedTasks);
-    setText('stat-placement', readiness + '%');
+  if (!supabase || !currentUserId) return;
+  const [tasks, projects, certs] = await Promise.all([
+    supabase.from('tasks').select('status').eq('user_id', currentUserId),
+    supabase.from('projects').select('status').eq('user_id', currentUserId),
+    supabase.from('certificates').select('id').eq('user_id', currentUserId)
+  ]);
+  const completedTasks = tasks.data?.filter(t => t.status === 'completed').length || 0;
+  const totalTasks = tasks.data?.length || 1;
+  const completedProjects = projects.data?.filter(p => p.status === 'completed').length || 0;
+  const certsCount = certs.data?.length || 0;
+  const progress = Math.round((completedTasks / totalTasks) * 100);
+  const readiness = Math.min(95, Math.round(progress * 0.6 + completedProjects * 8 + certsCount * 5));
+  setText('stat-progress', progress + '%');
+  setText('stat-projects', completedProjects);
+  setText('stat-skills', completedTasks);
+  setText('stat-placement', readiness + '%');
 }
 
 async function renderDashboard() {
-    if (!supabase || !currentUserId) return;
-    const { data: profile } = await supabase.from('profiles').select('roadmap_json, roadmap_data').eq('id', currentUserId).single();
-    const r = profile?.roadmap_data || profile?.roadmap_json;
-    if (!r) return;
-    setText('roadmap-focus-text', r.focus || (r.jobReadinessTarget ? `Target: Job Ready in ${r.jobReadinessTarget}` : 'Your roadmap is ready.'));
-    ['roadmap-nodes-dashboard', 'roadmap-nodes-tab'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerHTML = (r.phases || []).map(p => {
-            const name = p.phase || p.name || 'Phase';
-            const status = p.status || 'locked';
-            return `<div class="node ${status}"><span class="node-label">${name}</span></div>`;
-        }).join('');
-    });
+  if (!supabase || !currentUserId) return;
+  const { data: profile } = await supabase.from('profiles').select('roadmap_json, roadmap_data').eq('id', currentUserId).single();
+  const r = profile?.roadmap_data || profile?.roadmap_json;
+  if (!r) return;
+  setText('roadmap-focus-text', r.focus || (r.jobReadinessTarget ? `Target: Job Ready in ${r.jobReadinessTarget}` : 'Your roadmap is ready.'));
+  ['roadmap-nodes-dashboard', 'roadmap-nodes-tab'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = (r.phases || []).map(p => {
+      const name = p.phase || p.name || 'Phase';
+      const status = p.status || 'locked';
+      return `<div class="node ${status}"><span class="node-label">${name}</span></div>`;
+    }).join('');
+  });
 }
 
 function initTheme() {
-    const saved = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', saved);
-    document.getElementById('theme-toggle') && (document.getElementById('theme-toggle').onclick = () => {
-        const target = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', target);
-        localStorage.setItem('theme', target);
-    });
+  const saved = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('theme-toggle') && (document.getElementById('theme-toggle').onclick = () => {
+    const target = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', target);
+    localStorage.setItem('theme', target);
+  });
 }
 
 function initInteractions() {
-    document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
-        e.preventDefault(); await supabase.auth.signOut(); window.location.href = 'index.html';
-    });
+  document.getElementById('logoutBtn')?.addEventListener('click', async (e) => {
+    e.preventDefault(); await supabase.auth.signOut(); window.location.href = 'index.html';
+  });
 }
 
 function initTabs() {
-    const tabs = document.querySelectorAll('[data-tab]');
-    function switchTab(tabName) {
-        document.querySelectorAll('[id^="tab-"]').forEach(sec => { sec.style.display = 'none'; });
-        const target = document.getElementById('tab-' + tabName);
-        if (target) { target.style.display = 'block'; }
-        tabs.forEach(t => { t.className = `nav-item ${t.dataset.tab === tabName ? 'active' : ''}`; });
-        localStorage.setItem('activeTab', tabName);
-        if (tabName === 'resources') loadResourcesTab();
-        if (tabName === 'tasks') loadTasks();
-        if (tabName === 'projects') loadProjects();
-        if (tabName === 'profile') loadProfile();
-        if (tabName === 'placement') initPlacementTab();
-        if (tabName === 'mentorship') initMentorChat();
-        if (tabName === 'portfolio') loadPortfolioTab();
+  const tabs = document.querySelectorAll('[data-tab]');
+  function switchTab(tabName) {
+    document.querySelectorAll('[id^="tab-"]').forEach(sec => { sec.style.display = 'none'; });
+    const target = document.getElementById('tab-' + tabName);
+    if (target) { target.style.display = 'block'; }
+    tabs.forEach(t => { t.className = `nav-item ${t.dataset.tab === tabName ? 'active' : ''}`; });
+    localStorage.setItem('activeTab', tabName);
+    if (tabName === 'roadmap') loadRoadmapTab();
+    if (tabName === 'resources') loadResourcesTab();
+    if (tabName === 'tasks') loadTasks();
+    if (tabName === 'projects') loadProjects();
+    if (tabName === 'profile') loadProfile();
+    if (tabName === 'placement') initPlacementTab();
+    if (tabName === 'mentorship') initMentorChat();
+    if (tabName === 'portfolio') loadPortfolioTab();
+  }
+  tabs.forEach(tab => tab.addEventListener('click', (e) => { e.preventDefault(); switchTab(tab.dataset.tab); }));
+  switchTab(localStorage.getItem('activeTab') || 'dashboard');
+}
+
+async function loadRoadmapTab() {
+  if (!supabase || !currentUserId) return;
+  const status = document.getElementById('roadmap-gen-status');
+  const display = document.getElementById('full-roadmap-display');
+  
+  if (status) status.style.display = 'none';
+  if (display) display.style.display = 'none';
+
+  const { data: profile } = await supabase.from('profiles').select('roadmap_data').eq('id', currentUserId).single();
+  
+  if (profile && profile.roadmap_data) {
+    renderFullRoadmap(profile.roadmap_data);
+    if (display) display.style.display = 'block';
+  } else {
+    if (display) {
+      display.innerHTML = `
+        <div style="text-align:center; padding:40px; background:white; border-radius:14px; border:1px solid #E2E8F0; margin-bottom:20px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+          <div style="font-size:32px; margin-bottom:12px;">🗺️</div>
+          <div style="font-size:16px; font-weight:600; color:#0F172A; margin-bottom:6px;">No roadmap generated yet</div>
+          <p style="font-size:13px; color:#64748B; max-width:320px; margin:0 auto 16px;">Enter your career goal above and click "Generate Roadmap" to create your customized AI study path!</p>
+        </div>
+      `;
+      display.style.display = 'block';
     }
-    tabs.forEach(tab => tab.addEventListener('click', (e) => { e.preventDefault(); switchTab(tab.dataset.tab); }));
-    switchTab(localStorage.getItem('activeTab') || 'dashboard');
+  }
 }
 
 async function loadProfile() {
-    const [profile, tasks, projects, certs] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', currentUserId).single(),
-        supabase.from('tasks').select('status').eq('user_id', currentUserId),
-        supabase.from('projects').select('status').eq('user_id', currentUserId),
-        supabase.from('certificates').select('*').eq('user_id', currentUserId)
-    ]);
-    if (profile.data) updateProfileUI(profile.data, '');
+  const [profile, tasks, projects, certs] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', currentUserId).single(),
+    supabase.from('tasks').select('status').eq('user_id', currentUserId),
+    supabase.from('projects').select('status').eq('user_id', currentUserId),
+    supabase.from('certificates').select('*').eq('user_id', currentUserId)
+  ]);
+  if (profile.data) updateProfileUI(profile.data, '');
 }
 
 function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
-function showToast(msg) { console.log('Toast:', msg); }
+function showToast(msg, type = 'success') {
+  console.log('Toast:', msg, type);
+  
+  // Find or create toast container
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 99999;
+      pointer-events: none;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    `;
+    document.body.appendChild(container);
+  }
+
+  // Create toast card
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    min-width: 320px;
+    max-width: 420px;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: auto;
+    transform: translateX(50px);
+    opacity: 0;
+    transition: all 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  `;
+
+  // Type customization
+  let accentColor = '#10B981';
+  let color = '#065F46'; // success dark text
+  let bg = 'rgba(240, 253, 244, 0.9)'; // success soft bg
+  let border = '1px solid rgba(16, 185, 129, 0.2)'; // success border
+  let icon = '✓';
+
+  const lowerType = String(type).toLowerCase();
+  if (lowerType === 'error' || lowerType === 'danger' || lowerType === 'failed') {
+    accentColor = '#EF4444';
+    color = '#991B1B';
+    bg = 'rgba(254, 242, 242, 0.9)';
+    border = '1px solid rgba(239, 68, 68, 0.2)';
+    icon = '✕';
+  } else if (lowerType === 'info') {
+    accentColor = '#0EA5E9';
+    color = '#075985';
+    bg = 'rgba(240, 249, 255, 0.9)';
+    border = '1px solid rgba(14, 165, 233, 0.2)';
+    icon = 'ℹ️';
+  } else if (lowerType === 'warning') {
+    accentColor = '#F59E0B';
+    color = '#92400E';
+    bg = 'rgba(255, 251, 235, 0.9)';
+    border = '1px solid rgba(245, 158, 11, 0.2)';
+    icon = '⚠️';
+  }
+
+  toast.style.background = bg;
+  toast.style.border = border;
+  toast.style.borderLeft = `4px solid ${accentColor}`;
+  toast.style.color = color;
+
+  // Inside Toast content with structured, micro-animated nodes
+  toast.innerHTML = `
+    <div style="width: 28px; height: 28px; border-radius: 50%; background: ${accentColor}20; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: ${accentColor}; flex-shrink: 0;">
+      ${icon}
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 13px; font-weight: 600; line-height: 1.4;">${msg}</span>
+    </div>
+    <button style="background: none; border: none; color: inherit; opacity: 0.5; cursor: pointer; font-size: 14px; padding: 4px; margin-left: 8px; line-height: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: all 200ms;" 
+      onmouseover="this.style.opacity='1'; this.style.background='${accentColor}15';" 
+      onmouseout="this.style.opacity='0.5'; this.style.background='none';" 
+      onclick="this.parentElement.style.opacity='0'; this.parentElement.style.transform='translateX(50px) scale(0.95)'; setTimeout(() => { this.parentElement.remove(); }, 350);">✕</button>
+  `;
+
+  container.appendChild(toast);
+
+  // Trigger smooth enter animation
+  requestAnimationFrame(() => {
+    toast.style.transform = 'translateX(0)';
+    toast.style.opacity = '1';
+  });
+
+  // Auto-dismiss after 4.5 seconds
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.style.transform = 'translateX(50px) scale(0.95)';
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.remove();
+        }
+      }, 350);
+    }
+  }, 4500);
+}
 function showTyping() { const chat = document.getElementById('chat-messages'); const typing = document.createElement('div'); typing.id = 'typing-indicator'; typing.style.cssText = 'padding:12px 16px; background:rgba(255,255,255,0.06); border-radius:16px; width:fit-content; margin-bottom:8px; display:flex; gap:4px;'; typing.innerHTML = '<span class="dot"></span><span class="dot"></span><span class="dot"></span>'; chat.appendChild(typing); chat.scrollTop = chat.scrollHeight; }
 function hideTyping() { document.getElementById('typing-indicator')?.remove(); }
 
 async function searchYouTube(query) {
-    if (!query) { const { data } = await supabase.from('profiles').select('goal').eq('id', currentUserId).single(); query = (data?.goal || 'Programming') + ' tutorial for beginners'; }
-    const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=6&relevanceLanguage=en&key=${YOUTUBE_API_KEY}`);
-    const data = await res.json();
-    const container = document.getElementById('youtube-results');
-    if (container && data.items) container.innerHTML = data.items.map(item => `<div style="border:0.5px solid var(--color-border); border-radius:12px; overflow:hidden; cursor:pointer; background:white;" onclick="window.open('https://youtube.com/watch?v=${item.id.videoId}', '_blank')"><img src="${item.snippet.thumbnails.medium.url}" style="width:100%; aspect-ratio:16/9; object-fit:cover;"><div style="padding:12px;"><div style="font-weight:600; font-size:13px; margin-bottom:6px; color:#0F172A;">${item.snippet.title.substring(0, 60)}...</div><div style="font-size:11px; color:#64748B;">${item.snippet.channelTitle}</div></div></div>`).join('');
+  if (!query) { const { data } = await supabase.from('profiles').select('goal').eq('id', currentUserId).single(); query = (data?.goal || 'Programming') + ' tutorial for beginners'; }
+  const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=6&relevanceLanguage=en&key=${YOUTUBE_API_KEY}`);
+  const data = await res.json();
+  const container = document.getElementById('youtube-results');
+  if (container && data.items) container.innerHTML = data.items.map(item => `<div style="border:0.5px solid var(--color-border); border-radius:12px; overflow:hidden; cursor:pointer; background:white;" onclick="window.open('https://youtube.com/watch?v=${item.id.videoId}', '_blank')"><img src="${item.snippet.thumbnails.medium.url}" style="width:100%; aspect-ratio:16/9; object-fit:cover;"><div style="padding:12px;"><div style="font-weight:600; font-size:13px; margin-bottom:6px; color:#0F172A;">${item.snippet.title.substring(0, 60)}...</div><div style="font-size:11px; color:#64748B;">${item.snippet.channelTitle}</div></div></div>`).join('');
 }
 
 async function recordTodayLogin(userId) { const today = new Date().toISOString().split('T')[0]; await supabase.from('user_activity').upsert({ user_id: userId, activity_date: today }, { onConflict: 'user_id,activity_date' }); }
 async function updateStreakDisplay(userId) { const streak = await calculateStreak(userId); const navStreak = document.getElementById('streak-badge'); if (navStreak) navStreak.innerHTML = '🔥 ' + streak + ' Day Streak'; }
 async function calculateStreak(userId) { const { data } = await supabase.from('user_activity').select('activity_date').eq('user_id', userId).order('activity_date', { ascending: false }); if (!data || data.length === 0) return 0; const todayStr = new Date().toISOString().split('T')[0]; const latestDate = data[0].activity_date; const dayDiff = Math.floor((new Date(todayStr) - new Date(latestDate)) / 86400000); if (dayDiff > 1) return 0; let streak = 0; const dateSet = new Set(data.map(d => d.activity_date)); let checkDate = new Date(latestDate); while (true) { const ds = checkDate.toISOString().split('T')[0]; if (dateSet.has(ds)) { streak++; checkDate.setDate(checkDate.getDate() - 1); } else break; } return streak; }
 async function buildActivityHeatmap(userId) {
-    const heatmapEl = document.getElementById('activity-heatmap'); if (!heatmapEl) return;
-    const twelveWeeksAgo = new Date(); twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
-    const { data } = await supabase.from('user_activity').select('activity_date').eq('user_id', userId).gte('activity_date', twelveWeeksAgo.toISOString().split('T')[0]);
-    const activeDates = new Set((data || []).map(d => d.activity_date));
-    heatmapEl.innerHTML = ''; heatmapEl.style.cssText = 'display:grid;grid-template-columns:repeat(12,1fr);gap:3px;';
-    for (let week = 11; week >= 0; week--) {
-        const col = document.createElement('div'); col.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
-        for (let day = 6; day >= 0; day--) {
-            const date = new Date(); date.setDate(date.getDate() - (week * 7 + day)); const ds = date.toISOString().split('T')[0];
-            const isActive = activeDates.has(ds); const isFuture = date > new Date();
-            const cell = document.createElement('div'); cell.style.cssText = `width:12px;height:12px;border-radius:2px;background:${isFuture ? 'transparent' : isActive ? '#059669' : '#E2E8F0'};opacity:${isFuture ? '0' : '1'};`;
-            cell.title = ds; col.appendChild(cell);
-        }
-        heatmapEl.appendChild(col);
+  const heatmapEl = document.getElementById('activity-heatmap'); if (!heatmapEl) return;
+  const twelveWeeksAgo = new Date(); twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+  const { data } = await supabase.from('user_activity').select('activity_date').eq('user_id', userId).gte('activity_date', twelveWeeksAgo.toISOString().split('T')[0]);
+  const activeDates = new Set((data || []).map(d => d.activity_date));
+  heatmapEl.innerHTML = ''; heatmapEl.style.cssText = 'display:grid;grid-template-columns:repeat(12,1fr);gap:3px;';
+  for (let week = 11; week >= 0; week--) {
+    const col = document.createElement('div'); col.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
+    for (let day = 6; day >= 0; day--) {
+      const date = new Date(); date.setDate(date.getDate() - (week * 7 + day)); const ds = date.toISOString().split('T')[0];
+      const isActive = activeDates.has(ds); const isFuture = date > new Date();
+      const cell = document.createElement('div'); cell.style.cssText = `width:12px;height:12px;border-radius:2px;background:${isFuture ? 'transparent' : isActive ? '#059669' : '#E2E8F0'};opacity:${isFuture ? '0' : '1'};`;
+      cell.title = ds; col.appendChild(cell);
     }
+    heatmapEl.appendChild(col);
+  }
 }
 
-function getSmartFallback(goal) { return { title: goal + " Roadmap", phases: [ { phase: "Phase 1", skills: ["Skill 1"], tasks: [{title: "Task 1", difficulty: "Easy"}] } ] }; }
+function getSmartFallback(goal) { return { title: goal + " Roadmap", phases: [{ phase: "Phase 1", skills: ["Skill 1"], tasks: [{ title: "Task 1", difficulty: "Easy" }] }] }; }
 
 const style = document.createElement('style');
 style.textContent = `
@@ -1677,10 +1824,10 @@ document.head.appendChild(style);
 // ── Global placement state ───────────────
 let placementResumeText = '';
 let selectedCompanyType = 'Product (FAANG)';
-let placementProgress = { 
-  resume: false, 
-  r1: false, 
-  r2: false, 
+let placementProgress = {
+  resume: false,
+  r1: false,
+  r2: false,
   r3: false,
   r1Score: 0,
   r2Score: 0,
@@ -1735,10 +1882,10 @@ function handleResumeFile(input) {
 async function analyzeResume() {
   const resArea = document.getElementById('resume-analysis-result');
   resArea.innerHTML = '<p style="font-size:13px;color:#64748B;padding:12px;">🔍 Analyzing with AI...</p>';
-  
+
   const prompt = `Analyze this resume and give a score out of 100 based on ATS compatibility and technical depth. Also list top 3 strengths.
   RESUME: ${placementResumeText}`;
-  
+
   const result = await callAI(prompt);
   if (result) {
     resArea.innerHTML = `
@@ -1812,7 +1959,7 @@ async function startRound1Test() {
   const prompt = `Generate a technical test for ${selectedCompanyType} role. 
   Include: 3 Technical MCQs and 1 Coding Logic Question.
   Return ONLY JSON format: {"mcqs": [{"q": "...", "a": ["...", "..."], "correct": 0}], "coding": {"q": "..."}}`;
-  
+
   const result = await callAI(prompt, 1000);
   try {
     const test = JSON.parse(result.match(/\{[\s\S]*\}/)[0]);
@@ -1826,11 +1973,11 @@ async function startRound1Test() {
 function renderRound1(test) {
   const area = document.getElementById('r1-test-area');
   let html = `<div style="padding:10px;">`;
-  
+
   test.mcqs.forEach((m, i) => {
     html += `
       <div style="margin-bottom:20px;">
-        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Q${i+1}: ${m.q}</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Q${i + 1}: ${m.q}</div>
         ${m.a.map((opt, oi) => `
           <label style="display:block;margin-bottom:6px;font-size:13px;cursor:pointer;">
             <input type="radio" name="mcq-${i}" value="${oi}"> ${opt}
@@ -1859,11 +2006,11 @@ async function submitRound1() {
   btn.disabled = true;
 
   // Mock scoring logic for demo - in real app, AI would evaluate
-  const score = Math.floor(Math.random() * 40) + 60; 
+  const score = Math.floor(Math.random() * 40) + 60;
   const passed = score >= 70;
 
   await savePlacementAttempt(1, score, passed);
-  
+
   document.getElementById('r1-test-area').style.display = 'none';
   const res = document.getElementById('r1-result');
   res.style.display = 'block';
@@ -1910,7 +2057,7 @@ async function sendR2Message() {
   input.value = '';
 
   addChatMessage('user', msg);
-  
+
   const response = await getAIInterviewResponse(msg);
   addChatMessage('ai', response);
 
@@ -1932,7 +2079,7 @@ function addChatMessage(role, text) {
 
 async function getAIInterviewResponse(userMsg) {
   const prompt = `You are a technical interviewer for ${selectedCompanyType}. The candidate said: "${userMsg}". 
-  Reply as an interviewer. Ask the next technical question based on their resume: ${placementResumeText.substring(0,500)}`;
+  Reply as an interviewer. Ask the next technical question based on their resume: ${placementResumeText.substring(0, 500)}`;
   return await callAI(prompt);
 }
 
@@ -1984,7 +2131,7 @@ function showNextVideoQuestion() {
   let i = 0;
   const display = document.getElementById('ai-q-display');
   display.textContent = questions[0];
-  
+
   interviewInterval = setInterval(() => {
     i++;
     if (i < questions.length) {
@@ -2011,10 +2158,10 @@ async function endVideoInterview() {
   if (video.srcObject) {
     video.srcObject.getTracks().forEach(t => t.stop());
   }
-  
+
   document.getElementById('r3-controls').style.display = 'none';
   document.getElementById('ai-q-display').style.display = 'none';
-  
+
   const res = document.getElementById('r3-result');
   res.style.display = 'block';
   res.innerHTML = `
@@ -2044,7 +2191,7 @@ async function geminiCall(prompt) {
 
 function updatePlacementProgress() {
   const { resume, r1, r2, r3 } = placementProgress;
-  
+
   // Update line
   let width = 0;
   if (resume) width = 25;
@@ -2073,9 +2220,9 @@ function updatePlacementProgress() {
 }
 
 function scrollToRound(id) {
-  const targetId = id === 'step-resume' ? 'section-resume' : 
-                   id === 'step-r1' ? 'section-round1' :
-                   id === 'step-r2' ? 'section-round2' : 'section-round3';
+  const targetId = id === 'step-resume' ? 'section-resume' :
+    id === 'step-r1' ? 'section-round1' :
+      id === 'step-r2' ? 'section-round2' : 'section-round3';
   document.getElementById(targetId).scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -2092,26 +2239,26 @@ async function savePlacementAttempt(round, score, passed) {
 async function generateFinalReport() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  
+
   doc.setFontSize(22);
   doc.text("Placement Readiness Report", 20, 30);
   doc.setFontSize(14);
   doc.text(`Candidate: ${currentUserName || 'Student'}`, 20, 45);
   doc.text(`Target Role: ${selectedCompanyType}`, 20, 55);
-  
+
   doc.setDrawColor(0, 150, 105);
   doc.line(20, 60, 190, 60);
-  
+
   doc.text("Performance Metrics:", 20, 75);
   doc.text(`- Round 1 (Aptitude): ${placementProgress.r1Score}/100`, 30, 85);
   doc.text(`- Round 2 (Technical): Cleared`, 30, 95);
   doc.text(`- Round 3 (Video): Completed`, 30, 105);
-  
+
   doc.text("Expert Feedback:", 20, 125);
   const feedback = await callAI(`Give a summary placement feedback for a student who scored well in aptitude and cleared technical rounds for a ${selectedCompanyType} role.`);
   const splitFeedback = doc.splitTextToSize(feedback || "Outstanding performance across all rounds.", 160);
   doc.text(splitFeedback, 20, 135);
-  
+
   doc.save('SkillBridge_Placement_Report.pdf');
 }
 
@@ -2232,8 +2379,8 @@ async function searchResources(query) {
           transition:all 200ms;"
           onclick="playVideo(
             '${item.id.videoId}',
-            '${item.snippet.title.replace(/'/g,"\\'").substring(0,60)}',
-            '${item.snippet.channelTitle.replace(/'/g,"\\'")}',
+            '${item.snippet.title.replace(/'/g, "\\'").substring(0, 60)}',
+            '${item.snippet.channelTitle.replace(/'/g, "\\'")}',
             '${item.snippet.thumbnails.medium.url}'
           )"
           onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,0.1)'"
@@ -2287,7 +2434,7 @@ async function searchResources(query) {
       `).join('');
     }
 
-  } catch(err) {
+  } catch (err) {
     console.error('YouTube search error:', err);
     if (grid) grid.innerHTML = `
       <div style="grid-column:1/-1;
@@ -2392,8 +2539,8 @@ async function loadSavedVideos(userId) {
       border-bottom:1px solid #F8FAFC;
       transition:background 150ms;"
       onclick="playVideo('${v.video_id}',
-        '${v.title?.replace(/'/g,"\\'")}',
-        '${v.channel?.replace(/'/g,"\\'")}',
+        '${v.title?.replace(/'/g, "\\'")}',
+        '${v.channel?.replace(/'/g, "\\'")}',
         '${v.thumbnail}')"
       onmouseover="this.style.background='#F8FAFC'"
       onmouseout="this.style.background='white'">
@@ -2433,13 +2580,14 @@ document.addEventListener('click', (e) => {
 // ── PROJECTS SYSTEM ──────────────────────────────────────────
 const suggestedProjects = {
   frontend: [
-    { title:'Personal Portfolio Website',
-      description:'Build a responsive portfolio showcasing your skills and projects with animations.',
-      tech_stack:['HTML','CSS','JavaScript'],
-      difficulty:'Beginner',
-      estimated_hours:8,
-      xp_reward:50,
-      checkpoints:[
+    {
+      title: 'Personal Portfolio Website',
+      description: 'Build a responsive portfolio showcasing your skills and projects with animations.',
+      tech_stack: ['HTML', 'CSS', 'JavaScript'],
+      difficulty: 'Beginner',
+      estimated_hours: 8,
+      xp_reward: 50,
+      checkpoints: [
         'Setup project structure',
         'Build navbar & hero section',
         'Add projects section',
@@ -2447,13 +2595,14 @@ const suggestedProjects = {
         'Deploy to GitHub Pages'
       ]
     },
-    { title:'Weather Dashboard App',
-      description:'Real-time weather app with 5-day forecast using OpenWeather API.',
-      tech_stack:['JavaScript','APIs','CSS'],
-      difficulty:'Intermediate',
-      estimated_hours:12,
-      xp_reward:100,
-      checkpoints:[
+    {
+      title: 'Weather Dashboard App',
+      description: 'Real-time weather app with 5-day forecast using OpenWeather API.',
+      tech_stack: ['JavaScript', 'APIs', 'CSS'],
+      difficulty: 'Intermediate',
+      estimated_hours: 12,
+      xp_reward: 100,
+      checkpoints: [
         'Setup OpenWeather API',
         'Build search functionality',
         'Display current weather',
@@ -2461,13 +2610,14 @@ const suggestedProjects = {
         'Add geolocation support'
       ]
     },
-    { title:'Full Stack Todo App',
-      description:'CRUD application with React frontend and Supabase backend.',
-      tech_stack:['React','Supabase','CSS'],
-      difficulty:'Intermediate',
-      estimated_hours:16,
-      xp_reward:150,
-      checkpoints:[
+    {
+      title: 'Full Stack Todo App',
+      description: 'CRUD application with React frontend and Supabase backend.',
+      tech_stack: ['React', 'Supabase', 'CSS'],
+      difficulty: 'Intermediate',
+      estimated_hours: 16,
+      xp_reward: 150,
+      checkpoints: [
         'Setup React project',
         'Connect Supabase database',
         'Build Create/Read operations',
@@ -2475,13 +2625,14 @@ const suggestedProjects = {
         'Add user authentication'
       ]
     },
-    { title:'E-commerce Product Page',
-      description:'Pixel-perfect product page with cart functionality.',
-      tech_stack:['React','Context API','CSS'],
-      difficulty:'Advanced',
-      estimated_hours:20,
-      xp_reward:200,
-      checkpoints:[
+    {
+      title: 'E-commerce Product Page',
+      description: 'Pixel-perfect product page with cart functionality.',
+      tech_stack: ['React', 'Context API', 'CSS'],
+      difficulty: 'Advanced',
+      estimated_hours: 20,
+      xp_reward: 200,
+      checkpoints: [
         'Design product layout',
         'Add image gallery',
         'Build cart context',
@@ -2491,13 +2642,14 @@ const suggestedProjects = {
     }
   ],
   backend: [
-    { title:'REST API with Authentication',
-      description:'Build a secure REST API with JWT auth and PostgreSQL.',
-      tech_stack:['Node.js','Express','PostgreSQL'],
-      difficulty:'Intermediate',
-      estimated_hours:14,
-      xp_reward:120,
-      checkpoints:[
+    {
+      title: 'REST API with Authentication',
+      description: 'Build a secure REST API with JWT auth and PostgreSQL.',
+      tech_stack: ['Node.js', 'Express', 'PostgreSQL'],
+      difficulty: 'Intermediate',
+      estimated_hours: 14,
+      xp_reward: 120,
+      checkpoints: [
         'Setup Express server',
         'Connect PostgreSQL',
         'Add user registration',
@@ -2505,13 +2657,14 @@ const suggestedProjects = {
         'Build CRUD endpoints'
       ]
     },
-    { title:'Real-time Chat Application',
-      description:'WebSocket-based chat app with rooms and online status.',
-      tech_stack:['Node.js','Socket.io','React'],
-      difficulty:'Advanced',
-      estimated_hours:20,
-      xp_reward:200,
-      checkpoints:[
+    {
+      title: 'Real-time Chat Application',
+      description: 'WebSocket-based chat app with rooms and online status.',
+      tech_stack: ['Node.js', 'Socket.io', 'React'],
+      difficulty: 'Advanced',
+      estimated_hours: 20,
+      xp_reward: 200,
+      checkpoints: [
         'Setup Socket.io server',
         'Build chat rooms',
         'Add online status',
@@ -2589,13 +2742,13 @@ function renderProjectsGrid(projects) {
     const isDone = proj.status === 'completed';
     const pct = proj.progress_pct || 0;
     const diffColor = {
-      'Beginner':'#10B981',
-      'Intermediate':'#F59E0B',
-      'Advanced':'#EF4444'
+      'Beginner': '#10B981',
+      'Intermediate': '#F59E0B',
+      'Advanced': '#EF4444'
     }[proj.difficulty] || '#94A3B8';
 
     return `
-      <div style="background:white;border-radius:14px;border:1px solid ${isDone?'#A7F3D0':'#E2E8F0'};overflow:hidden;transition:all 200ms;cursor:pointer;"
+      <div style="background:white;border-radius:14px;border:1px solid ${isDone ? '#A7F3D0' : '#E2E8F0'};overflow:hidden;transition:all 200ms;cursor:pointer;"
         onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)'"
         onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'"
         onclick="openProjectDetail(${i})">
@@ -2632,7 +2785,7 @@ function renderProjectsGrid(projects) {
 }
 
 function filterProjects(filter, btn) {
-  ['all','active','completed','custom'].forEach(f => {
+  ['all', 'active', 'completed', 'custom'].forEach(f => {
     const b = document.getElementById('proj-filter-' + f);
     if (b) {
       b.style.background = f === filter ? '#059669' : '#F1F5F9';
@@ -2642,8 +2795,8 @@ function filterProjects(filter, btn) {
   const all = window.allProjectsData || [];
   const filtered = filter === 'all' ? all
     : filter === 'active' ? all.filter(p => p.status === 'in_progress' || !p.status)
-    : filter === 'completed' ? all.filter(p => p.status === 'completed')
-    : all.filter(p => p.is_custom);
+      : filter === 'completed' ? all.filter(p => p.status === 'completed')
+        : all.filter(p => p.is_custom);
   renderProjectsGrid(filtered);
 }
 
@@ -2722,9 +2875,9 @@ async function markProjectComplete(index) {
     });
   }
   const { data: profile } = await supabase.from('profiles').select('xp').eq('id', session.user.id).single();
-  await supabase.from('profiles').update({ xp: (profile?.xp || 0) + (proj.xp_reward||100) }).eq('id', session.user.id);
+  await supabase.from('profiles').update({ xp: (profile?.xp || 0) + (proj.xp_reward || 100) }).eq('id', session.user.id);
   closeProjectDetail();
-  showToast(`🎉 Project completed! +${proj.xp_reward||100} XP earned!`);
+  showToast(`🎉 Project completed! +${proj.xp_reward || 100} XP earned!`);
   loadProjects();
 }
 
@@ -2762,7 +2915,7 @@ async function saveGithubUrl(index) {
   const proj = window.allProjectsData?.[index];
   if (!proj) return;
   const url = document.getElementById('proj-github-input')?.value;
-  
+
   if (proj.id) {
     await supabase.from('projects').update({ github_url: url }).eq('id', proj.id);
     showToast('🚀 GitHub URL updated!');
@@ -2832,7 +2985,7 @@ Rules:
 
   // Welcome message
   const firstName = profile?.full_name?.split(' ')[0] || 'there';
-  addMentorMessage('ai', 
+  addMentorMessage('ai',
     `Hey ${firstName}! 👋 I'm **Atlas**, your AI career mentor.\n\nI know your goal is to become a **${profile?.goal || 'Software Developer'}** and you're currently at ${profile?.current_level || 'beginner'} level.\n\nI'm here to guide you with roadmap advice, interview prep, resume tips, and more. What would you like to work on today? 🚀`
   );
 }
@@ -2845,7 +2998,7 @@ function addMentorMessage(role, text) {
   const div = document.createElement('div');
   div.style.cssText = `
     display:flex;gap:8px;
-    justify-content:${isAI?'flex-start':'flex-end'};
+    justify-content:${isAI ? 'flex-start' : 'flex-end'};
     animation:fadeUp 300ms ease-out;
     margin-bottom: 12px;
   `;
@@ -2868,12 +3021,12 @@ function addMentorMessage(role, text) {
     <div style="
       max-width:70%;padding:12px 16px;
       border-radius:16px;
-      border-${isAI?'bottom-left':'bottom-right'}-radius:4px;
-      background:${isAI?'white':'#059669'};
-      color:${isAI?'#0F172A':'white'};
+      border-${isAI ? 'bottom-left' : 'bottom-right'}-radius:4px;
+      background:${isAI ? 'white' : '#059669'};
+      color:${isAI ? '#0F172A' : 'white'};
       font-size:14px;line-height:1.6;
-      border:${isAI?'1px solid #E2E8F0':'none'};
-      box-shadow:${isAI?'0 2px 8px rgba(0,0,0,0.06)':'none'};
+      border:${isAI ? '1px solid #E2E8F0' : 'none'};
+      box-shadow:${isAI ? '0 2px 8px rgba(0,0,0,0.06)' : 'none'};
     ">${formatted}</div>
     ${!isAI ? `
       <div style="width:32px;height:32px;
@@ -2903,14 +3056,14 @@ async function sendMentorMessage() {
 
   addMentorMessage('user', msg);
   input.value = '';
-  mentorHistory.push({ role:'user', content:msg });
+  mentorHistory.push({ role: 'user', content: msg });
 
   // Show typing
   const typing = document.getElementById('mentor-typing');
   if (typing) typing.style.display = 'block';
 
   // Track topics
-  const topics = ['resume','interview','dsa','roadmap','career','project','skill'];
+  const topics = ['resume', 'interview', 'dsa', 'roadmap', 'career', 'project', 'skill'];
   topics.forEach(t => {
     if (msg.toLowerCase().includes(t)) {
       topicsCovered.add(t);
@@ -2920,36 +3073,43 @@ async function sendMentorMessage() {
   if (topicsEl) topicsEl.textContent = topicsCovered.size;
 
   const messages = [
-    { role:'system', content: window.mentorSystemPrompt },
+    { role: 'system', content: window.mentorSystemPrompt },
     ...mentorHistory.slice(-6)
   ];
 
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':`Bearer ${OPENROUTER_KEY}`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_KEY}`,
         'HTTP-Referer': window.location.origin
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        model: 'openrouter/free',
         messages,
         max_tokens: 400,
         temperature: 0.7
       })
     });
 
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      console.error("OpenRouter API Error:", res.status, errData);
+      throw new Error(errData.error?.message || 'API failed: ' + res.status);
+    }
+
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content || 'Sorry, I had trouble responding. Please try again!';
 
     if (typing) typing.style.display = 'none';
     addMentorMessage('ai', reply);
-    mentorHistory.push({ role:'assistant', content:reply });
+    mentorHistory.push({ role: 'assistant', content: reply });
 
-  } catch(err) {
+  } catch (err) {
+    console.error("Mentor chat error:", err);
     if (typing) typing.style.display = 'none';
-    addMentorMessage('ai', 'Network issue! Please check your connection and try again. 🔌');
+    addMentorMessage('ai', `Network issue or API error! Please check your connection and try again. 🔌 (${err.message})`);
   }
 }
 
@@ -2985,8 +3145,8 @@ async function loadPortfolioTab() {
   // Fetch all user data in parallel
   const [profileRes, tasksRes, projectsRes, certsRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-    supabase.from('tasks').select('*').eq('user_id', session.user.id).eq('status','completed'),
-    supabase.from('projects').select('*').eq('user_id', session.user.id).eq('status','completed'),
+    supabase.from('tasks').select('*').eq('user_id', session.user.id).eq('status', 'completed'),
+    supabase.from('projects').select('*').eq('user_id', session.user.id).eq('status', 'completed'),
     supabase.from('certificates').select('*').eq('user_id', session.user.id)
   ]);
 
@@ -3081,7 +3241,7 @@ function renderPortfolioTab(profile, tasks, projects, certs, skills, readiness, 
                     <div>
                       <div style="font-size:14px; font-weight:500; margin-bottom:4px;">${p.title}</div>
                       <div style="display:flex; gap:6px;flex-wrap:wrap;">
-                        ${(p.tags||[]).map(t=>`<span style="font-size:11px; background:#E2E8F0; color:#475569; padding:2px 8px; border-radius:6px;">${t}</span>`).join('')}
+                        ${(p.tags || []).map(t => `<span style="font-size:11px; background:#E2E8F0; color:#475569; padding:2px 8px; border-radius:6px;">${t}</span>`).join('')}
                       </div>
                     </div>
                     ${p.github_url ? `<a href="${p.github_url}" target="_blank" style="font-size:12px; color:#059669; text-decoration:none; white-space:nowrap;">GitHub →</a>` : ''}
@@ -3114,7 +3274,7 @@ function renderPortfolioTab(profile, tasks, projects, certs, skills, readiness, 
     <div style="background:white; border-radius:14px; border:1px solid #E2E8F0;padding:20px;">
       <h3 style="font-size:15px;font-weight:600; margin-bottom:14px;">📊 Portfolio Summary</h3>
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px;">
-        ${[{label:'Tasks Done',val:tasks.length,icon:'✅'},{label:'Projects Built',val:projects.length,icon:'🛠️'},{label:'Certificates',val:certs.length,icon:'🏆'},{label:'Skills Learned',val:skills.length,icon:'⚡'},{label:'XP Earned',val:xp,icon:'🔥'},{label:'Job Readiness',val:readiness+'%',icon:'🎯'}].map(s => `
+        ${[{ label: 'Tasks Done', val: tasks.length, icon: '✅' }, { label: 'Projects Built', val: projects.length, icon: '🛠️' }, { label: 'Certificates', val: certs.length, icon: '🏆' }, { label: 'Skills Learned', val: skills.length, icon: '⚡' }, { label: 'XP Earned', val: xp, icon: '🔥' }, { label: 'Job Readiness', val: readiness + '%', icon: '🎯' }].map(s => `
           <div style="text-align:center; padding:12px;background:#F8FAFC; border-radius:10px;">
             <div style="font-size:20px; margin-bottom:4px;">${s.icon}</div>
             <div style="font-size:18px; font-weight:700;color:#0F172A;">${s.val}</div>
@@ -3138,8 +3298,8 @@ async function downloadPortfolioPDF() {
 
   const [profileRes, tasksRes, projectsRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-    supabase.from('tasks').select('*').eq('user_id', session.user.id).eq('status','completed'),
-    supabase.from('projects').select('*').eq('user_id', session.user.id).eq('status','completed')
+    supabase.from('tasks').select('*').eq('user_id', session.user.id).eq('status', 'completed'),
+    supabase.from('projects').select('*').eq('user_id', session.user.id).eq('status', 'completed')
   ]);
 
   const p = profileRes.data;
@@ -3149,56 +3309,56 @@ async function downloadPortfolioPDF() {
   const doc = new jsPDF();
   let y = 20;
 
-  doc.setFillColor(15,23,42);
-  doc.rect(0,0,210,40,'F');
-  doc.setTextColor(255,255,255);
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, 210, 40, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
-  doc.setFont('helvetica','bold');
+  doc.setFont('helvetica', 'bold');
   doc.text(p?.full_name || 'Student', 20, 18);
   doc.setFontSize(12);
-  doc.setFont('helvetica','normal');
-  doc.text(p?.goal || 'Software Developer', 20,28);
+  doc.setFont('helvetica', 'normal');
+  doc.text(p?.goal || 'Software Developer', 20, 28);
   doc.setFontSize(10);
   doc.text(p?.college_name || '', 20, 36);
 
   y = 55;
-  doc.setTextColor(5,150,105);
+  doc.setTextColor(5, 150, 105);
   doc.setFontSize(11);
-  doc.setFont('helvetica','bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('PROFILE STATS', 20, y);
   y += 8;
-  doc.setTextColor(71,85,105);
-  doc.setFont('helvetica','normal');
+  doc.setTextColor(71, 85, 105);
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.text(`Level: ${p?.level || 1}  |  XP: ${p?.xp || 0}  |  Tasks: ${tasks.length}  |  Projects: ${projects.length}`, 20, y);
   y += 12;
 
-  doc.setTextColor(5,150,105);
+  doc.setTextColor(5, 150, 105);
   doc.setFontSize(11);
-  doc.setFont('helvetica','bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('SKILLS LEARNED', 20, y);
   y += 8;
-  doc.setTextColor(71,85,105);
-  doc.setFont('helvetica','normal');
+  doc.setTextColor(71, 85, 105);
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   const phases = [...new Set(tasks.map(t => t.roadmap_phase).filter(Boolean))];
   doc.text(phases.join(' · ') || 'In progress', 20, y);
   y += 14;
 
   if (projects.length > 0) {
-    doc.setTextColor(5,150,105);
+    doc.setTextColor(5, 150, 105);
     doc.setFontSize(11);
-    doc.setFont('helvetica','bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('COMPLETED PROJECTS', 20, y);
     y += 8;
     projects.forEach(proj => {
-      doc.setTextColor(15,23,42);
-      doc.setFont('helvetica','bold');
+      doc.setTextColor(15, 23, 42);
+      doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
       doc.text('• ' + proj.title, 20, y);
       y += 6;
-      doc.setTextColor(71,85,105);
-      doc.setFont('helvetica','normal');
+      doc.setTextColor(71, 85, 105);
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       doc.text('  Tech: ' + (proj.tags || []).join(', '), 20, y);
       y += 8;
@@ -3206,9 +3366,9 @@ async function downloadPortfolioPDF() {
     y += 4;
   }
 
-  doc.setFillColor(5,150,105);
-  doc.rect(0,280,210,17,'F');
-  doc.setTextColor(255,255,255);
+  doc.setFillColor(5, 150, 105);
+  doc.rect(0, 280, 210, 17, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(9);
   doc.text('Generated by SkillBridge AI · ' + new Date().toLocaleDateString('en-IN'), 20, 291);
 
@@ -3219,7 +3379,7 @@ async function downloadPortfolioPDF() {
 function changePortfolioTheme(theme) {
   const header = document.getElementById('portfolio-header');
   if (!header) return;
-  
+
   if (theme === 'dark') {
     header.style.background = 'linear-gradient(135deg, #020617, #1E293B)';
   } else if (theme === 'minimal') {

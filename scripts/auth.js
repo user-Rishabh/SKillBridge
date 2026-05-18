@@ -16,6 +16,7 @@ try {
     const lib = window.supabase || window.supabasejs;
     if (typeof lib !== 'undefined') {
         supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClient = supabase;
         console.log("✅ Supabase client initialized");
     } else {
         console.error("❌ Supabase library not found! Check your CDN script in auth.html.");
