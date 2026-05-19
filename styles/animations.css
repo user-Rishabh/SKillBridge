@@ -1,178 +1,285 @@
 /* ══════════════════════════════════════════════════════════════
-   SKILLBRIDGE — ANIMATIONS
+   SKILLBRIDGE — PREMIUM ANIMATION SYSTEM
+   Dark Space • Fuchsia/Violet • Glassmorphic
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Stagger children reveal ──────────────────────────────── */
+/* ── Entrance: Fade Up ────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeDown {
+  from { opacity:0; transform:translateY(-20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeLeft {
+  from { opacity:0; transform:translateX(-20px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes fadeRight {
+  from { opacity:0; transform:translateX(20px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity:0; transform:scale(0.93); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+/* ── Tab switching ────────────────────────────────────────── */
+[id^="tab-"] { animation: fadeUp 320ms cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── Stagger children ─────────────────────────────────────── */
 [data-stagger] > * {
-  opacity: 0;
-  transform: translateY(30px);
+  opacity:0;
+  transform:translateY(24px);
   transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
-[data-stagger].revealed > *:nth-child(1) { opacity: 1; transform: none; transition-delay: 0ms; }
-[data-stagger].revealed > *:nth-child(2) { opacity: 1; transform: none; transition-delay: 80ms; }
-[data-stagger].revealed > *:nth-child(3) { opacity: 1; transform: none; transition-delay: 160ms; }
-[data-stagger].revealed > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 240ms; }
-[data-stagger].revealed > *:nth-child(5) { opacity: 1; transform: none; transition-delay: 320ms; }
-[data-stagger].revealed > *:nth-child(6) { opacity: 1; transform: none; transition-delay: 400ms; }
+[data-stagger].revealed > *:nth-child(1) { opacity:1; transform:none; transition-delay:0ms; }
+[data-stagger].revealed > *:nth-child(2) { opacity:1; transform:none; transition-delay:80ms; }
+[data-stagger].revealed > *:nth-child(3) { opacity:1; transform:none; transition-delay:160ms; }
+[data-stagger].revealed > *:nth-child(4) { opacity:1; transform:none; transition-delay:240ms; }
+[data-stagger].revealed > *:nth-child(5) { opacity:1; transform:none; transition-delay:320ms; }
+[data-stagger].revealed > *:nth-child(6) { opacity:1; transform:none; transition-delay:400ms; }
 
-/* ── Timeline line draw animation ────────────────────────── */
-#tl-line {
-  transition: y2 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+/* ── Glow pulse ───────────────────────────────────────────── */
+@keyframes glowPulse {
+  0%,100% { box-shadow: 0 0 12px rgba(217,70,239,0.3); }
+  50%      { box-shadow: 0 0 30px rgba(217,70,239,0.6); }
 }
-
-/* ── Tab indicator slide ──────────────────────────────────── */
-.tab-ink {
-  position: absolute;
-  bottom: -1px;
-  height: 3px;
-  background: #059669;
-  border-radius: 2px 2px 0 0;
-  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
+@keyframes glowPulseViolet {
+  0%,100% { box-shadow: 0 0 12px rgba(124,58,237,0.3); }
+  50%      { box-shadow: 0 0 28px rgba(124,58,237,0.6); }
+}
+@keyframes glowPulseEmerald {
+  0%,100% { box-shadow: 0 0 10px rgba(16,185,129,0.2); }
+  50%      { box-shadow: 0 0 24px rgba(16,185,129,0.5); }
 }
 
-/* ── Card hover lift ──────────────────────────────────────── */
-.inno-card,
-.testi-card,
-.mentor-card,
-.project-card,
-.stat-card {
-  will-change: transform;
+/* ── Shimmer / skeleton ───────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(217,70,239,0.08) 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 2s infinite linear;
 }
 
-/* ── Button ripple ────────────────────────────────────────── */
-.btn {
-  position: relative;
-  overflow: hidden;
+/* ── Floating elements ────────────────────────────────────── */
+@keyframes float {
+  0%,100% { transform:translateY(0px); }
+  50%      { transform:translateY(-8px); }
+}
+@keyframes floatSlow {
+  0%,100% { transform:translateY(0px) rotate(0deg); }
+  50%      { transform:translateY(-12px) rotate(1deg); }
+}
+.float      { animation: float 4s ease-in-out infinite; }
+.float-slow { animation: floatSlow 6s ease-in-out infinite; }
+
+/* ── Orb drift ────────────────────────────────────────────── */
+@keyframes orbDrift1 {
+  0%   { transform:translate(0,0) scale(1); }
+  100% { transform:translate(40px,60px) scale(1.12); }
+}
+@keyframes orbDrift2 {
+  0%   { transform:translate(0,0); }
+  100% { transform:translate(30px,-40px); }
 }
 
-/* ── Glow pulse for nav CTA ──────────────────────────────── */
-.nav-cta {
-  animation: navCtaGlow 3s ease-in-out infinite;
-}
-.nav-cta:hover { animation: none; }
-
-@keyframes navCtaGlow {
-  0%, 100% { box-shadow: 0 4px 14px rgba(5,150,105,0.25); }
-  50%       { box-shadow: 0 4px 20px rgba(5,150,105,0.45); }
+/* ── Rotating gradient ring ───────────────────────────────── */
+@keyframes rotateSlow {
+  from { transform:rotate(0deg); }
+  to   { transform:rotate(360deg); }
 }
 
-/* ── Floating badge animations (hero) ────────────────────── */
-.hero-badge-top,
-.hero-weekly-badge {
-  animation: badgeBounce 2.5s ease-in-out infinite;
-}
-.hero-badge-bottom {
-  animation: badgeBounce 3s ease-in-out infinite reverse;
-}
-@keyframes badgeBounce {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-4px); }
-}
+/* ── Nav CTA glow ─────────────────────────────────────────── */
+.nav-cta { animation: glowPulse 3s ease-in-out infinite; }
+.nav-cta:hover { animation:none; }
 
-/* ── New card will-change hints ───────────────────────────── */
-.step-card,
-.feature-card,
-.before-card,
-.after-card,
-.mock-dashboard {
-  will-change: transform;
+/* ── Pulse dot ────────────────────────────────────────────── */
+@keyframes pulseDot {
+  0%,100% { transform:scale(1); opacity:1; }
+  50%      { transform:scale(1.6); opacity:0.5; }
 }
-
-/* ── Step card pop in ─────────────────────────────────────── */
-@keyframes stepPop {
-  from { opacity: 0; transform: translateY(24px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* ── Skill bars animated fill on reveal ──────────────────── */
-.bar-fill {
-  width: 0 !important;
-  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.bar-fill.animated {
-  width: var(--w) !important;
-}
+.pulse-dot { animation: pulseDot 2s infinite; }
 
 /* ── Heatmap cell entrance ────────────────────────────────── */
 .heat-cell {
   animation: heatIn 0.3s ease both;
 }
 @keyframes heatIn {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
+  from { opacity:0; transform:scale(0.4); }
+  to   { opacity:1; transform:scale(1); }
 }
 
-/* ── Counter numbers ──────────────────────────────────────── */
-.stat-num {
-  font-variant-numeric: tabular-nums;
+/* ── Skill bars ───────────────────────────────────────────── */
+.bar-fill {
+  width:0 !important;
+  transition: width 1.4s cubic-bezier(0.16,1,0.3,1);
+}
+.bar-fill.animated { width:var(--w) !important; }
+
+/* ── Progress fill animation ──────────────────────────────── */
+@keyframes fillBar {
+  from { width:0%; }
+}
+.animate-fill { animation: fillBar 1.2s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ── Counter ──────────────────────────────────────────────── */
+.stat-num { font-variant-numeric:tabular-nums; }
+
+/* ── Typewriter cursor ────────────────────────────────────── */
+@keyframes blink {
+  0%,100% { opacity:1; }
+  50%       { opacity:0; }
+}
+.cursor-blink { animation: blink 1s step-end infinite; }
+
+/* ── Spin (loading) ───────────────────────────────────────── */
+@keyframes spin {
+  from { transform:rotate(0deg); }
+  to   { transform:rotate(360deg); }
 }
 
-/* ── SVG pulse ring (skill tree active node) ─────────────── */
-@keyframes pulseRing {
-  0%, 100% { rx: 12; ry: 12; opacity: 0.25; }
-  50%       { rx: 14; ry: 14; opacity: 0.6; }
+/* ── Slide in progress bar (generation) ──────────────────── */
+@keyframes slideIn {
+  0%   { width:0%;  margin-left:0%; }
+  50%  { width:60%; margin-left:20%; }
+  100% { width:0%;  margin-left:100%; }
 }
 
-/* ── Marquee speed ────────────────────────────────────────── */
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+/* ── Card hover micro-lift ────────────────────────────────── */
+.stat-card,
+.project-card,
+.panel-card,
+.hero-card {
+  will-change: transform;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-/* ── FAQ open/close ───────────────────────────────────────── */
-.faq-a {
-  transition: max-height 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+/* ── Gradient text ────────────────────────────────────────── */
+.text-gradient {
+  background: linear-gradient(135deg, #D946EF 0%, #7C3AED 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-warm {
+  background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* ── Scroll-triggered row stagger (table) ────────────────── */
+/* ── Trow (table row) stagger ─────────────────────────────── */
 .trow {
-  opacity: 0;
-  transform: translateX(-12px);
+  opacity:0;
+  transform:translateX(-12px);
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
-.trow.revealed {
-  opacity: 1;
-  transform: translateX(0);
+.trow.revealed { opacity:1; transform:translateX(0); }
+
+/* ── FAQ ──────────────────────────────────────────────────── */
+.faq-a { transition: max-height 0.38s cubic-bezier(0.16,1,0.3,1); }
+
+/* ── Marquee ──────────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform:translateX(0); }
+  to   { transform:translateX(-50%); }
 }
 
-/* ── Orb slow drift ───────────────────────────────────────── */
-@keyframes orbDrift1 {
-  0%   { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(40px, 60px) scale(1.12); }
-}
-@keyframes orbDrift2 {
-  0%   { transform: translate(0, 0); }
-  100% { transform: translate(30px, -40px); }
+/* ── Active node pulse ring ───────────────────────────────── */
+@keyframes pulseRing {
+  0%,100% { rx:12; ry:12; opacity:0.25; }
+  50%      { rx:14; ry:14; opacity:0.6; }
 }
 
-/* ── Typewriter cursor blink ──────────────────────────────── */
-.cursor-blink {
-  animation: blink 1s step-end infinite;
+/* ── Badge bounce ─────────────────────────────────────────── */
+@keyframes badgeBounce {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-4px); }
 }
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
+.hero-badge-top, .hero-weekly-badge { animation: badgeBounce 2.5s ease-in-out infinite; }
+.hero-badge-bottom { animation: badgeBounce 3s ease-in-out infinite reverse; }
 
-/* ── Scrollbar emerald thumb ──────────────────────────────── */
-::-webkit-scrollbar        { width: 5px; }
-::-webkit-scrollbar-track  { background: var(--cream-2, #EDE8DC); }
-::-webkit-scrollbar-thumb  { background: #059669; border-radius: 10px; }
-
-@keyframes slideIn {
-  0% { width: 0%; margin-left: 0%; }
-  50% { width: 60%; margin-left: 20%; }
-  100% { width: 0%; margin-left: 100%; }
+/* ── Step pop ─────────────────────────────────────────────── */
+@keyframes stepPop {
+  from { opacity:0; transform:translateY(24px) scale(0.97); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
 }
 
-@keyframes fadeUp {
-  from { opacity:0; transform:translateY(16px); }
-  to { opacity:1; transform:translateY(0); }
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar        { width:5px; }
+::-webkit-scrollbar-track  { background:transparent; }
+::-webkit-scrollbar-thumb  { background:rgba(217,70,239,0.4); border-radius:10px; }
+::-webkit-scrollbar-thumb:hover { background:#D946EF; }
+
+/* ── Utility classes ──────────────────────────────────────── */
+.fade-up   { animation: fadeUp  400ms ease-out; }
+.fade-down { animation: fadeDown 400ms ease-out; }
+.scale-in  { animation: scaleIn  350ms cubic-bezier(0.22,1,0.36,1); }
+
+/* ── Premium Action Button (e.g. View Full) ── */
+.btn-premium-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white !important;
+  background: linear-gradient(135deg, var(--fuchsia, #D946EF) 0%, var(--violet, #7C3AED) 100%) !important;
+  border: none !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  box-shadow: 0 0 12px rgba(217, 70, 239, 0.25);
+  text-decoration: none;
 }
 
-.fade-up { animation: fadeUp 400ms ease-out; }
+.btn-premium-action::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: all 0.6s ease;
+}
 
-[id^="tab-"] { animation: fadeUp 300ms ease-out; }
+.btn-premium-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 22px rgba(217, 70, 239, 0.5);
+  filter: brightness(1.05);
+}
+
+.btn-premium-action:hover::before {
+  left: 100%;
+}
+
+.btn-premium-action:active {
+  transform: translateY(0);
+}
+
+.btn-premium-action i, .btn-premium-action svg {
+  transition: transform 0.3s ease;
+}
+
+.btn-premium-action:hover i, .btn-premium-action:hover svg {
+  transform: translateX(4px);
+}
 

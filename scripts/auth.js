@@ -172,13 +172,15 @@ if (signupForm) {
                 // Save profile
                 if (data.user) {
                     console.log("📂 Saving profile data...");
+                    const serializedGoal = JSON.stringify({
+                        goal: dreamJob,
+                        college_name: college,
+                        branch: branch
+                    });
                     supabase.from('profiles').upsert({
                         id: data.user.id,
                         full_name: name,
-                        email: email,
-                        college_name: college,
-                        branch: branch,
-                        dream_job: dreamJob
+                        goal: serializedGoal
                     }).then(({ error: pError }) => {
                         if (pError) console.warn("⚠️ Profile save warning:", pError);
                         else console.log("✅ Profile saved");

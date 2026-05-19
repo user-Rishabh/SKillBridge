@@ -22,15 +22,28 @@
 
   <style>
     :root {
-      --panel-left-bg: #0A1628;
+      --fuchsia:      #D946EF;
+      --violet:       #7C3AED;
+      --fuchsia-dim:  rgba(217,70,239,0.15);
+      --fuchsia-glow: rgba(217,70,239,0.4);
+      --border:       rgba(255,255,255,0.08);
+      --border-bright:rgba(217,70,239,0.3);
+      --bg-base:      #08011A;
+      --bg-surface:   #0D0520;
+      --bg-card:      rgba(255,255,255,0.04);
+      --text-primary: #FFFFFF;
+      --text-sec:     #A0AEC0;
+      --text-muted:   rgba(255,255,255,0.35);
+      --emerald:      #10B981;
     }
 
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
     body {
-      margin: 0;
-      padding: 0;
+      font-family:'Inter',sans-serif;
       overflow: hidden;
       height: 100vh;
-      background: #fff;
+      background: var(--bg-base);
     }
 
     .auth-layout {
@@ -42,7 +55,7 @@
     /* ── LEFT PANEL ────────────────────────────────────────── */
     .left-panel {
       flex: 1;
-      background: linear-gradient(135deg, #0A1628 0%, #0F172A 50%, #0D1F2D 100%);
+      background: linear-gradient(135deg, #060114 0%, #0D0520 50%, #0A011E 100%);
       padding: 48px;
       display: flex;
       flex-direction: column;
@@ -71,7 +84,7 @@
       left: -100px;
       width: 500px;
       height: 500px;
-      background: radial-gradient(circle, rgba(5, 150, 105, 0.2) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(217,70,239,0.25) 0%, transparent 70%);
       animation: orbFloat 15s infinite alternate ease-in-out;
     }
 
@@ -80,7 +93,7 @@
       right: -100px;
       width: 400px;
       height: 400px;
-      background: radial-gradient(circle, rgba(52, 211, 153, 0.12) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%);
       animation: orbFloat 20s infinite alternate-reverse ease-in-out;
     }
 
@@ -100,7 +113,7 @@
     .dot-grid-overlay {
       position: absolute;
       inset: 0;
-      background-image: radial-gradient(circle, rgba(52, 211, 153, 0.08) 1px, transparent 1px);
+      background-image: radial-gradient(circle, rgba(217,70,239,0.07) 1px, transparent 1px);
       background-size: 32px 32px;
       z-index: 1;
       pointer-events: none;
@@ -154,7 +167,7 @@
 
     .f-card {
       position: absolute;
-      background: rgba(30, 41, 59, 0.7);
+      background: rgba(13,5,32,0.75);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 16px;
@@ -167,7 +180,7 @@
     .card-a {
       top: 15%;
       left: 10%;
-      border-left: 4px solid var(--emerald);
+      border-left: 4px solid var(--fuchsia);
       animation: float-a 6s infinite ease-in-out;
     }
 
@@ -229,7 +242,7 @@
     .pulse-dot {
       width: 8px;
       height: 8px;
-      background: var(--emerald);
+      background: var(--fuchsia);
       border-radius: 50%;
       display: inline-block;
       margin-right: 8px;
@@ -258,8 +271,8 @@
     .skill-badge {
       position: absolute;
       padding: 6px 14px;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(52, 211, 153, 0.3);
+      background: rgba(13,5,32,0.7);
+      border: 1px solid rgba(217,70,239,0.3);
       border-radius: 100px;
       color: #fff;
       font-size: 0.75rem;
@@ -296,8 +309,8 @@
     .terminal-widget {
       width: 100%;
       max-width: 440px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(8,1,26,0.95);
+      border: 1px solid rgba(217,70,239,0.2);
       border-radius: 12px;
       overflow: hidden;
       margin: 0 auto;
@@ -321,7 +334,7 @@
       padding: 20px;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.85rem;
-      color: var(--emerald);
+      color: var(--fuchsia);
       min-height: 180px;
     }
 
@@ -375,7 +388,7 @@
     /* ── RIGHT PANEL ────────────────────────────────────────── */
     .right-panel {
       flex: 1;
-      background: #fff;
+      background: var(--bg-surface);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -401,10 +414,10 @@
     }
 
     .welcome-text h1 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 1.75rem;
       font-weight: 800;
-      color: var(--slate-900);
+      color: var(--text-primary);
       margin-bottom: 8px;
     }
 
@@ -416,7 +429,7 @@
     /* Tab Switcher */
     .tab-switcher {
       display: flex;
-      background: #F1F5F9;
+      background: rgba(255,255,255,0.05);
       padding: 4px;
       border-radius: 12px;
       margin-bottom: 24px;
@@ -428,16 +441,17 @@
       border-radius: 10px;
       font-size: 0.9rem;
       font-weight: 600;
-      color: var(--slate-500);
+      color: var(--text-muted);
       cursor: pointer;
       text-align: center;
       transition: all 0.25s;
     }
 
     .tab-btn.active {
-      background: #fff;
-      color: var(--emerald);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      background: var(--fuchsia-dim);
+      color: var(--fuchsia);
+      box-shadow: 0 4px 12px rgba(217,70,239,0.1);
+      border: 1px solid var(--border-bright);
     }
 
     /* Form Styles */
@@ -458,7 +472,7 @@
       display: block;
       font-size: 0.85rem;
       font-weight: 600;
-      color: var(--slate-900);
+      color: var(--text-sec);
       margin-bottom: 6px;
     }
 
@@ -479,23 +493,25 @@
     input,
     select {
       width: 100%;
-      background: #F8FAFC;
-      border: 1px solid #E2E8F0;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 10px;
       padding: 12px 16px 12px 42px;
       font-family: inherit;
       font-size: 0.95rem;
-      color: var(--slate-900);
+      color: var(--text-primary);
       outline: none;
       transition: all 0.2s;
     }
 
     input:focus,
     select:focus {
-      border-color: var(--emerald);
-      box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.08);
-      background: #fff;
+      border-color: var(--fuchsia);
+      box-shadow: 0 0 0 4px var(--fuchsia-dim);
+      background: rgba(255,255,255,0.07);
     }
+
+    select option { background: #0D0520; color: white; }
 
     .eye-toggle {
       position: absolute;
@@ -518,7 +534,7 @@
     .strength-meter {
       height: 4px;
       border-radius: 10px;
-      background: #E2E8F0;
+      background: rgba(255,255,255,0.08);
       margin-top: 8px;
       overflow: hidden;
     }
@@ -541,7 +557,7 @@
     .submit-btn {
       width: 100%;
       height: 48px;
-      background: var(--emerald);
+      background: linear-gradient(135deg, #D946EF 0%, #7C3AED 100%);
       color: #fff;
       border-radius: 10px;
       font-weight: 700;
@@ -556,9 +572,9 @@
     }
 
     .submit-btn:hover {
-      background: var(--emerald-dark);
+      filter: brightness(1.1);
       transform: translateY(-1px);
-      box-shadow: var(--shadow-emerald);
+      box-shadow: 0 0 24px rgba(217,70,239,0.4);
     }
 
     .submit-btn:active {
@@ -583,7 +599,7 @@
       content: '';
       flex: 1;
       height: 1px;
-      background: #E2E8F0;
+      background: rgba(255,255,255,0.08);
     }
 
     .oauth-row {
@@ -606,23 +622,25 @@
     }
 
     .google-btn {
-      background: #fff;
-      border: 1px solid #E2E8F0;
-      color: var(--slate-900);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: white;
     }
 
     .google-btn:hover {
-      background: #F8FAFC;
-      border-color: var(--slate-300);
+      background: rgba(255,255,255,0.09);
+      border-color: var(--border-bright);
     }
 
     .github-btn {
-      background: #0F172A;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
       color: #fff;
     }
 
     .github-btn:hover {
-      background: #1E293B;
+      background: rgba(255,255,255,0.11);
+      border-color: var(--border-bright);
     }
 
     /* Checkbox */
@@ -638,7 +656,7 @@
       height: 18px;
       margin-top: 2px;
       cursor: pointer;
-      accent-color: var(--emerald);
+      accent-color: var(--fuchsia);
       padding: 0;
     }
 
@@ -665,18 +683,21 @@
     }
 
     .msg.loading {
-      background: #F0FDF4;
-      color: #059669;
+      background: var(--fuchsia-dim);
+      color: var(--fuchsia);
+      border: 1px solid var(--border-bright);
     }
 
     .msg.error {
-      background: #FEF2F2;
-      color: #DC2626;
+      background: rgba(244,63,94,0.1);
+      color: #F87171;
+      border: 1px solid rgba(244,63,94,0.25);
     }
 
     .msg.success {
-      background: #F0FDF4;
-      color: #059669;
+      background: rgba(16,185,129,0.1);
+      color: #34D399;
+      border: 1px solid rgba(16,185,129,0.25);
     }
 
     /* Custom scrollbar for college dropdown */

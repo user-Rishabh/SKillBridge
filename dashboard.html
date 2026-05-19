@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -14,6 +14,7 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="/styles/dashboard.css">
+    <link rel="stylesheet" href="/styles/animations.css">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.js"></script>
@@ -30,6 +31,12 @@
 
 <body>
     <div class="app-container" style="display: flex; width: 100%;">
+        <!-- Dot grid background overlay -->
+        <div style="
+          position:fixed; inset:0; z-index:0; pointer-events:none;
+          background-image: radial-gradient(circle, rgba(217,70,239,0.06) 1px, transparent 1px);
+          background-size: 36px 36px;
+        "></div>
         <!-- Sidebar (Always Dark) -->
         <aside class="sidebar" id="sidebar">
             <a href="index.html" class="sidebar-logo">
@@ -48,10 +55,6 @@
                     <i data-lucide="map" class="w-4 h-4"></i>
                     AI Roadmap
                 </a>
-                <a href="#" class="nav-item" data-tab="resources">
-                    <i data-lucide="library" class="w-4 h-4"></i>
-                    Resources
-                </a>
                 <a href="#" class="nav-item" data-tab="tasks">
                     <i data-lucide="check-square" class="w-4 h-4"></i>
                     Tasks
@@ -60,25 +63,29 @@
                     <i data-lucide="folder-kanban" class="w-4 h-4"></i>
                     Projects
                 </a>
+                <a href="#" class="nav-item" data-tab="resources">
+                    <i data-lucide="library" class="w-4 h-4"></i>
+                    Resources
+                </a>
                 <a href="#" class="nav-item" data-tab="mentorship">
                     <i data-lucide="graduation-cap" class="w-4 h-4"></i>
                     Mentorship
-                </a>
-                <a href="#" class="nav-item" data-tab="portfolio">
-                    <i data-lucide="briefcase" class="w-4 h-4"></i>
-                    Portfolio
                 </a>
                 <a href="#" class="nav-item" data-tab="resume">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                     Resume
                 </a>
-                <a href="#" class="nav-item" data-tab="profile">
-                    <i data-lucide="user" class="w-4 h-4"></i>
-                    Profile
+                <a href="#" class="nav-item" data-tab="portfolio">
+                    <i data-lucide="award" class="w-4 h-4"></i>
+                    Portfolio
                 </a>
                 <a href="#" class="nav-item" data-tab="placement">
                     <i data-lucide="briefcase" class="w-4 h-4"></i>
                     Placement
+                </a>
+                <a href="#" class="nav-item" data-tab="profile">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    Profile
                 </a>
             </nav>
 
@@ -103,10 +110,10 @@
             <div style="
               display:flex;justify-content:space-between;
               align-items:center;padding:16px 24px;
-              background:white;
-              border-bottom:1px solid #E2E8F0;
+              background:rgba(8,1,26,0.85);
+              border-bottom:1px solid rgba(255,255,255,0.07);
               position:sticky;top:0;z-index:100;
-              backdrop-filter:blur(10px);
+              backdrop-filter:blur(20px);
             ">
               <!-- Left: greeting -->
               <div>
@@ -182,24 +189,41 @@
                   <!-- Notifications dropdown -->
                   <div id="notif-dropdown" style="
                     position:absolute;top:46px;right:0;
-                    width:320px;background:white;
-                    border:1px solid #E2E8F0;
+                    width:320px;background:rgba(15, 12, 30, 0.95);
+                    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+                    border:1px solid rgba(255,255,255,0.08);
                     border-radius:14px;
-                    box-shadow:0 8px 24px rgba(0,0,0,0.1);
+                    box-shadow:0 12px 40px rgba(0,0,0,0.5);
                     z-index:999;display:none;
-                    overflow:hidden;">
+                    overflow:hidden;
+                    color:white;">
                     <div style="padding:14px 16px;
-                      border-bottom:1px solid #E2E8F0;
+                      border-bottom:1px solid rgba(255,255,255,0.08);
                       display:flex;justify-content:space-between;
-                      align-items:center;">
+                      align-items:center;gap:8px;">
                       <span style="font-size:14px;
                         font-weight:600;">Notifications</span>
-                      <button onclick="clearNotifications()"
-                        style="font-size:12px;color:#059669;
-                        border:none;background:none;
-                        cursor:pointer;">
-                        Clear all
-                      </button>
+                      <div style="display:flex;align-items:center;gap:10px;">
+                        <button id="enable-notif-btn" onclick="requestNotificationPermission()"
+                          style="font-size:11px;color:var(--fuchsia, #D946EF);
+                          border:1px solid rgba(217,70,239,0.3);
+                          padding:3px 8px;border-radius:6px;
+                          background:rgba(217,70,239,0.05);
+                          cursor:pointer;display:none;align-items:center;gap:3px;
+                          transition:all 0.2s;"
+                          onmouseover="this.style.background='rgba(217,70,239,0.15)'"
+                          onmouseout="this.style.background='rgba(217,70,239,0.05)'">
+                          🔔 Enable Notif
+                        </button>
+                        <button onclick="clearNotifications()"
+                          style="font-size:12px;color:#A78BFA;
+                          border:none;background:none;
+                          cursor:pointer;transition:color 0.2s;"
+                          onmouseover="this.style.color='#C084FC'"
+                          onmouseout="this.style.color='#A78BFA'">
+                          Clear all
+                        </button>
+                      </div>
                     </div>
                     <div id="notif-list" style="
                       max-height:300px;overflow-y:auto;">
@@ -207,31 +231,20 @@
                   </div>
                 </div>
 
-                <!-- Theme toggle -->
-                <button id="theme-toggle"
-                  onclick="toggleTheme()"
-                  style="width:38px;height:38px;
-                  border-radius:50%;border:none;
-                  background:#F1F5F9;cursor:pointer;
-                  font-size:16px;
-                  transition:background 200ms;"
-                  onmouseover="this.style.background='#E2E8F0'"
-                  onmouseout="this.style.background='#F1F5F9'">
-                  ☀️
-                </button>
 
                 <!-- New Session button -->
                 <button onclick="startNewSession()"
                   style="display:flex;align-items:center;
-                  gap:6px;padding:8px 16px;
-                  background:#059669;color:white;
+                  gap:6px;padding:8px 18px;
+                  background:linear-gradient(135deg,#D946EF,#7C3AED);color:white;
                   border:none;border-radius:10px;
-                  font-size:13px;font-weight:500;
+                  font-size:13px;font-weight:600;
                   cursor:pointer;
+                  box-shadow:0 0 18px rgba(217,70,239,0.3);
                   transition:all 200ms;"
-                  onmouseover="this.style.background='#047857'"
-                  onmouseout="this.style.background='#059669'">
-                  ＋ New Session
+                  onmouseover="this.style.filter='brightness(1.1)';this.style.transform='translateY(-1px)'"
+                  onmouseout="this.style.filter='none';this.style.transform='translateY(0)'">
+                  ⚡ New Session
                 </button>
               </div>
             </div>
@@ -273,20 +286,9 @@
                         </p>
                       </div>
                       <div style="display:flex;gap:8px;">
-                        <button onclick="switchTab('roadmap')"
-                          style="padding:8px 16px;
-                          background:transparent;
-                          border:1px solid #059669;
-                          color:#059669;border-radius:8px;
-                          font-size:13px;cursor:pointer;">
-                          View Full →
-                        </button>
-                        <button onclick="generateNewRoadmap()"
-                          style="padding:8px 16px;
-                          background:#059669;color:white;
-                          border:none;border-radius:8px;
-                          font-size:13px;cursor:pointer;">
-                          ✨ Generate
+                        <button onclick="switchTab('roadmap')" class="btn-premium-action">
+                          <span>View Full Roadmap</span>
+                          <i data-lucide="arrow-right" class="w-4 h-4"></i>
                         </button>
                       </div>
                     </div>
@@ -294,11 +296,13 @@
                     <!-- Phase progress bars -->
                     <div id="roadmap-phases-short" style="
                       display:grid;gap:10px;">
-                      <div style="text-align:center;
+                      <div onclick="switchTab('roadmap')" style="text-align:center;
                         padding:20px;color:#94A3B8;
-                        font-size:13px;">
-                        Click Generate to create your 
-                        personalized roadmap
+                        font-size:13px;cursor:pointer;
+                        transition:color 0.2s;"
+                        onmouseover="this.style.color='var(--fuchsia)'"
+                        onmouseout="this.style.color='#94A3B8'">
+                        Generate your personalized career roadmap in the AI Roadmap tab!
                       </div>
                     </div>
 
@@ -1371,11 +1375,11 @@
                 
                 <!-- Edit form -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px;">
-                  <div><label style="font-size:12px;font-weight:700;color:#64748B;display:block;margin-bottom:8px;">Full Name</label><input id="edit-name" placeholder="Full Name" style="width:100%;padding:11px 14px;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;outline:none;"></div>
-                  <div><label style="font-size:12px;font-weight:700;color:#64748B;display:block;margin-bottom:8px;">College</label><input id="edit-college-name" placeholder="College" style="width:100%;padding:11px 14px;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;outline:none;"></div>
+                  <div><label style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:8px;">Full Name</label><input type="text" id="edit-name" placeholder="Full Name" style="width:100%;padding:11px 14px;font-size:14px;"></div>
+                  <div><label style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:8px;">College</label><input type="text" id="edit-college-name" placeholder="College" style="width:100%;padding:11px 14px;font-size:14px;"></div>
                   <div>
-                    <label style="font-size:12px;font-weight:700;color:#64748B;display:block;margin-bottom:8px;">Branch</label>
-                    <select id="edit-branch" style="width:100%;padding:11px 14px;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;outline:none;background:white;">
+                    <label style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:8px;">Branch</label>
+                    <select id="edit-branch" style="width:100%;padding:11px 14px;font-size:14px;">
                       <option value="Computer Science">Computer Science</option>
                       <option value="Electronics">Electronics</option>
                       <option value="Mechanical">Mechanical</option>
@@ -1383,7 +1387,7 @@
                       <option value="Other">Other</option>
                     </select>
                   </div>
-                  <div><label style="font-size:12px;font-weight:700;color:#64748B;display:block;margin-bottom:8px;">Dream Job</label><input id="edit-dreamjob" placeholder="Dream Job" style="width:100%;padding:11px 14px;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;outline:none;"></div>
+                  <div><label style="font-size:12px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:8px;">Dream Job</label><input type="text" id="edit-dreamjob" placeholder="Dream Job" style="width:100%;padding:11px 14px;font-size:14px;"></div>
                 </div>
                 <button class="btn-primary" onclick="saveProfile()" style="padding:12px 28px;">Save Changes</button>
                 
@@ -1561,18 +1565,18 @@
 
     <!-- Upload zone -->
     <div id="resume-dropzone" style="
-      border:2px dashed #E2E8F0;
+      border:2px dashed rgba(217,70,239,0.4);
       border-radius:12px;padding:28px;
       text-align:center;cursor:pointer;
       transition:all 200ms;margin-bottom:16px;
-      background:#FAFAFA;"
+      background:rgba(217,70,239,0.04);"
       onclick="document.getElementById(
         'resume-file-input').click()"
       ondragover="event.preventDefault();
-        this.style.borderColor='#059669';
-        this.style.background='#F0FDF4'"
+        this.style.borderColor='#D946EF';
+        this.style.background='rgba(217,70,239,0.1)'"
       ondragleave="this.style.borderColor=
-        '#E2E8F0';this.style.background='#FAFAFA'"
+        'rgba(217,70,239,0.4)';this.style.background='rgba(217,70,239,0.04)'"
       ondrop="handleResumeDrop(event)">
       <div id="dropzone-content">
         <div style="font-size:36px;

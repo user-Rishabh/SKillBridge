@@ -223,8 +223,7 @@ async function finishOnboarding() {
     timeline: onboardingData.timeline,
     learning_style: onboardingData.learningStyle,
     education_level: onboardingData.educationLevel,
-    onboarding_completed: true,
-    updated_at: new Date().toISOString()
+    onboarding_completed: true
   });
 
   if (error) {
@@ -443,10 +442,10 @@ function renderTasks(tasks) {
 
   if (!tasks || tasks.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center;padding:60px 20px;background:white;border-radius:24px;border:1px solid #E2E8F0;box-shadow:0 10px 30px rgba(0,0,0,0.02);">
+      <div style="text-align:center;padding:60px 20px;background:var(--bg-surface);border-radius:24px;border:1px solid var(--border);backdrop-filter:blur(12px);">
         <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-        <h3 style="font-size:18px;font-weight:700;color:#0F172A;margin-bottom:8px;">Ready to Start Your Learning Journey?</h3>
-        <p style="font-size:13px;color:#64748B;max-width:360px;margin:0 auto 20px;">Complete onboarding to generate your customized AI Career Roadmap with structured tasks!</p>
+        <h3 style="font-size:18px;font-weight:700;color:var(--text-main);margin-bottom:8px;">Ready to Start Your Learning Journey?</h3>
+        <p style="font-size:13px;color:var(--text-muted);max-width:360px;margin:0 auto 20px;">Complete onboarding to generate your customized AI Career Roadmap with structured tasks!</p>
       </div>
     `;
     return;
@@ -472,39 +471,39 @@ function renderTasks(tasks) {
   container.innerHTML = `
     <!-- Top Stats Row -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
-      <div style="background: white; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="background: #F0FDF4; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #059669;">🏆</div>
+      <div style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: rgba(217, 70, 239, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--fuchsia);">🏆</div>
         <div>
-          <div style="font-size: 11px; color: #64748B; font-weight: 600; text-transform: uppercase;">Total Roadmap Tasks</div>
-          <div style="font-size: 18px; font-weight: 700; color: #0F172A;">${totalTasks} Tasks</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Roadmap Tasks</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--text-main);">${totalTasks} Tasks</div>
         </div>
       </div>
       
-      <div style="background: white; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="background: #ECFDF5; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #059669;">🎯</div>
+      <div style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: rgba(16, 185, 129, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--emerald);">🎯</div>
         <div>
-          <div style="font-size: 11px; color: #64748B; font-weight: 600; text-transform: uppercase;">Mastered</div>
-          <div style="font-size: 18px; font-weight: 700; color: #059669;">${completedTasks} / ${totalTasks}</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Mastered</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--emerald);">${completedTasks} / ${totalTasks}</div>
         </div>
       </div>
 
-      <div style="background: white; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="background: #FEF3C7; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #D97706;">⚡</div>
+      <div style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: rgba(245, 158, 11, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--amber);">⚡</div>
         <div>
-          <div style="font-size: 11px; color: #64748B; font-weight: 600; text-transform: uppercase;">XP Reward</div>
-          <div style="font-size: 18px; font-weight: 700; color: #D97706;">+${xpEarned} XP</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">XP Reward</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--amber);">+${xpEarned} XP</div>
         </div>
       </div>
     </div>
 
     <!-- Filter Actions Row -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:12px; border-bottom:1px solid #E2E8F0; flex-wrap:wrap; gap:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:12px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:16px;">
       <div style="display:flex; gap:8px;">
-        <button onclick="filterTasks('all')" id="filter-all" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid #059669; background:#059669; color:white; cursor:pointer; transition:all 200ms; height:34px;">All Mastery Path</button>
-        <button onclick="filterTasks('pending')" id="filter-pending" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid #E2E8F0; background:transparent; color:#64748B; cursor:pointer; transition:all 200ms; height:34px;">Active & Locked</button>
-        <button onclick="filterTasks('completed')" id="filter-completed" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid #E2E8F0; background:transparent; color:#64748B; cursor:pointer; transition:all 200ms; height:34px;">Mastered</button>
+        <button onclick="filterTasks('all')" id="filter-all" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid var(--violet); background:var(--violet); color:white; cursor:pointer; transition:all 200ms; height:34px;">All Mastery Path</button>
+        <button onclick="filterTasks('pending')" id="filter-pending" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; transition:all 200ms; height:34px;">Active & Locked</button>
+        <button onclick="filterTasks('completed')" id="filter-completed" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; transition:all 200ms; height:34px;">Mastered</button>
       </div>
-      <div style="font-size:12px; color:#64748B; font-weight:500;">
+      <div style="font-size:12px; color:var(--text-muted); font-weight:500;">
         Click cards to view official resources & docs
       </div>
     </div>
@@ -519,15 +518,15 @@ function renderTasks(tasks) {
         
         // Colors/Styles for columns
         const accentColors = [
-          { border: '#34D399', bg: '#F0FDF4', primary: '#059669', banner: 'linear-gradient(135deg, #059669, #10B981)' },
-          { border: '#60A5FA', bg: '#EFF6FF', primary: '#2563EB', banner: 'linear-gradient(135deg, #2563EB, #3B82F6)' },
-          { border: '#F59E0B', bg: '#FEF3C7', primary: '#D97706', banner: 'linear-gradient(135deg, #D97706, #F59E0B)' }
+          { border: 'var(--emerald-dim)', bg: 'rgba(16, 185, 129, 0.05)', primary: 'var(--emerald)', glow: 'rgba(16, 185, 129, 0.15)', banner: 'linear-gradient(135deg, #059669, #10B981)' },
+          { border: 'var(--violet-dim)', bg: 'rgba(124, 58, 237, 0.05)', primary: 'var(--violet)', glow: 'rgba(124, 58, 237, 0.15)', banner: 'linear-gradient(135deg, #7C3AED, #9333EA)' },
+          { border: 'var(--fuchsia-dim)', bg: 'rgba(217, 70, 239, 0.05)', primary: 'var(--fuchsia)', glow: 'rgba(217, 70, 239, 0.15)', banner: 'linear-gradient(135deg, #D946EF, #C084FC)' }
         ];
         
         const colors = accentColors[index % accentColors.length];
 
         return `
-          <div class="phase-column" style="background: white; border: 1px solid #E2E8F0; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+          <div class="phase-column" style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; backdrop-filter: blur(12px);">
             <!-- Column Header Banner -->
             <div style="background: ${colors.banner}; padding: 20px; color: white; position: relative;">
               <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9; margin-bottom: 4px;">
@@ -549,7 +548,7 @@ function renderTasks(tasks) {
             </div>
 
             <!-- Tasks List Container -->
-            <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #FAFBFD; min-height: 250px;">
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; background: rgba(0, 0, 0, 0.15); min-height: 250px;">
               ${phaseTasks.map((task, tIdx) => {
                 const isCompleted = task.status === 'completed';
                 
@@ -557,8 +556,8 @@ function renderTasks(tasks) {
                 let isUnlocked = true;
                 for (let k = 0; k < tIdx; k++) {
                   if (phaseTasks[k].status !== 'completed') {
-                    isUnlocked = false;
-                    break;
+                     isUnlocked = false;
+                     break;
                   }
                 }
 
@@ -572,44 +571,44 @@ function renderTasks(tasks) {
                     data-task-status="${task.status}"
                     style="
                       position: relative;
-                      background: ${isCompleted ? '#FFFFFF' : isLocked ? '#F8FAFC' : '#FFFFFF'};
-                      border: 1.5px solid ${isCompleted ? '#E2E8F0' : isLocked ? '#E2E8F0' : colors.primary};
+                      background: ${isCompleted ? 'rgba(16, 185, 129, 0.04)' : isLocked ? 'rgba(255, 255, 255, 0.01)' : 'rgba(255, 255, 255, 0.04)'};
+                      border: 1.5px solid ${isCompleted ? 'rgba(16, 185, 129, 0.15)' : isLocked ? 'var(--border)' : colors.primary};
                       border-radius: 14px;
                       padding: 14px 16px;
                       cursor: ${isLocked ? 'not-allowed' : 'pointer'};
                       transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
-                      opacity: ${isLocked ? '0.65' : '1'};
-                      box-shadow: ${isActive ? '0 10px 15px -3px rgba(5,150,105,0.05)' : 'none'};
+                      opacity: ${isLocked ? '0.5' : '1'};
+                      box-shadow: ${isActive ? '0 0 15px ' + colors.glow : 'none'};
                     "
                     ${isLocked ? '' : `onclick="openTaskDetail('${task.id}')"`}
                     ${isLocked ? '' : `
-                      onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='${colors.primary}'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.06)';"
-                      onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='${isCompleted ? '#E2E8F0' : colors.primary}'; this.style.boxShadow='${isActive ? '0 10px 15px -3px rgba(5,150,105,0.05)' : 'none'}';"
+                      onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='${colors.primary}'; this.style.boxShadow='0 0 15px ${colors.glow}';"
+                      onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='${isCompleted ? 'rgba(16, 185, 129, 0.15)' : colors.primary}'; this.style.boxShadow='${isActive ? '0 0 15px ' + colors.glow : 'none'}';"
                     `}
                   >
                     <!-- Status Icon Badge -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
-                      <span style="font-size: 13px; font-weight: 600; color: ${isLocked ? '#94A3B8' : '#0F172A'}; line-height: 1.4;">
+                      <span style="font-size: 13px; font-weight: 600; color: ${isLocked ? 'var(--text-muted)' : 'var(--text-main)'}; line-height: 1.4;">
                         ${task.title}
                       </span>
                       <div style="flex-shrink: 0;">
                         ${isCompleted ? 
-                          `<span style="background: #DEF7EC; color: #03543F; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">✓ DONE</span>` : 
+                          `<span style="background: rgba(16, 185, 129, 0.15); color: #34D399; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">✓ DONE</span>` : 
                           isLocked ? 
-                          `<span style="background: #E2E8F0; color: #64748B; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">🔒 LOCKED</span>` :
+                          `<span style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">🔒 LOCKED</span>` :
                           `<span style="background: ${colors.bg}; color: ${colors.primary}; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">🎯 ACTIVE</span>`
                         }
                       </div>
                     </div>
 
                     <!-- Meta & Actions -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #F1F5F9;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--border);">
                       <div style="display: flex; gap: 6px; align-items: center;">
                         <span style="color: ${difficultyColor}; font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.03em;">
                           ${task.difficulty}
                         </span>
-                        <span style="color: #CBD5E1;">•</span>
-                        <span style="color: #64748B; font-weight: 500;">
+                        <span style="color: var(--border);">•</span>
+                        <span style="color: var(--text-muted); font-weight: 500;">
                           +${task.difficulty === 'Hard' ? 50 : task.difficulty === 'Medium' ? 30 : 15} XP
                         </span>
                       </div>
@@ -968,9 +967,20 @@ async function showQuizResults(taskId, score, total) {
   const { data: profile } = await supabase.from('profiles').select('xp, level').eq('id', session.user.id).single();
   const newXP = (profile?.xp || 0) + xpEarned; const newLevel = Math.floor(newXP / 100) + 1;
   await supabase.from('profiles').update({ xp: newXP, level: newLevel }).eq('id', session.user.id);
+  
+  // Notification for Quiz completion
+  await addNotification(
+    pct >= 80 ? '🎉 Quiz Passed!' : '👍 Quiz Attempted',
+    `You scored ${pct}% on the quiz and earned +${xpEarned} XP.`
+  );
+
+  const levelUp = newLevel > (profile?.level || 1);
+  if (levelUp) {
+    await addNotification('🎊 Level Up!', `Congratulations! You leveled up to Level ${newLevel}!`);
+  }
+
   if (pct >= 80) await completeTask(taskId, false);
   const modal = document.getElementById('quiz-modal'); if (!modal) return;
-  const levelUp = newLevel > (profile?.level || 1);
   modal.innerHTML = `<div style="background:white;border-radius:20px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.3);"><div style="width:100px;height:100px;border-radius:50%;background:${pct >= 80 ? 'linear-gradient(135deg,#059669,#34D399)' : pct >= 60 ? 'linear-gradient(135deg,#F59E0B,#FCD34D)' : 'linear-gradient(135deg,#EF4444,#FCA5A5)'};display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(5,150,105,0.3);"><div style="font-size:28px;font-weight:700;color:white;">${pct}%</div><div style="font-size:11px;color:rgba(255,255,255,0.8);">${score}/${total}</div></div><h3 style="font-size:20px;margin-bottom:6px;">${pct >= 80 ? '🎉 Excellent!' : pct >= 60 ? '👍 Good Job!' : '💪 Keep Practicing!'}</h3><p style="color:#64748B;font-size:14px;margin-bottom:20px;">${pct >= 80 ? 'Task marked as complete!' : 'Score 80%+ to complete the task'}</p><div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px;margin-bottom:16px;"><div style="font-size:28px;font-weight:700;color:#D97706;">+${xpEarned} XP</div><div style="font-size:13px;color:#92400E;margin-top:4px;">Total XP: ${newXP} | Level ${newLevel}</div>${levelUp ? `<div style="margin-top:8px;font-size:13px;color:#059669;font-weight:600;">🎊 Level Up! You reached Level ${newLevel}!</div>` : ''}</div><button onclick="document.getElementById('quiz-modal').remove();loadTasks();" style="width:100%;background:#059669;color:white;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">${pct >= 80 ? '🏠 Back to Tasks' : '🔄 Try Again Later'}</button></div>`;
   loadXPDisplay();
 }
@@ -997,7 +1007,8 @@ async function initDashboard(profile) {
 
   // Set basic profile text
   setText('greeting-text', `Welcome back, ${currentUserName.split(' ')[0]} 👋`);
-  setText('greeting-sub', profile.goal ? `Path: ${profile.goal}` : 'Select a goal to start');
+  const goalText = getGoalText(profile.goal);
+  setText('greeting-sub', goalText ? `Path: ${goalText}` : 'Select a goal to start');
 
   // Run secondary loads in parallel for performance
   Promise.all([
@@ -1024,21 +1035,31 @@ function toggleNotifications() {
 async function loadNotifications(notifs) {
   const list = document.getElementById('notif-list');
   const count = document.getElementById('notif-count');
+  const enableBtn = document.getElementById('enable-notif-btn');
+
+  // Handle permission button visibility
+  if (enableBtn) {
+    if (Notification.permission === 'default') {
+      enableBtn.style.display = 'inline-flex';
+    } else {
+      enableBtn.style.display = 'none';
+    }
+  }
 
   const data = notifs || [];
   if (data.length > 0) {
     count.textContent = data.length;
     count.style.display = 'flex';
     list.innerHTML = data.map(n => `
-      <div style="padding:12px 16px; border-bottom:1px solid #F1F5F9; cursor:pointer;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='white'">
-        <div style="font-size:13px; font-weight:500; color:#0F172A; margin-bottom:2px;">${n.title}</div>
-        <div style="font-size:12px; color:#64748B;">${n.message}</div>
-        <div style="font-size:10px; color:#94A3B8; margin-top:4px;">${n.time || 'Just now'}</div>
+      <div style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; transition:background-color 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+        <div style="font-size:13px; font-weight:600; color:white; margin-bottom:2px;">${n.title}</div>
+        <div style="font-size:12px; color:#94A3B8;">${n.message}</div>
+        <div style="font-size:10px; color:#64748B; margin-top:4px;">${n.time || 'Just now'}</div>
       </div>
     `).join('');
   } else {
     count.style.display = 'none';
-    list.innerHTML = `<div style="padding:30px; text-align:center; color:#94A3B8; font-size:13px;">No new notifications</div>`;
+    list.innerHTML = `<div style="padding:30px; text-align:center; color:#64748B; font-size:13px;">No new notifications</div>`;
   }
 }
 
@@ -1047,21 +1068,59 @@ async function clearNotifications() {
   loadNotifications([]);
 }
 
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) {
+    showToast('This browser does not support desktop notifications', 'warning');
+    return;
+  }
+  
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    showToast('🎉 Desktop notifications enabled!');
+    // Push a welcome notification
+    await addNotification('🔔 Notifications Enabled', 'You will now receive desktop alerts for task completions and level ups.');
+  } else {
+    showToast('Notifications disabled. Enable them in browser settings.', 'info');
+  }
+  
+  // Update button visibility
+  const enableBtn = document.getElementById('enable-notif-btn');
+  if (enableBtn) {
+    enableBtn.style.display = (permission === 'default') ? 'inline-flex' : 'none';
+  }
+}
+
+async function addNotification(title, message) {
+  if (!currentUserId) return;
+  const { data: profile } = await supabase.from('profiles').select('notifications').eq('id', currentUserId).single();
+  const currentNotifs = profile?.notifications || [];
+  
+  const newNotif = {
+    id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    title,
+    message,
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    created_at: new Date().toISOString()
+  };
+
+  const updatedNotifs = [newNotif, ...currentNotifs].slice(0, 50); // limit to 50
+  await supabase.from('profiles').update({ notifications: updatedNotifs }).eq('id', currentUserId);
+  
+  // Reload local UI
+  loadNotifications(updatedNotifs);
+  
+  // Trigger toast notification (which handles desktop notifications as well)
+  showToast(`${title}: ${message}`);
+}
+
 // ── Theme Management ─────────────────────────────────────────
 function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'light';
-  const target = current === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', target);
-  localStorage.setItem('theme', target);
-  document.getElementById('theme-toggle').textContent = target === 'light' ? '☀️' : '🌙';
-  showToast(`Switched to ${target} mode`);
+  // Theme is locked to dark mode.
 }
 
 function initTheme() {
-  const saved = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
-  const btn = document.getElementById('theme-toggle');
-  if (btn) btn.textContent = saved === 'light' ? '☀️' : '🌙';
+  document.documentElement.setAttribute('data-theme', 'dark');
+  localStorage.setItem('theme', 'dark');
 }
 
 // ── XP & Progression ─────────────────────────────────────────
@@ -1248,8 +1307,9 @@ async function loadTodaysFocus() {
 }
 
 async function completeFocusTask(id) {
+  const { data: task } = await supabase.from('tasks').select('title').eq('id', id).single();
   await supabase.from('tasks').update({ status: 'completed' }).eq('id', id);
-  showToast("Task completed! +10 XP");
+  await addNotification('✅ Focus Task Completed', `You completed "${task?.title || 'a task'}" and earned 10 XP!`);
   loadTodaysFocus();
   loadDashboardStats();
 }
@@ -1268,6 +1328,8 @@ async function buildActivityHeatmap(userId) {
   const today = new Date();
   grid.innerHTML = '';
 
+  const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
   for (let i = 0; i < 12; i++) {
     const col = document.createElement('div');
     col.style.display = 'flex';
@@ -1275,17 +1337,48 @@ async function buildActivityHeatmap(userId) {
     col.style.gap = '3px';
 
     for (let j = 0; j < 7; j++) {
-      const date = new Date();
-      date.setDate(today.getDate() - ((11 - i) * 7 + (6 - j)));
-      const ds = date.toISOString().split('T')[0];
+      // row j corresponds to weekday j (0 = Sunday, 1 = Monday, etc.)
+      const date = new Date(today);
+      // Offset from today to the Sunday of week i, then add j days
+      const daysOffset = (11 - i) * 7 + (currentDay - j);
+      date.setDate(today.getDate() - daysOffset);
+
+      // Local YYYY-MM-DD representation
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const dayVal = String(date.getDate()).padStart(2, '0');
+      const ds = `${year}-${month}-${dayVal}`;
+
       const isActive = activeDates.has(ds);
+      const isFuture = date > today;
 
       const cell = document.createElement('div');
+      cell.className = 'heat-cell';
       cell.style.width = '12px';
       cell.style.height = '12px';
       cell.style.borderRadius = '2px';
-      cell.style.background = isActive ? '#059669' : '#F1F5F9';
-      cell.title = ds;
+
+      if (isFuture) {
+        cell.style.background = 'transparent';
+        cell.style.pointerEvents = 'none';
+      } else {
+        cell.style.background = isActive ? 'var(--fuchsia, #D946EF)' : 'rgba(255, 255, 255, 0.05)';
+        cell.style.border = '1px solid rgba(255, 255, 255, 0.03)';
+        cell.title = `${ds} (${isActive ? 'Active' : 'No activity'})`;
+        
+        // Add a micro hover effect
+        cell.style.transition = 'transform 0.15s ease, background-color 0.15s ease';
+        cell.onmouseover = () => {
+          cell.style.transform = 'scale(1.3)';
+          if (isActive) {
+            cell.style.boxShadow = '0 0 8px var(--fuchsia, #D946EF)';
+          }
+        };
+        cell.onmouseout = () => {
+          cell.style.transform = 'scale(1)';
+          cell.style.boxShadow = 'none';
+        };
+      }
       col.appendChild(cell);
     }
     grid.appendChild(col);
@@ -1812,10 +1905,12 @@ async function generateAIResume() {
     const { data: tasks } = await supabase.from('tasks').select('title').eq('user_id', currentUserId).eq('status', 'completed');
 
     const skillsList = (tasks || []).map(t => t.title).join(', ') || 'Web Development, Problem Solving';
+    const goalText = getGoalText(profile.goal);
+    const { college, branch } = getProfileCollege(profile);
 
     const prompt = `Generate a JSON object for a professional resume.
     USER: ${profile.full_name}
-    GOAL: ${profile.goal}
+    GOAL: ${goalText}
     SKILLS: ${skillsList}
     
     RETURN ONLY VALID JSON. Format:
@@ -1827,7 +1922,7 @@ async function generateAIResume() {
       "summary": "Professional summary based on goal...",
       "skills": ["Skill1", "Skill2"],
       "experience": [{"company": "Project A", "role": "Developer", "years": "2024", "desc": "Built a web app..."}],
-      "education": [{"school": "${profile.college_name || 'University'}", "degree": "${profile.branch || 'B.Tech'}", "year": "2025"}]
+      "education": [{"school": "${college || 'University'}", "degree": "${branch || 'B.Tech'}", "year": "2025"}]
     }`;
 
     const result = await callAI(prompt, 1200);
@@ -1967,17 +2062,53 @@ function downloadPortfolio() {
   doc.save('SkillBridge_Portfolio.pdf');
 }
 
+function getGoalText(goalField) {
+  if (!goalField) return '';
+  try {
+    const parsed = JSON.parse(goalField);
+    if (parsed && typeof parsed === 'object' && 'goal' in parsed) {
+      return parsed.goal || '';
+    }
+  } catch (e) {}
+  return goalField;
+}
+
+function getProfileCollege(p) {
+  let college = '';
+  let branch = '';
+  if (!p || !p.goal) return { college, branch };
+  try {
+    const parsed = JSON.parse(p.goal);
+    if (parsed && typeof parsed === 'object') {
+      college = parsed.college_name || '';
+      branch = parsed.branch || '';
+    }
+  } catch (e) {}
+  return { college, branch };
+}
+
 async function saveProfile() {
+  const goalValue = document.getElementById('edit-dreamjob')?.value || '';
+  const collegeValue = document.getElementById('edit-college-name')?.value || '';
+  const branchValue = document.getElementById('edit-branch')?.value || '';
+  
+  // Serialize college and branch inside the goal field
+  const serializedGoal = JSON.stringify({
+    goal: goalValue,
+    college_name: collegeValue,
+    branch: branchValue
+  });
+
   const updates = {
     full_name: document.getElementById('edit-name')?.value,
-    college_name: document.getElementById('edit-college-name')?.value,
-    branch: document.getElementById('edit-branch')?.value,
-    goal: document.getElementById('edit-dreamjob')?.value,
-    updated_at: new Date().toISOString()
+    goal: serializedGoal
   };
+
   const { error } = await supabase.from('profiles').update(updates).eq('id', currentUserId);
-  if (error) showToast('Failed to save profile', 'error');
-  else {
+  if (error) {
+    console.error('Save profile error:', error);
+    showToast('Failed to save profile', 'error');
+  } else {
     showToast('Profile updated!', 'success');
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
     if (profile) updateProfileUI(profile, '');
@@ -1991,7 +2122,9 @@ function changeTheme(theme) {
 
 // ── Task Completion ──────────────────────────────────────────
 async function completeTask(taskId, refresh = true) {
+  const { data: task } = await supabase.from('tasks').select('title').eq('id', taskId).single();
   await supabase.from('tasks').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', taskId);
+  await addNotification('✅ Task Completed', `You successfully completed the task: "${task?.title || 'a task'}".`);
   if (refresh) {
     await recalculateStats(currentUserId);
     loadTasks();
@@ -2005,11 +2138,27 @@ function updateProfileUI(p, email) {
   currentUserName = name;
   setText('user-display-name', name);
   setText('greeting-name', name.split(' ')[0]);
+  setText('greeting-text', `Welcome back, ${name.split(' ')[0]} 👋`);
+  
+  const goalText = getGoalText(p.goal);
+  const { college, branch } = getProfileCollege(p);
+
+  setText('greeting-sub', goalText ? `Path: ${goalText}` : 'Select a goal to start');
   setText('profile-initials', name.substring(0, 1).toUpperCase());
   setText('profile-name', name);
-  setText('profile-goal', p.goal || 'Set your goal');
-  setText('profile-college', (p.college_name || '') + (p.branch ? ' · ' + p.branch : ''));
+  setText('profile-goal', goalText || 'Set your goal');
+  setText('profile-college', (college || '') + (branch ? ' · ' + branch : ''));
   const avatar = document.getElementById('profile-avatar'); if (avatar) avatar.textContent = name.substring(0, 1).toUpperCase();
+  
+  // Set edit form input values so they are visible and editable
+  const editNameEl = document.getElementById('edit-name');
+  if (editNameEl) editNameEl.value = p.full_name || '';
+  const editCollegeEl = document.getElementById('edit-college-name');
+  if (editCollegeEl) editCollegeEl.value = college || '';
+  const editBranchEl = document.getElementById('edit-branch');
+  if (editBranchEl) editBranchEl.value = branch || 'Computer Science';
+  const editDreamjobEl = document.getElementById('edit-dreamjob');
+  if (editDreamjobEl) editDreamjobEl.value = goalText || '';
 }
 
 async function loadDashboardStats() {
@@ -2119,13 +2268,30 @@ async function loadProfile() {
     supabase.from('projects').select('status').eq('user_id', currentUserId),
     supabase.from('certificates').select('*').eq('user_id', currentUserId)
   ]);
-  if (profile.data) updateProfileUI(profile.data, '');
+  if (profile.data) {
+    updateProfileUI(profile.data, '');
+    const completedTasks = tasks.data?.filter(t => t.status === 'completed').length || 0;
+    const completedProjects = projects.data?.filter(p => p.status === 'completed').length || 0;
+    const certsCount = certs.data?.length || 0;
+    setText('p-tasks', completedTasks);
+    setText('p-projects', completedProjects);
+    setText('p-certs', certsCount);
+  }
 }
 
 function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 function setVal(id, val) { const el = document.getElementById(id); if (el) el.value = val; }
 function showToast(msg, type = 'success') {
   console.log('Toast:', msg, type);
+
+  // Trigger HTML5 notification if granted
+  if (Notification.permission === 'granted') {
+    try {
+      new Notification('SkillBridge', { body: msg });
+    } catch (e) {
+      console.warn('Native notification failed:', e);
+    }
+  }
   
   // Find or create toast container
   let container = document.getElementById('toast-container');
@@ -2237,7 +2403,7 @@ function showTyping() { const chat = document.getElementById('chat-messages'); c
 function hideTyping() { document.getElementById('typing-indicator')?.remove(); }
 
 async function searchYouTube(query) {
-  if (!query) { const { data } = await supabase.from('profiles').select('goal').eq('id', currentUserId).single(); query = (data?.goal || 'Programming') + ' tutorial for beginners'; }
+  if (!query) { const { data } = await supabase.from('profiles').select('goal').eq('id', currentUserId).single(); query = (getGoalText(data?.goal) || 'Programming') + ' tutorial for beginners'; }
   const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=6&relevanceLanguage=en&key=${YOUTUBE_API_KEY}`);
   const data = await res.json();
   const container = document.getElementById('youtube-results');
@@ -2247,23 +2413,7 @@ async function searchYouTube(query) {
 async function recordTodayLogin(userId) { const today = new Date().toISOString().split('T')[0]; await supabase.from('user_activity').upsert({ user_id: userId, activity_date: today }, { onConflict: 'user_id,activity_date' }); }
 async function updateStreakDisplay(userId) { const streak = await calculateStreak(userId); const navStreak = document.getElementById('streak-badge'); if (navStreak) navStreak.innerHTML = '🔥 ' + streak + ' Day Streak'; }
 async function calculateStreak(userId) { const { data } = await supabase.from('user_activity').select('activity_date').eq('user_id', userId).order('activity_date', { ascending: false }); if (!data || data.length === 0) return 0; const todayStr = new Date().toISOString().split('T')[0]; const latestDate = data[0].activity_date; const dayDiff = Math.floor((new Date(todayStr) - new Date(latestDate)) / 86400000); if (dayDiff > 1) return 0; let streak = 0; const dateSet = new Set(data.map(d => d.activity_date)); let checkDate = new Date(latestDate); while (true) { const ds = checkDate.toISOString().split('T')[0]; if (dateSet.has(ds)) { streak++; checkDate.setDate(checkDate.getDate() - 1); } else break; } return streak; }
-async function buildActivityHeatmap(userId) {
-  const heatmapEl = document.getElementById('activity-heatmap'); if (!heatmapEl) return;
-  const twelveWeeksAgo = new Date(); twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
-  const { data } = await supabase.from('user_activity').select('activity_date').eq('user_id', userId).gte('activity_date', twelveWeeksAgo.toISOString().split('T')[0]);
-  const activeDates = new Set((data || []).map(d => d.activity_date));
-  heatmapEl.innerHTML = ''; heatmapEl.style.cssText = 'display:grid;grid-template-columns:repeat(12,1fr);gap:3px;';
-  for (let week = 11; week >= 0; week--) {
-    const col = document.createElement('div'); col.style.cssText = 'display:flex;flex-direction:column;gap:3px;';
-    for (let day = 6; day >= 0; day--) {
-      const date = new Date(); date.setDate(date.getDate() - (week * 7 + day)); const ds = date.toISOString().split('T')[0];
-      const isActive = activeDates.has(ds); const isFuture = date > new Date();
-      const cell = document.createElement('div'); cell.style.cssText = `width:12px;height:12px;border-radius:2px;background:${isFuture ? 'transparent' : isActive ? '#059669' : '#E2E8F0'};opacity:${isFuture ? '0' : '1'};`;
-      cell.title = ds; col.appendChild(cell);
-    }
-    heatmapEl.appendChild(col);
-  }
-}
+
 
 function getSmartFallback(goal) { return { title: goal + " Roadmap", phases: [{ phase: "Phase 1", skills: ["Skill 1"], tasks: [{ title: "Task 1", difficulty: "Easy" }] }] }; }
 
@@ -2770,7 +2920,7 @@ async function loadResourcesTab() {
   }
 
   // Auto-load videos for user's goal
-  const goal = profile?.goal || 'software development';
+  const goal = getGoalText(profile?.goal) || 'software development';
   await searchResources(goal + ' tutorial');
 
   // Load saved videos
@@ -3153,7 +3303,7 @@ async function loadProjects() {
     .eq('user_id', session.user.id)
     .order('status');
 
-  const goal = (profile?.goal || '').toLowerCase();
+  const goal = (getGoalText(profile?.goal) || '').toLowerCase();
   let suggested = suggestedProjects.frontend;
   if (goal.includes('backend') || goal.includes('node') || goal.includes('python')) {
     suggested = suggestedProjects.backend;
@@ -3339,7 +3489,7 @@ async function markProjectComplete(index) {
   const { data: profile } = await supabase.from('profiles').select('xp').eq('id', session.user.id).single();
   await supabase.from('profiles').update({ xp: (profile?.xp || 0) + (proj.xp_reward || 100) }).eq('id', session.user.id);
   closeProjectDetail();
-  showToast(`🎉 Project completed! +${proj.xp_reward || 100} XP earned!`);
+  await addNotification('🚀 Project Completed!', `You completed "${proj.title}" and earned ${proj.xp_reward || 100} XP!`);
   loadProjects();
 }
 
@@ -3418,13 +3568,15 @@ async function initMentorChat() {
     .eq('id', session.user.id)
     .single();
 
+  const goalText = getGoalText(profile?.goal) || 'Software Developer';
+
   // Build system context
   window.mentorSystemPrompt = `
 You are Atlas, a friendly and knowledgeable AI career mentor for Indian tech students.
 
 Student profile:
 - Name: ${profile?.full_name || 'Student'}
-- Goal: ${profile?.goal || 'Software Developer'}
+- Goal: ${goalText}
 - Current Level: ${profile?.current_level || 'Beginner'}
 - XP: ${profile?.xp || 0} | Level: ${profile?.level || 1}
 - Current roadmap: ${profile?.roadmap_data?.phases?.[0]?.phase || 'Not set yet'}
@@ -3448,7 +3600,7 @@ Rules:
   // Welcome message
   const firstName = profile?.full_name?.split(' ')[0] || 'there';
   addMentorMessage('ai',
-    `Hey ${firstName}! 👋 I'm **Atlas**, your AI career mentor.\n\nI know your goal is to become a **${profile?.goal || 'Software Developer'}** and you're currently at ${profile?.current_level || 'beginner'} level.\n\nI'm here to guide you with roadmap advice, interview prep, resume tips, and more. What would you like to work on today? 🚀`
+    `Hey ${firstName}! 👋 I'm **Atlas**, your AI career mentor.\n\nI know your goal is to become a **${goalText}** and you're currently at ${profile?.current_level || 'beginner'} level.\n\nI'm here to guide you with roadmap advice, interview prep, resume tips, and more. What would you like to work on today? 🚀`
   );
 }
 
@@ -3633,8 +3785,9 @@ function renderPortfolioTab(profile, tasks, projects, certs, skills, readiness, 
   if (!container) return;
 
   const name = profile?.full_name || 'Student';
-  const goal = profile?.goal || 'Software Developer';
-  const college = profile?.college_name || '';
+  const goal = getGoalText(profile?.goal) || 'Software Developer';
+  const { college, branch } = getProfileCollege(profile);
+  const collegeWithBranch = (college || '') + (branch ? ' · ' + branch : '');
 
   container.innerHTML = `
     <!-- Controls row -->
@@ -3667,7 +3820,7 @@ function renderPortfolioTab(profile, tasks, projects, certs, skills, readiness, 
         </div>
         <h2 style="font-size:22px;font-weight:700; margin-bottom:4px;">${name}</h2>
         <p style="font-size:15px; color:rgba(255,255,255,0.8); margin-bottom:6px;">${goal}</p>
-        ${college ? `<p style="font-size:13px; color:rgba(255,255,255,0.6);">📍 ${college}</p>` : ''}
+        ${collegeWithBranch ? `<p style="font-size:13px; color:rgba(255,255,255,0.6);">📍 ${collegeWithBranch}</p>` : ''}
         <div style="display:flex;gap:20px; justify-content:center;margin-top:16px; flex-wrap:wrap;">
           <div style="text-align:center;">
             <div style="font-size:22px; font-weight:700;">${level}</div>
@@ -3779,9 +3932,13 @@ async function downloadPortfolioPDF() {
   doc.text(p?.full_name || 'Student', 20, 18);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text(p?.goal || 'Software Developer', 20, 28);
+  const goalText = getGoalText(p?.goal) || 'Software Developer';
+  const { college, branch } = getProfileCollege(p);
+  const collegeWithBranch = (college || '') + (branch ? ' · ' + branch : '');
+
+  doc.text(goalText, 20, 28);
   doc.setFontSize(10);
-  doc.text(p?.college_name || '', 20, 36);
+  doc.text(collegeWithBranch, 20, 36);
 
   y = 55;
   doc.setTextColor(5, 150, 105);
