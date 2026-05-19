@@ -984,13 +984,13 @@ async function generateCourseNotes(taskId, title) {
 function getFallbackVideoUrl(title) {
   const t = title.toLowerCase();
   if (t.includes('router') || t.includes('routing')) {
-    return 'https://www.youtube.com/embed/oTIJunBa1Zw';
+    return 'https://www.youtube.com/embed/c02YoWR9gSY';
   }
   if (t.includes('hooks') || t.includes('state') || t.includes('prop') || t.includes('react')) {
     return 'https://www.youtube.com/embed/Ke90Tje7VS0';
   }
   if (t.includes('django')) {
-    return 'https://www.youtube.com/embed/F5mRW0q-A0o';
+    return 'https://www.youtube.com/embed/rHux0gMZ3Eg';
   }
   if (t.includes('python')) {
     return 'https://www.youtube.com/embed/_uQrJ0TkZlc';
@@ -1002,7 +1002,7 @@ function getFallbackVideoUrl(title) {
     return 'https://www.youtube.com/embed/pQN-pnXPaVg';
   }
   if (t.includes('dsa') || t.includes('data structure') || t.includes('algorithm') || t.includes('tree') || t.includes('sort') || t.includes('search')) {
-    return 'https://www.youtube.com/embed/8hly31xKjns';
+    return 'https://www.youtube.com/embed/RBSGKlAvoiM';
   }
   if (t.includes('sql') || t.includes('database') || t.includes('mongodb') || t.includes('postgres')) {
     return 'https://www.youtube.com/embed/HXV3zeQKqGY';
@@ -2056,10 +2056,10 @@ function downloadRoadmapPDF() {
 
 async function callAI(prompt, maxTokens = 800) {
   const models = [
-    'openrouter/free',
     'meta-llama/llama-3.3-70b-instruct:free',
-    'google/gemini-2.0-flash-exp:free',
-    'deepseek/deepseek-v4-flash:free'
+    'openai/gpt-oss-120b:free',
+    'deepseek/deepseek-v4-flash:free',
+    'openrouter/free'
   ];
 
   for (const model of models) {
