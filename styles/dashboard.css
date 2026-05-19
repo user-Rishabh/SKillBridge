@@ -672,7 +672,9 @@ button[onclick="startNewSession()"]:hover {
 [style*="background:#FFFFFF"],
 [style*="background: #FFFFFF"],
 [style*="background: #fff"],
-[style*="background:#fff"] {
+[style*="background:#fff"],
+[style*="background: rgb(255, 255, 255)"],
+[style*="background:rgb(255, 255, 255)"] {
   background: var(--bg-card) !important;
   backdrop-filter: blur(10px) !important;
   color: var(--text-primary) !important;
@@ -681,44 +683,68 @@ button[onclick="startNewSession()"]:hover {
 /* ── Cream / near-white surfaces → translucent dark ── */
 [style*="background:#F8FAFC"],
 [style*="background: #F8FAFC"],
+[style*="background: rgb(248, 250, 252)"],
+[style*="background:rgb(248, 250, 252)"],
 [style*="background:#F1F5F9"],
 [style*="background: #F1F5F9"],
+[style*="background: rgb(241, 245, 249)"],
+[style*="background:rgb(241, 245, 249)"],
 [style*="background:#EFF6FF"],
-[style*="background: #EFF6FF"] {
+[style*="background: #EFF6FF"],
+[style*="background: rgb(239, 246, 255)"],
+[style*="background:rgb(239, 246, 255)"] {
   background: rgba(255,255,255,0.04) !important;
 }
 
 /* ── Green tints → fuchsia-tinted dark ── */
 [style*="background:#F0FDF4"],
 [style*="background: #F0FDF4"],
+[style*="background: rgb(240, 253, 244)"],
+[style*="background:rgb(240, 253, 244)"],
 [style*="background:#DCFCE7"],
 [style*="background: #DCFCE7"],
+[style*="background: rgb(220, 252, 231)"],
+[style*="background:rgb(220, 252, 231)"],
 [style*="background:#ECFDF5"],
-[style*="background: #ECFDF5"] {
+[style*="background: #ECFDF5"],
+[style*="background: rgb(236, 253, 245)"],
+[style*="background:rgb(236, 253, 245)"] {
   background: var(--fuchsia-dim) !important;
 }
 
 /* ── Yellow/amber tints ── */
 [style*="background:#FEF3C7"],
 [style*="background: #FEF3C7"],
+[style*="background: rgb(254, 243, 199)"],
+[style*="background:rgb(254, 243, 199)"],
 [style*="background:#FEF9C3"],
-[style*="background: #FEF9C3"] {
+[style*="background: #FEF9C3"],
+[style*="background: rgb(254, 249, 195)"],
+[style*="background:rgb(254, 249, 195)"] {
   background: rgba(245,158,11,0.1) !important;
 }
 
 /* ── Red tints ── */
 [style*="background:#FEE2E2"],
 [style*="background: #FEE2E2"],
+[style*="background: rgb(254, 226, 226)"],
+[style*="background:rgb(254, 226, 226)"],
 [style*="background:#FEF2F2"],
-[style*="background: #FEF2F2"] {
+[style*="background: #FEF2F2"],
+[style*="background: rgb(254, 242, 242)"],
+[style*="background:rgb(254, 242, 242)"] {
   background: rgba(239,68,68,0.1) !important;
 }
 
 /* ── Blue tints ── */
 [style*="background:#DBEAFE"],
 [style*="background: #DBEAFE"],
+[style*="background: rgb(219, 234, 254)"],
+[style*="background:rgb(219, 234, 254)"],
 [style*="background:#EFF6FF"],
-[style*="background: #EFF6FF"] {
+[style*="background: #EFF6FF"],
+[style*="background: rgb(239, 246, 255)"],
+[style*="background:rgb(239, 246, 255)"] {
   background: rgba(59,130,246,0.1) !important;
 }
 
