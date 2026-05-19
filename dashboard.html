@@ -356,21 +356,21 @@
                       </div>
                     </div>
 
-                    <!-- Day labels -->
-                    <div style="display:flex;gap:3px;
-                      margin-bottom:4px;padding-left:18px;">
-                      ${['S','M','T','W','T','F','S'].map(d => `
-                        <div style="width:12px;font-size:9px;
-                          color:#94A3B8;text-align:center;
-                          flex-shrink:0;">
-                          ${d}
-                        </div>
-                      `).join('')}
-                    </div>
-
-                    <!-- Heatmap grid -->
-                    <div id="heatmap-grid" style="
-                      display:flex;gap:3px;">
+                    <!-- Heatmap and Day labels container -->
+                    <div style="display: flex; gap: 8px; align-items: flex-start; margin-top: 8px;">
+                      <!-- Vertical Day labels -->
+                      <div style="display: flex; flex-direction: column; gap: 3px; padding-top: 1px;">
+                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">S</div>
+                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">M</div>
+                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">T</div>
+                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">W</div>
+                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">T</div>
+                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">F</div>
+                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">S</div>
+                      </div>
+                      <!-- Heatmap grid -->
+                      <div id="heatmap-grid" style="display: flex; gap: 3px; overflow-x: auto; padding-bottom: 4px; flex: 1;">
+                      </div>
                     </div>
 
                     <!-- Legend -->

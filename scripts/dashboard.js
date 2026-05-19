@@ -430,102 +430,249 @@ function renderTasks(tasks) {
   const container = document.getElementById('tasks-container') || document.querySelector('[data-section="tasks"]');
   if (!container) return;
 
-  const pending = tasks.filter(t => t.status !== 'completed');
-  const completed = tasks.filter(t => t.status === 'completed');
+  window.allTasks = tasks;
+
+  if (!tasks || tasks.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;background:white;border-radius:24px;border:1px solid #E2E8F0;box-shadow:0 10px 30px rgba(0,0,0,0.02);">
+        <div style="font-size:48px;margin-bottom:16px;">🚀</div>
+        <h3 style="font-size:18px;font-weight:700;color:#0F172A;margin-bottom:8px;">Ready to Start Your Learning Journey?</h3>
+        <p style="font-size:13px;color:#64748B;max-width:360px;margin:0 auto 20px;">Complete onboarding to generate your customized AI Career Roadmap with structured tasks!</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Group tasks by their roadmap_phase
+  const phasesMap = {};
+  tasks.forEach(task => {
+    const phaseName = task.roadmap_phase || 'General Prep';
+    if (!phasesMap[phaseName]) {
+      phasesMap[phaseName] = [];
+    }
+    phasesMap[phaseName].push(task);
+  });
+
+  const phaseNames = Object.keys(phasesMap);
+
+  // Compute stats
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === 'completed').length;
+  const xpEarned = tasks.filter(t => t.status === 'completed').reduce((sum, t) => sum + (t.difficulty === 'Hard' ? 50 : t.difficulty === 'Medium' ? 30 : 15), 0);
 
   container.innerHTML = `
-    <div style="display:flex;gap:10px;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid var(--color-border);align-items:center;flex-wrap:wrap;">
-      <button onclick="filterTasks('all')" id="filter-all" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid #059669;background:#059669;color:white;cursor:pointer;transition:all 200ms;height:36px;">Mastery Path (${tasks.length})</button>
-      <button onclick="filterTasks('pending')" id="filter-pending" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid var(--color-border);background:transparent;cursor:pointer;transition:all 200ms;height:36px;">Next Steps (${pending.length})</button>
-      <button onclick="filterTasks('completed')" id="filter-completed" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid var(--color-border);background:transparent;cursor:pointer;transition:all 200ms;height:36px;">Completed (${completed.length})</button>
-    </div>
-    <div id="tasks-list" style="position:relative; padding-left:20px;"></div>
-  `;
-
-  window.allTasks = tasks;
-  filterTasks('all');
-}
-
-function filterTasks(filter) {
-  const tasks = window.allTasks || [];
-  const list = document.getElementById('tasks-list');
-  if (!list) return;
-
-  ['all', 'pending', 'completed'].forEach(f => {
-    const btn = document.getElementById('filter-' + f);
-    if (!btn) return;
-    if (f === filter) {
-      btn.style.background = '#059669'; btn.style.color = 'white'; btn.style.borderColor = '#059669';
-    } else {
-      btn.style.background = 'transparent'; btn.style.color = 'inherit'; btn.style.borderColor = 'var(--color-border)';
-    }
-  });
-
-  const isCompletedView = filter === 'completed';
-  const isPendingView = filter === 'pending';
-
-  list.innerHTML = `<div style="position:absolute;left:29px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom, #059669 0%, #E2E8F0 100%);z-index:0;"></div>`;
-
-  let previousCompleted = true;
-  tasks.forEach((task) => {
-    const isDone = task.status === 'completed';
-    const isVisible = filter === 'all' || (isCompletedView ? isDone : !isDone);
-
-    if (isVisible) {
-      list.innerHTML += renderTaskCard(task, previousCompleted);
-    }
-    if (!isDone) previousCompleted = false;
-  });
-
-  if (list.children.length <= 1) {
-    list.innerHTML = `<div style="text-align:center;padding:60px;color:#94A3B8;">${isCompletedView ? '🎯 No mastered skills yet — complete your first quiz!' : '✅ Roadmap fully mastered! You are job ready!'}</div>`;
-  }
-}
-
-function renderTaskCard(task, isUnlocked = true) {
-  const isDone = task.status === 'completed';
-  const isLocked = !isUnlocked && !isDone;
-  const isActive = isUnlocked && !isDone;
-  const diffColor = { 'Easy': '#10B981', 'Medium': '#F59E0B', 'Hard': '#EF4444' }[task.difficulty] || '#94A3B8';
-
-  return `
-    <div id="task-card-${task.id}" 
-      style="
-        position:relative;
-        background:${isDone ? '#F0FDF4' : isActive ? 'white' : '#F8FAFC'};
-        border:1px solid ${isActive ? '#059669' : isDone ? 'rgba(5,150,105,0.2)' : '#E2E8F0'};
-        border-radius:16px;
-        padding:20px;
-        padding-left:50px;
-        margin-bottom:20px;
-        transition:all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-        cursor:${isLocked ? 'not-allowed' : 'pointer'};
-        z-index:1;
-        ${isActive ? 'box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.1), 0 8px 10px -6px rgba(5, 150, 105, 0.1);' : ''}
-      " 
-      onclick="${isLocked ? '' : `openTaskDetail('${task.id}')`}"
-      onmouseover="${isLocked ? '' : `this.style.transform='translateX(8px)'; if(!${isDone}) this.style.borderColor='#059669';`}"
-      onmouseout="this.style.transform='translateX(0)'; this.style.borderColor='${isActive ? '#059669' : isDone ? 'rgba(5,150,105,0.2)' : '#E2E8F0'}';"
-    >
-      <div style="position:absolute;left:-1px;top:28px;width:20px;height:20px;border-radius:50%;background:${isDone ? '#059669' : isActive ? '#059669' : '#CBD5E1'};border:4px solid white;box-shadow: 0 0 0 4px ${isDone || isActive ? 'rgba(5,150,105,0.1)' : 'transparent'};z-index:2;"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;">
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-            <span style="font-weight:600;font-size:15px;color:${isLocked ? '#94A3B8' : '#1E293B'};">${task.title}</span>
-            ${isDone ? '<span style="background:#DCFCE7;color:#166534;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">MASTERED ✓</span>' : ''}
-          </div>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <span style="font-size:11px;padding:3px 10px;border-radius:8px;background:${isLocked ? '#E2E8F0' : diffColor + '15'};color:${isLocked ? '#64748B' : diffColor};font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">${task.difficulty}</span>
-            <span style="font-size:12px;color:#64748B;">•</span>
-            <span style="font-size:12px;color:#64748B;font-weight:500;">${task.roadmap_phase}</span>
-          </div>
+    <!-- Top Stats Row -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
+      <div style="background: white; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: #F0FDF4; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #059669;">🏆</div>
+        <div>
+          <div style="font-size: 11px; color: #64748B; font-weight: 600; text-transform: uppercase;">Total Roadmap Tasks</div>
+          <div style="font-size: 18px; font-weight: 700; color: #0F172A;">${totalTasks} Tasks</div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          ${isActive ? `<button onclick="event.stopPropagation();startQuiz('${task.id}','${task.title.replace(/'/g, "\\'")}','${task.roadmap_phase || ''}')" style="background:#059669;color:white;border:none;padding:8px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 200ms;" onmouseover="this.style.background='#047857';this.style.transform='scale(1.05)'" onmouseout="this.style.background='#059669';this.style.transform='scale(1)'"><span>🎯</span> Take Quiz</button>` : isLocked ? `<div style="display:flex;align-items:center;gap:6px;color:#94A3B8;font-size:12px;font-weight:500;"><span>🔒</span> Locked</div>` : `<div style="color:#059669;font-size:20px;">★</div>`}
+      </div>
+      
+      <div style="background: white; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: #ECFDF5; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #059669;">🎯</div>
+        <div>
+          <div style="font-size: 11px; color: #64748B; font-weight: 600; text-transform: uppercase;">Mastered</div>
+          <div style="font-size: 18px; font-weight: 700; color: #059669;">${completedTasks} / ${totalTasks}</div>
+        </div>
+      </div>
+
+      <div style="background: white; border: 1px solid #E2E8F0; border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <div style="background: #FEF3C7; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #D97706;">⚡</div>
+        <div>
+          <div style="font-size: 11px; color: #64748B; font-weight: 600; text-transform: uppercase;">XP Reward</div>
+          <div style="font-size: 18px; font-weight: 700; color: #D97706;">+${xpEarned} XP</div>
         </div>
       </div>
     </div>
+
+    <!-- Filter Actions Row -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:12px; border-bottom:1px solid #E2E8F0; flex-wrap:wrap; gap:16px;">
+      <div style="display:flex; gap:8px;">
+        <button onclick="filterTasks('all')" id="filter-all" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid #059669; background:#059669; color:white; cursor:pointer; transition:all 200ms; height:34px;">All Mastery Path</button>
+        <button onclick="filterTasks('pending')" id="filter-pending" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid #E2E8F0; background:transparent; color:#64748B; cursor:pointer; transition:all 200ms; height:34px;">Active & Locked</button>
+        <button onclick="filterTasks('completed')" id="filter-completed" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid #E2E8F0; background:transparent; color:#64748B; cursor:pointer; transition:all 200ms; height:34px;">Mastered</button>
+      </div>
+      <div style="font-size:12px; color:#64748B; font-weight:500;">
+        Click cards to view official resources & docs
+      </div>
+    </div>
+
+    <!-- 3 Sections Columns Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; align-items: start;">
+      ${phaseNames.map((phaseName, index) => {
+        const phaseTasks = phasesMap[phaseName];
+        const doneCount = phaseTasks.filter(t => t.status === 'completed').length;
+        const totalCount = phaseTasks.length;
+        const phaseProgress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+        
+        // Colors/Styles for columns
+        const accentColors = [
+          { border: '#34D399', bg: '#F0FDF4', primary: '#059669', banner: 'linear-gradient(135deg, #059669, #10B981)' },
+          { border: '#60A5FA', bg: '#EFF6FF', primary: '#2563EB', banner: 'linear-gradient(135deg, #2563EB, #3B82F6)' },
+          { border: '#F59E0B', bg: '#FEF3C7', primary: '#D97706', banner: 'linear-gradient(135deg, #D97706, #F59E0B)' }
+        ];
+        
+        const colors = accentColors[index % accentColors.length];
+
+        return `
+          <div class="phase-column" style="background: white; border: 1px solid #E2E8F0; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+            <!-- Column Header Banner -->
+            <div style="background: ${colors.banner}; padding: 20px; color: white; position: relative;">
+              <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9; margin-bottom: 4px;">
+                Phase 0${index + 1}
+              </div>
+              <h4 style="font-size: 15px; font-weight: 700; margin: 0; line-height: 1.3;">
+                ${phaseName}
+              </h4>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 11px;">
+                <span style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                  ${doneCount}/${totalCount} Mastered
+                </span>
+                <span style="font-weight: 700;">${phaseProgress}% Completed</span>
+              </div>
+              <!-- Header Progress Bar -->
+              <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: rgba(255,255,255,0.25);">
+                <div style="width: ${phaseProgress}%; height: 100%; background: white;"></div>
+              </div>
+            </div>
+
+            <!-- Tasks List Container -->
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; background: #FAFBFD; min-height: 250px;">
+              ${phaseTasks.map((task, tIdx) => {
+                const isCompleted = task.status === 'completed';
+                
+                // Sequential unlocking within this phase:
+                let isUnlocked = true;
+                for (let k = 0; k < tIdx; k++) {
+                  if (phaseTasks[k].status !== 'completed') {
+                    isUnlocked = false;
+                    break;
+                  }
+                }
+
+                const isLocked = !isUnlocked && !isCompleted;
+                const isActive = isUnlocked && !isCompleted;
+                const difficultyColor = { 'Easy': '#10B981', 'Medium': '#F59E0B', 'Hard': '#EF4444' }[task.difficulty] || '#64748B';
+
+                return `
+                  <div 
+                    class="task-card-item"
+                    data-task-status="${task.status}"
+                    style="
+                      position: relative;
+                      background: ${isCompleted ? '#FFFFFF' : isLocked ? '#F8FAFC' : '#FFFFFF'};
+                      border: 1.5px solid ${isCompleted ? '#E2E8F0' : isLocked ? '#E2E8F0' : colors.primary};
+                      border-radius: 14px;
+                      padding: 14px 16px;
+                      cursor: ${isLocked ? 'not-allowed' : 'pointer'};
+                      transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+                      opacity: ${isLocked ? '0.65' : '1'};
+                      box-shadow: ${isActive ? '0 10px 15px -3px rgba(5,150,105,0.05)' : 'none'};
+                    "
+                    ${isLocked ? '' : `onclick="openTaskDetail('${task.id}')"`}
+                    ${isLocked ? '' : `
+                      onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='${colors.primary}'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.06)';"
+                      onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='${isCompleted ? '#E2E8F0' : colors.primary}'; this.style.boxShadow='${isActive ? '0 10px 15px -3px rgba(5,150,105,0.05)' : 'none'}';"
+                    `}
+                  >
+                    <!-- Status Icon Badge -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+                      <span style="font-size: 13px; font-weight: 600; color: ${isLocked ? '#94A3B8' : '#0F172A'}; line-height: 1.4;">
+                        ${task.title}
+                      </span>
+                      <div style="flex-shrink: 0;">
+                        ${isCompleted ? 
+                          `<span style="background: #DEF7EC; color: #03543F; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">✓ DONE</span>` : 
+                          isLocked ? 
+                          `<span style="background: #E2E8F0; color: #64748B; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">🔒 LOCKED</span>` :
+                          `<span style="background: ${colors.bg}; color: ${colors.primary}; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">🎯 ACTIVE</span>`
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Meta & Actions -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 12px; padding-top: 8px; border-top: 1px dashed #F1F5F9;">
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <span style="color: ${difficultyColor}; font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.03em;">
+                          ${task.difficulty}
+                        </span>
+                        <span style="color: #CBD5E1;">•</span>
+                        <span style="color: #64748B; font-weight: 500;">
+                          +${task.difficulty === 'Hard' ? 50 : task.difficulty === 'Medium' ? 30 : 15} XP
+                        </span>
+                      </div>
+                      ${isActive ? `
+                        <button 
+                          onclick="event.stopPropagation(); startQuiz('${task.id}','${task.title.replace(/'/g, "\\'")}','${task.roadmap_phase || ''}')"
+                          style="
+                            background: ${colors.primary};
+                            color: white;
+                            border: none;
+                            padding: 5px 10px;
+                            border-radius: 8px;
+                            font-size: 10px;
+                            font-weight: 700;
+                            cursor: pointer;
+                            display: flex;
+                            align-items: center;
+                            gap: 3px;
+                            transition: all 150ms ease;
+                          "
+                          onmouseover="this.style.filter='brightness(0.9)';"
+                          onmouseout="this.style.filter='none';"
+                        >
+                          Take Quiz ⚡
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
   `;
+}
+
+function filterTasks(status) {
+  const cards = document.querySelectorAll('.task-card-item');
+  const buttons = document.querySelectorAll('.task-filter-btn');
+  
+  buttons.forEach(btn => {
+    if (btn.id === `filter-${status}`) {
+      btn.style.background = '#059669';
+      btn.style.color = 'white';
+      btn.style.borderColor = '#059669';
+    } else {
+      btn.style.background = 'transparent';
+      btn.style.color = '#64748B';
+      btn.style.borderColor = '#E2E8F0';
+    }
+  });
+
+  cards.forEach(card => {
+    const cardStatus = card.getAttribute('data-task-status');
+    if (status === 'all') {
+      card.style.display = 'block';
+    } else if (status === 'pending') {
+      if (cardStatus !== 'completed') {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    } else if (status === 'completed') {
+      if (cardStatus === 'completed') {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    }
+  });
 }
 
 // ── DEPRECATED: MANUAL ACTIONS REMOVED ──────────────────────
