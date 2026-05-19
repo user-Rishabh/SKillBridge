@@ -214,8 +214,8 @@ async function sendChatAnswer() {
 }
 
 async function finishOnboarding() {
-  // Use upsert instead of update to handle new users (especially OAuth)
-  const { error } = await supabase.from('profiles').upsert({
+  // Use upsert instead of update to handle new users
+  let { error } = await supabase.from('profiles').upsert({
     id: currentUserId,
     goal: onboardingData.goal,
     current_level: onboardingData.currentLevel,
@@ -228,11 +228,20 @@ async function finishOnboarding() {
   });
 
   if (error) {
-    console.error('Error saving onboarding data:', error);
-    showToast('Failed to save your preferences. Please try again.', 'error');
-    const overlay = document.getElementById('onboarding-overlay');
-    if (overlay) overlay.style.display = 'none';
-    return;
+    console.warn('❌ Full profile upsert failed (likely missing columns), trying defensive fallback update...', error);
+    
+    // Fallback: only update core columns we are confident exist in any version of profiles
+    const fallbackResult = await supabase.from('profiles').update({
+      goal: onboardingData.goal,
+      current_level: onboardingData.currentLevel,
+      timeline: onboardingData.timeline,
+      onboarding_completed: true
+    }).eq('id', currentUserId);
+
+    if (fallbackResult.error) {
+      console.error('❌ Onboarding fallback update also failed:', fallbackResult.error);
+      showToast('Profile sync failed, but proceeding locally to generate roadmap...', 'warning');
+    }
   }
 
   await generateRoadmapWithAI();
@@ -690,9 +699,15 @@ async function recalculateStats(userId) {
 }
 
 // ── FIX 3: AI QUIZ + XP SYSTEM ──────────────────────────────
-function openTaskDetail(taskId) {
-  const task = window.allTasks?.find(t => t.id === taskId);
-  if (!task) return;
+async function openTaskDetail(taskId) {
+  let task = window.allTasks?.find(t => t.id === taskId);
+  if (!task) {
+    const { data } = await supabase.from('tasks').select('*').eq('id', taskId).single();
+    if (!data) return;
+    task = data;
+    if (!window.allTasks) window.allTasks = [];
+    window.allTasks.push(task);
+  }
 
   const modal = document.createElement('div');
   modal.id = 'task-detail-modal';
@@ -1080,22 +1095,156 @@ async function startNewSession() {
 // ── Today's Focus ────────────────────────────────────────────
 async function loadTodaysFocus() {
   const container = document.getElementById('todays-focus');
-  const { data: tasks } = await supabase.from('tasks')
-    .select('*')
-    .eq('user_id', currentUserId)
-    .eq('status', 'pending')
-    .limit(3);
+  if (!container) return;
 
-  if (tasks && tasks.length > 0) {
-    container.innerHTML = tasks.map(t => `
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-        <button onclick="completeFocusTask('${t.id}')" style="width:18px; height:18px; border:2px solid #059669; border-radius:4px; background:none; cursor:pointer;"></button>
-        <span style="font-size:13px; color:#1E293B;">${t.title}</span>
-      </div>
-    `).join('');
-  } else {
-    container.innerHTML = `<div style="font-size:13px; color:#94A3B8; text-align:center;">No tasks for today. ✨</div>`;
+  container.innerHTML = `
+    <div style="text-align:center; padding:20px;">
+      <div style="font-size:20px; animation: spin 1s linear infinite; display: inline-block;">⏳</div>
+    </div>
+  `;
+
+  // 1. Fetch all tasks for the user
+  const { data: dbTasks } = await supabase.from('tasks')
+    .select('*')
+    .eq('user_id', currentUserId);
+
+  if (!dbTasks || dbTasks.length === 0) {
+    container.innerHTML = `<div style="font-size:13px; color:#94A3B8; text-align:center; padding:10px;">No active tasks. Please generate your roadmap! 🚀</div>`;
+    return;
   }
+
+  // 2. Fetch the profile's roadmap_data to get the proper order of tasks
+  const { data: profile } = await supabase.from('profiles')
+    .select('roadmap_data')
+    .eq('id', currentUserId)
+    .single();
+
+  const roadmap = profile?.roadmap_data;
+  let tasks = [...dbTasks];
+
+  // 3. Sort tasks according to the roadmap sequence
+  if (roadmap?.phases) {
+    const taskOrder = [];
+    roadmap.phases.forEach(p => (p.tasks || []).forEach(t => taskOrder.push(t.title)));
+    tasks.sort((a, b) => taskOrder.indexOf(a.title) - taskOrder.indexOf(b.title));
+  }
+
+  // 4. Find the first uncompleted task
+  const activeTaskIndex = tasks.findIndex(t => t.status !== 'completed');
+  
+  if (activeTaskIndex === -1) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:12px;">
+        <div style="font-size:24px; margin-bottom:8px;">🎉</div>
+        <div style="font-size:13px; font-weight:700; color:#059669;">All Tasks Mastered!</div>
+        <p style="font-size:11px; color:#64748B; margin:4px 0 0 0;">You've completed your entire career roadmap.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // 5. Gather up to 3 tasks to display:
+  // - The active task
+  // - The next two upcoming tasks
+  const focusTasks = [];
+  
+  // Active task is the first uncompleted task
+  const activeTask = tasks[activeTaskIndex];
+  focusTasks.push({ ...activeTask, isFocusActive: true });
+
+  // Add the next 2 tasks in the sequence as "Next Up" (locked)
+  for (let i = 1; i <= 2; i++) {
+    const nextTask = tasks[activeTaskIndex + i];
+    if (nextTask) {
+      focusTasks.push({ ...nextTask, isFocusActive: false });
+    }
+  }
+
+  // 6. Render the checklist!
+  container.innerHTML = focusTasks.map(t => {
+    const isFocusActive = t.isFocusActive;
+    
+    if (isFocusActive) {
+      return `
+        <div 
+          style="
+            background: #F0FDF4; 
+            border: 1.5px solid #10B981; 
+            border-radius: 12px; 
+            padding: 14px; 
+            margin-bottom: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.05);
+            cursor: pointer;
+            transition: all 200ms;
+          "
+          onclick="openTaskDetail('${t.id}')"
+          onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 12px rgba(16,185,129,0.1)';"
+          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.05)';"
+        >
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:10px; font-weight:700; color:#059669; background:#DCFCE7; padding:2px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:0.02em;">
+              🎯 Active Priority
+            </span>
+            <span style="font-size:10px; font-weight:700; color:#059669; text-transform:uppercase;">
+              +${t.difficulty === 'Hard' ? 50 : t.difficulty === 'Medium' ? 30 : 15} XP
+            </span>
+          </div>
+          <div style="font-size:13px; font-weight:600; color:#0F172A; margin-bottom:12px; line-height:1.4;">
+            ${t.title}
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:11px; color:#64748B;">📍 ${t.roadmap_phase}</span>
+            <button 
+              onclick="event.stopPropagation(); startQuiz('${t.id}', '${t.title.replace(/'/g, "\\'")}', '${t.roadmap_phase || ''}')"
+              style="
+                background: #059669; 
+                color: white; 
+                border: none; 
+                padding: 6px 12px; 
+                border-radius: 8px; 
+                font-size: 11px; 
+                font-weight: 700; 
+                cursor: pointer; 
+                display: flex; 
+                align-items: center; 
+                gap: 4px;
+                box-shadow: 0 2px 4px rgba(5,150,105,0.2);
+                transition: all 150ms;
+              "
+              onmouseover="this.style.background='#047857'; this.style.transform='scale(1.03)';"
+              onmouseout="this.style.background='#059669'; this.style.transform='scale(1)';"
+            >
+              Start Quiz ⚡
+            </button>
+          </div>
+        </div>
+      `;
+    } else {
+      return `
+        <div 
+          style="
+            background: #F8FAFC; 
+            border: 1px solid #E2E8F0; 
+            border-radius: 12px; 
+            padding: 12px; 
+            margin-bottom: 8px; 
+            opacity: 0.75;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          "
+        >
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="color:#94A3B8; font-size:12px;">🔒</span>
+            <span style="font-size:12px; font-weight:500; color:#475569;">${t.title}</span>
+          </div>
+          <span style="font-size:9px; font-weight:700; color:#94A3B8; background:#E2E8F0; padding:2px 6px; border-radius:6px; text-transform:uppercase;">
+            Next Up
+          </span>
+        </div>
+      `;
+    }
+  }).join('');
 }
 
 async function completeFocusTask(id) {
@@ -1218,10 +1367,13 @@ async function generateNewRoadmap() {
     }
     const roadmap = JSON.parse(jsonMatch[0]);
 
-    // Save to Supabase
+    // Save to Supabase profile
     await supabase.from('profiles').update({ roadmap_data: roadmap }).eq('id', currentUserId);
 
-    renderFullRoadmap(roadmap);
+    // Save tasks to standard tasks database table so everything is in sync
+    await saveTasksFromRoadmap(roadmap, currentUserId);
+
+    await renderFullRoadmap(roadmap);
     loadShortRoadmap(roadmap);
     showToast("✨ Roadmap generated successfully!", "success");
   } catch (err) {
@@ -1234,39 +1386,201 @@ async function generateNewRoadmap() {
   }
 }
 
-function renderFullRoadmap(roadmap) {
+async function renderFullRoadmap(roadmap) {
   const display = document.getElementById('full-roadmap-display');
   if (!display) return;
 
   display.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-      <h2 style="font-size:24px; font-weight:700; color:#0F172A;">${roadmap.title}</h2>
-      <button onclick="downloadRoadmapPDF()" style="padding:10px 18px; background:white; border:1px solid #E2E8F0; border-radius:10px; font-size:14px; cursor:pointer;">
-        📥 Download PDF
-      </button>
+    <div style="text-align:center; padding:40px;">
+      <div style="font-size:24px; animation: spin 1s linear infinite; display: inline-block;">⏳</div>
+      <div style="margin-top:12px; color:#64748B;">Loading latest roadmap progress...</div>
     </div>
-    <div style="display:grid; gap:20px;">
-      ${roadmap.phases.map((p, pIdx) => `
-        <div style="background:white; border:1px solid #E2E8F0; border-radius:16px; padding:24px;">
-          <div style="font-size:12px; font-weight:700; color:#059669; text-transform:uppercase; margin-bottom:8px;">Phase ${pIdx + 1}</div>
-          <h3 style="font-size:18px; font-weight:600; margin-bottom:12px;">${p.phase}</h3>
-          <p style="font-size:14px; color:#64748B; margin-bottom:20px;">${p.description || ''}</p>
-          
-          <div style="display:grid; gap:12px;">
-            ${p.tasks.map((t, tIdx) => `
-              <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#F8FAFC; border-radius:12px; border:1px solid #E2E8F0;">
-                <div style="display:flex; align-items:center; gap:12px;">
-                  <button onclick="completeRoadmapTask(${pIdx}, ${tIdx})" style="width:20px; height:20px; border-radius:50%; border:2px solid ${t.status === 'completed' ? '#059669' : '#CBD5E1'}; background:${t.status === 'completed' ? '#059669' : 'none'}; cursor:pointer; display:flex; align-items:center; justify-content:center;">
-                    ${t.status === 'completed' ? '✓' : ''}
-                  </button>
-                  <span style="font-size:14px; font-weight:500; color:${t.status === 'completed' ? '#94A3B8' : '#1E293B'}; text-decoration:${t.status === 'completed' ? 'line-through' : 'none'};">${t.title}</span>
-                </div>
-                <div style="font-size:11px; font-weight:600; padding:4px 8px; border-radius:6px; background:${t.difficulty === 'Hard' ? '#FEE2E2' : t.difficulty === 'Medium' ? '#FEF3C7' : '#DCFCE7'}; color:${t.difficulty === 'Hard' ? '#EF4444' : t.difficulty === 'Medium' ? '#D97706' : '#059669'};">${t.difficulty}</div>
-              </div>
-            `).join('')}
-          </div>
+  `;
+
+  // Fetch the latest task states from the db to render exact progress metrics
+  const { data: dbTasks } = await supabase.from('tasks').select('*').eq('user_id', currentUserId);
+  const dbTasksList = dbTasks || [];
+
+  // Group database tasks by phase so we can compute actual metrics
+  const phasesMap = {};
+  dbTasksList.forEach(task => {
+    const phaseName = task.roadmap_phase || 'General Prep';
+    if (!phasesMap[phaseName]) phasesMap[phaseName] = [];
+    phasesMap[phaseName].push(task);
+  });
+
+  const roadmapPhases = roadmap.phases || [];
+  
+  // Calculate completion and unlock status for each phase
+  let allPreviousCompleted = true;
+  let totalAllTasks = 0;
+  let totalCompletedTasks = 0;
+
+  const renderedPhases = roadmapPhases.map((p, pIdx) => {
+    const phaseName = p.phase || p.name;
+    let phaseTasks = phasesMap[phaseName] || [];
+    
+    // Fallback if DB doesn't have tasks for this phase yet
+    if (phaseTasks.length === 0 && p.tasks) {
+      phaseTasks = p.tasks.map(t => ({
+        title: t.title,
+        difficulty: t.difficulty || 'Medium',
+        status: 'pending'
+      }));
+    }
+
+    const total = phaseTasks.length;
+    const completed = phaseTasks.filter(t => t.status === 'completed').length;
+    const isPhaseCompleted = total > 0 && completed === total;
+    
+    totalAllTasks += total;
+    totalCompletedTasks += completed;
+
+    // Status logic: sequential unlocking of phases
+    let status = 'locked';
+    if (pIdx === 0 || allPreviousCompleted) {
+      status = isPhaseCompleted ? 'completed' : 'active';
+    }
+    
+    if (!isPhaseCompleted) {
+      allPreviousCompleted = false;
+    }
+    
+    return {
+      name: phaseName,
+      description: p.description || '',
+      tasks: phaseTasks,
+      total,
+      completed,
+      status
+    };
+  });
+
+  const overallPct = totalAllTasks > 0 ? Math.round((totalCompletedTasks / totalAllTasks) * 100) : 0;
+
+  // Add custom pulse animation style
+  if (!document.getElementById('pulse-glow-style')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'pulse-glow-style';
+    styleEl.innerHTML = `
+      @keyframes pulseGlow {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
+  display.innerHTML = `
+    <!-- Pathway Header Progress -->
+    <div style="background:linear-gradient(135deg, #064E3B 0%, #022C22 100%); border-radius:24px; padding:32px; color:white; margin-bottom:32px; box-shadow:0 20px 40px rgba(4,120,87,0.15); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;">
+      <div>
+        <span style="background:rgba(255,255,255,0.15); font-size:11px; font-weight:700; text-transform:uppercase; padding:6px 12px; border-radius:20px; letter-spacing:0.05em; display:inline-block; margin-bottom:12px;">Active Career Pathway</span>
+        <h2 style="font-size:28px; font-weight:800; margin:0 0 8px 0; color:white; line-height:1.2;">${roadmap.title}</h2>
+        <p style="font-size:14px; color:#A7F3D0; margin:0;">Master this sequential path to become industry-ready.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:24px; background:rgba(255,255,255,0.06); padding:20px 24px; border-radius:18px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(10px);">
+        <div style="text-align:center;">
+          <div style="font-size:12px; color:#A7F3D0; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Mastered</div>
+          <div style="font-size:24px; font-weight:800; color:white;">${totalCompletedTasks} / ${totalAllTasks}</div>
         </div>
-      `).join('')}
+        <div style="width:1px; height:40px; background:rgba(255,255,255,0.2);"></div>
+        <div style="text-align:center;">
+          <div style="font-size:12px; color:#A7F3D0; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Progress</div>
+          <div style="font-size:24px; font-weight:800; color:#34D399;">${overallPct}%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Grid Map -->
+    <div style="position:relative; display:grid; gap:32px;">
+      <!-- Timeline connecting vertical bar -->
+      <div style="position:absolute; left:46px; top:40px; bottom:40px; width:4px; background:#E2E8F0; border-radius:2px; z-index:1;"></div>
+      
+      ${renderedPhases.map((p, pIdx) => {
+        const isCompleted = p.status === 'completed';
+        const isActive = p.status === 'active';
+        const isLocked = p.status === 'locked';
+        
+        const badgeBg = isCompleted ? '#D1FAE5' : isActive ? '#DBEAFE' : '#F1F5F9';
+        const badgeColor = isCompleted ? '#065F46' : isActive ? '#1E40AF' : '#475569';
+        const badgeText = isCompleted ? '✓ Completed' : isActive ? '🎯 Active & Focused' : '🔒 Locked Phase';
+        
+        const nodeBg = isCompleted ? '#10B981' : isActive ? '#3B82F6' : '#94A3B8';
+        const nodeBorderColor = isCompleted ? '#D1FAE5' : isActive ? '#DBEAFE' : '#E2E8F0';
+        const glowStyle = isActive ? 'box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2); animation: pulseGlow 2s infinite;' : '';
+        
+        const phasePct = p.total > 0 ? Math.round((p.completed / p.total) * 100) : 0;
+        
+        return `
+          <div style="display:grid; grid-template-columns:96px 1fr; gap:16px; position:relative; z-index:2;">
+            <!-- Node Column -->
+            <div style="display:flex; flex-direction:column; align-items:center;">
+              <div style="width:40px; height:40px; border-radius:50%; background:${nodeBg}; border:4px solid ${nodeBorderColor}; color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; transition: all 200ms; ${glowStyle}">
+                ${isCompleted ? '✓' : pIdx + 1}
+              </div>
+              <div style="font-size:11px; font-weight:700; color:#94A3B8; margin-top:8px; text-transform:uppercase;">PHASE 0${pIdx + 1}</div>
+            </div>
+            
+            <!-- Milestone Card Column -->
+            <div style="
+              background: white;
+              border: 1.5px solid ${isActive ? '#3B82F6' : '#E2E8F0'};
+              border-radius: 20px;
+              padding: 24px;
+              box-shadow: ${isActive ? '0 20px 25px -5px rgba(59, 130, 246, 0.05), 0 10px 10px -5px rgba(59, 130, 246, 0.02)' : '0 10px 15px -3px rgba(0,0,0,0.02)'};
+              transition: all 250ms;
+              opacity: ${isLocked ? '0.75' : '1'};
+            ">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                <div>
+                  <span style="display:inline-flex; align-items:center; gap:4px; background:${badgeBg}; color:${badgeColor}; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom:10px;">
+                    ${badgeText}
+                  </span>
+                  <h3 style="font-size:20px; font-weight:700; color:#0F172A; margin:0 0 6px 0;">${p.name}</h3>
+                  <p style="font-size:14px; color:#64748B; margin:0;">${p.description}</p>
+                </div>
+                
+                <div style="text-align:right;">
+                  <div style="font-size:20px; font-weight:800; color:${isActive ? '#3B82F6' : '#1E293B'};">${phasePct}%</div>
+                  <div style="font-size:11px; color:#64748B; font-weight:500;">${p.completed}/${p.total} Mastered</div>
+                </div>
+              </div>
+              
+              <div style="height:6px; background:#F1F5F9; border-radius:3px; overflow:hidden; margin-bottom:20px;">
+                <div style="height:100%; width:${phasePct}%; background:${isActive ? '#3B82F6' : '#10B981'}; border-radius:3px; transition: width 500ms ease;"></div>
+              </div>
+              
+              <div style="margin-bottom:24px;">
+                <div style="font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.03em;">Key Skills inside this phase:</div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                  ${p.tasks.map(t => {
+                    const tCompleted = t.status === 'completed';
+                    return `
+                      <span style="font-size:12px; padding:6px 12px; background:${tCompleted ? '#ECFDF5' : '#F8FAFC'}; border:1px solid ${tCompleted ? '#A7F3D0' : '#E2E8F0'}; color:${tCompleted ? '#065F46' : '#475569'}; border-radius:8px; display:inline-flex; align-items:center; gap:5px;">
+                        ${tCompleted ? '✓' : '•'} ${t.title}
+                      </span>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+              
+              <div style="display:flex; justify-content:flex-end;">
+                ${isLocked ? `
+                  <button disabled style="padding:10px 20px; background:#F1F5F9; color:#94A3B8; border:1px solid #E2E8F0; border-radius:12px; font-size:13px; font-weight:600; cursor:not-allowed; display:flex; align-items:center; gap:6px;">
+                    🔒 Locked
+                  </button>
+                ` : `
+                  <button onclick="window.switchTab('tasks')" style="padding:10px 20px; background:${isActive ? '#3B82F6' : '#10B981'}; color:white; border:none; border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 200ms;" onmouseover="this.style.filter='brightness(0.9)';" onmouseout="this.style.filter='none';">
+                    ${isCompleted ? 'Review Workspace ➔' : 'Open Active Workspace ➔'}
+                  </button>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
     </div>
   `;
 }
@@ -1766,6 +2080,7 @@ function initTabs() {
     if (tabName === 'mentorship') initMentorChat();
     if (tabName === 'portfolio') loadPortfolioTab();
   }
+  window.switchTab = switchTab;
   tabs.forEach(tab => tab.addEventListener('click', (e) => { e.preventDefault(); switchTab(tab.dataset.tab); }));
   switchTab(localStorage.getItem('activeTab') || 'dashboard');
 }
@@ -1781,7 +2096,7 @@ async function loadRoadmapTab() {
   const { data: profile } = await supabase.from('profiles').select('roadmap_data').eq('id', currentUserId).single();
   
   if (profile && profile.roadmap_data) {
-    renderFullRoadmap(profile.roadmap_data);
+    await renderFullRoadmap(profile.roadmap_data);
     if (display) display.style.display = 'block';
   } else {
     if (display) {
