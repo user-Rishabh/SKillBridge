@@ -97,9 +97,9 @@
           <!-- Circular Progress Ring -->
           <div class="readiness-ring-wrap">
             <svg class="readiness-ring" viewBox="0 0 120 120" aria-label="72% job readiness score">
-              <circle class="ring-bg" cx="60" cy="60" r="50" fill="none" stroke="#E2E8F0" stroke-width="8"/>
+              <circle class="ring-bg" cx="60" cy="60" r="50" fill="none" stroke="rgba(255, 255, 255, 0.08)" stroke-width="8"/>
               <circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="50" fill="none"
-                stroke="#059669" stroke-width="8"
+                stroke="var(--fuchsia)" stroke-width="8"
                 stroke-linecap="round"
                 stroke-dasharray="314"
                 stroke-dashoffset="314"
@@ -154,50 +154,50 @@
       <div style="text-align:center; margin-bottom:0.5rem;">
         <div class="section-pill pill-slate">WHY IT EXISTS</div>
       </div>
-      <h2 class="section-heading text-center" data-reveal>Every student faces the same confusion.</h2>
-
-      <div class="problem-vs-grid">
-        <!-- Before card -->
-        <div class="before-card" data-reveal>
-          <div class="vs-card-header red-header">
-            <span class="vs-header-icon">❌</span>
-            <span>Without Direction</span>
-          </div>
-          <div class="vs-pain-list">
-            <div class="pain-item">
-              <div class="pain-label"><span class="pain-x">❌</span> No direction on what to learn</div>
-              <p class="pain-desc">Students waste months on random YouTube playlists going nowhere.</p>
-            </div>
-            <div class="pain-item">
-              <div class="pain-label"><span class="pain-x">❌</span> Random courses, zero outcome</div>
-              <p class="pain-desc">Finished 10 courses but still can't answer interview questions.</p>
-            </div>
-            <div class="pain-item">
-              <div class="pain-label"><span class="pain-x">❌</span> No proof of skills</div>
-              <p class="pain-desc">Resume says skills but interviews reveal the truth. Rejected.</p>
-            </div>
-          </div>
-          <div class="vs-card-footer">
-            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-              <circle cx="32" cy="32" r="30" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
-              <ellipse cx="22" cy="26" rx="4" ry="5" fill="#EF4444" opacity="0.8"/>
-              <ellipse cx="42" cy="26" rx="4" ry="5" fill="#EF4444" opacity="0.8"/>
-              <path d="M20 44 Q32 36 44 44" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-              <circle cx="22" cy="26" r="2" fill="#0F172A"/>
-              <circle cx="42" cy="26" r="2" fill="#0F172A"/>
-            </svg>
-          </div>
-        </div>
-
-        <!-- VS divider -->
-        <div class="vs-divider">
-          <div class="vs-line"></div>
-          <div class="vs-badge">VS</div>
-          <div class="vs-line"></div>
-        </div>
-
-        <!-- After card -->
-        <div class="after-card" data-reveal data-delay="100">
+      <h2 class="section-heading text-center" data-reveal="fade-down">Every student faces the same confusion.</h2>
+ 
+       <div class="problem-vs-grid">
+         <!-- Before card -->
+         <div class="before-card" data-reveal="flip-x">
+           <div class="vs-card-header red-header">
+             <span class="vs-header-icon">❌</span>
+             <span>Without Direction</span>
+           </div>
+           <div class="vs-pain-list">
+             <div class="pain-item">
+               <div class="pain-label"><span class="pain-x">❌</span> No direction on what to learn</div>
+               <p class="pain-desc">Students waste months on random YouTube playlists going nowhere.</p>
+             </div>
+             <div class="pain-item">
+               <div class="pain-label"><span class="pain-x">❌</span> Random courses, zero outcome</div>
+               <p class="pain-desc">Finished 10 courses but still can't answer interview questions.</p>
+             </div>
+             <div class="pain-item">
+               <div class="pain-label"><span class="pain-x">❌</span> No proof of skills</div>
+               <p class="pain-desc">Resume says skills but interviews reveal the truth. Rejected.</p>
+             </div>
+           </div>
+           <div class="vs-card-footer">
+             <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+               <circle cx="32" cy="32" r="30" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+               <ellipse cx="22" cy="26" rx="4" ry="5" fill="#EF4444" opacity="0.8"/>
+               <ellipse cx="42" cy="26" rx="4" ry="5" fill="#EF4444" opacity="0.8"/>
+               <path d="M20 44 Q32 36 44 44" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+               <circle cx="22" cy="26" r="2" fill="#0F172A"/>
+               <circle cx="42" cy="26" r="2" fill="#0F172A"/>
+             </svg>
+           </div>
+         </div>
+ 
+         <!-- VS divider -->
+         <div class="vs-divider">
+           <div class="vs-line"></div>
+           <div class="vs-badge">VS</div>
+           <div class="vs-line"></div>
+         </div>
+ 
+         <!-- After card -->
+         <div class="after-card" data-reveal="flip-x" data-delay="100">
           <div class="vs-card-header emerald-header">
             <span class="vs-header-icon">✅</span>
             <span>With SkillBridge AI</span>
@@ -228,114 +228,114 @@
   </section>
 
   <!-- ═══════════════════════════════════ HOW IT WORKS -->
-  <section class="section" id="how" style="background:var(--cream-3, #FAF7F2);">
+  <section class="section" id="how">
     <div class="container">
       <div style="text-align:center;margin-bottom:0.5rem;">
         <div class="section-pill pill-emerald">THE PROCESS</div>
       </div>
-      <h2 class="section-heading text-center" data-reveal>From zero to job-ready in 5 steps.</h2>
-
-      <div class="steps-row" id="steps-row">
-        <div class="steps-connector" id="steps-connector" aria-hidden="true">
-          <div class="steps-line" id="steps-line"></div>
-        </div>
-
-        <div class="step-card" data-step="1" data-reveal>
-          <div class="step-num-badge">01</div>
-          <div class="step-icon">🎯</div>
-          <h3 class="step-title">Set Your Goal</h3>
-          <p class="step-desc">Tell us your target role. e.g. Frontend Developer</p>
-          <div class="step-tag">2 minutes</div>
-        </div>
-
-        <div class="step-card" data-step="2" data-reveal data-delay="100">
-          <div class="step-num-badge">02</div>
-          <div class="step-icon">🤖</div>
-          <h3 class="step-title">AI Analyzes You</h3>
-          <p class="step-desc">AI scans your current skills and finds exact gaps.</p>
-          <div class="step-tag">Instant</div>
-        </div>
-
-        <div class="step-card step-active" data-step="3" data-reveal data-delay="200">
-          <div class="step-num-badge active">03</div>
-          <div class="step-icon">🗺️</div>
-          <h3 class="step-title">Get Your Roadmap</h3>
-          <p class="step-desc">Personalized step-by-step path built for your goal.</p>
-          <div class="step-tag">Unique to you</div>
-        </div>
-
-        <div class="step-card" data-step="4" data-reveal data-delay="300">
-          <div class="step-num-badge">04</div>
-          <div class="step-icon">⚡</div>
-          <h3 class="step-title">Complete Tasks</h3>
-          <p class="step-desc">Daily tasks, real projects, skill checkpoints.</p>
-          <div class="step-tag">At your pace</div>
-        </div>
-
-        <div class="step-card" data-step="5" data-reveal data-delay="400">
-          <div class="step-num-badge">05</div>
-          <div class="step-icon">🏆</div>
-          <h3 class="step-title">Get Readiness Score</h3>
-          <p class="step-desc">Your verified Job Readiness Score. Show it. Get hired.</p>
-          <div class="step-tag">Employer trusted</div>
-        </div>
+      <h2 class="section-heading text-center" data-reveal="zoom-in">From zero to job-ready in 5 steps.</h2>
+ 
+       <div class="steps-row" id="steps-row">
+         <div class="steps-connector" id="steps-connector" aria-hidden="true">
+           <div class="steps-line" id="steps-line"></div>
+         </div>
+ 
+         <div class="step-card" data-step="1" data-reveal="fade-left">
+           <div class="step-num-badge">01</div>
+           <div class="step-icon">🎯</div>
+           <h3 class="step-title">Set Your Goal</h3>
+           <p class="step-desc">Tell us your target role. e.g. Frontend Developer</p>
+           <div class="step-tag">2 minutes</div>
+         </div>
+ 
+         <div class="step-card" data-step="2" data-reveal="fade-up" data-delay="100">
+           <div class="step-num-badge">02</div>
+           <div class="step-icon">🤖</div>
+           <h3 class="step-title">AI Analyzes You</h3>
+           <p class="step-desc">AI scans your current skills and finds exact gaps.</p>
+           <div class="step-tag">Instant</div>
+         </div>
+ 
+         <div class="step-card step-active" data-step="3" data-reveal="scale-up" data-delay="200">
+           <div class="step-num-badge active">03</div>
+           <div class="step-icon">🗺️</div>
+           <h3 class="step-title">Get Your Roadmap</h3>
+           <p class="step-desc">Personalized step-by-step path built for your goal.</p>
+           <div class="step-tag">Unique to you</div>
+         </div>
+ 
+         <div class="step-card" data-step="4" data-reveal="fade-up" data-delay="300">
+           <div class="step-num-badge">04</div>
+           <div class="step-icon">⚡</div>
+           <h3 class="step-title">Complete Tasks</h3>
+           <p class="step-desc">Daily tasks, real projects, skill checkpoints.</p>
+           <div class="step-tag">At your pace</div>
+         </div>
+ 
+         <div class="step-card" data-step="5" data-reveal="fade-right" data-delay="400">
+           <div class="step-num-badge">05</div>
+           <div class="step-icon">🏆</div>
+           <h3 class="step-title">Get Readiness Score</h3>
+           <p class="step-desc">Your verified Job Readiness Score. Show it. Get hired.</p>
+           <div class="step-tag">Employer trusted</div>
+         </div>
       </div>
     </div>
   </section>
 
   <!-- ═══════════════════════════════════ CORE FEATURES -->
-  <section class="section" id="features" style="background:var(--cream, #F5F0E8);">
+  <section class="section" id="features">
     <div class="container">
       <div style="text-align:center;margin-bottom:0.5rem;">
         <div class="section-pill pill-emerald">CORE FEATURES</div>
       </div>
-      <h2 class="section-heading text-center" data-reveal>Built like a system. Not a course.</h2>
-
-      <div class="features-grid">
-        <!-- Card 1 -->
-        <div class="feature-card" data-reveal>
-          <div class="fc-tag fc-tag-core">CORE ENGINE</div>
-          <div class="fc-icon-wrap emerald-circle">🔍</div>
-          <h3 class="fc-title">Skill Gap Analyzer</h3>
-          <p class="fc-desc">AI compares your current skills against actual job requirements. Tells you exactly what's missing.</p>
-          <div class="fc-stat">Analyzes 200+ job roles</div>
-        </div>
-
-        <!-- Card 2 -->
-        <div class="feature-card" data-reveal data-delay="80">
-          <div class="fc-tag fc-tag-ai">AI POWERED</div>
-          <div class="fc-icon-wrap emerald-circle">🗺️</div>
-          <h3 class="fc-title">Personalized Roadmap</h3>
-          <p class="fc-desc">Not a generic course list. A custom-built path based on your goal, level, and timeline.</p>
-          <div class="fc-stat">Unique per student</div>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="feature-card" data-reveal data-delay="160">
-          <div class="fc-tag fc-tag-amber">PRODUCTIVITY</div>
-          <div class="fc-icon-wrap amber-circle">⚡</div>
-          <h3 class="fc-title">Daily Task Engine</h3>
-          <p class="fc-desc">Every morning: 3 tasks matched to your roadmap. No decision fatigue.</p>
-          <div class="fc-stat">Updated daily</div>
-        </div>
-
-        <!-- Card 4 -->
-        <div class="feature-card" data-reveal data-delay="240">
-          <div class="fc-tag fc-tag-trust">TRUST SIGNAL</div>
-          <div class="fc-icon-wrap emerald-circle">📊</div>
-          <h3 class="fc-title">Job Readiness Score</h3>
-          <p class="fc-desc">A single % score that tells you how close you are to being hireable. Watch it grow.</p>
-          <div class="fc-stat">Employer-readable</div>
-        </div>
-
-        <!-- Card 5 — wide -->
-        <div class="feature-card feature-card-wide" data-reveal data-delay="320">
-          <div class="fc-tag fc-tag-dark">CAREER PROOF</div>
-          <div class="fc-icon-wrap dark-circle">✓</div>
-          <h3 class="fc-title">Verified Skill Portfolio</h3>
-          <p class="fc-desc">Your skills verified by SkillBridge AI. Not self-reported. Not a certificate. Proof.</p>
-          <div class="fc-stat">Shareable link</div>
-        </div>
+      <h2 class="section-heading text-center" data-reveal="fade-left">Built like a system. Not a course.</h2>
+ 
+       <div class="features-grid">
+         <!-- Card 1 -->
+         <div class="feature-card" data-reveal="fade-up">
+           <div class="fc-tag fc-tag-core">CORE ENGINE</div>
+           <div class="fc-icon-wrap emerald-circle">🔍</div>
+           <h3 class="fc-title">Skill Gap Analyzer</h3>
+           <p class="fc-desc">AI compares your current skills against actual job requirements. Tells you exactly what's missing.</p>
+           <div class="fc-stat">Analyzes 200+ job roles</div>
+         </div>
+ 
+         <!-- Card 2 -->
+         <div class="feature-card" data-reveal="scale-up" data-delay="80">
+           <div class="fc-tag fc-tag-ai">AI POWERED</div>
+           <div class="fc-icon-wrap emerald-circle">🗺️</div>
+           <h3 class="fc-title">Personalized Roadmap</h3>
+           <p class="fc-desc">Not a generic course list. A custom-built path based on your goal, level, and timeline.</p>
+           <div class="fc-stat">Unique per student</div>
+         </div>
+ 
+         <!-- Card 3 -->
+         <div class="feature-card" data-reveal="fade-up" data-delay="160">
+           <div class="fc-tag fc-tag-amber">PRODUCTIVITY</div>
+           <div class="fc-icon-wrap amber-circle">⚡</div>
+           <h3 class="fc-title">Daily Task Engine</h3>
+           <p class="fc-desc">Every morning: 3 tasks matched to your roadmap. No decision fatigue.</p>
+           <div class="fc-stat">Updated daily</div>
+         </div>
+ 
+         <!-- Card 4 -->
+         <div class="feature-card" data-reveal="scale-up" data-delay="240">
+           <div class="fc-tag fc-tag-trust">TRUST SIGNAL</div>
+           <div class="fc-icon-wrap emerald-circle">📊</div>
+           <h3 class="fc-title">Job Readiness Score</h3>
+           <p class="fc-desc">A single % score that tells you how close you are to being hireable. Watch it grow.</p>
+           <div class="fc-stat">Employer-readable</div>
+         </div>
+ 
+         <!-- Card 5 — wide -->
+         <div class="feature-card feature-card-wide" data-reveal="zoom-in" data-delay="320">
+           <div class="fc-tag fc-tag-dark">CAREER PROOF</div>
+           <div class="fc-icon-wrap dark-circle">✓</div>
+           <h3 class="fc-title">Verified Skill Portfolio</h3>
+           <p class="fc-desc">Your skills verified by SkillBridge AI. Not self-reported. Not a certificate. Proof.</p>
+           <div class="fc-stat">Shareable link</div>
+         </div>
       </div>
     </div>
   </section>
@@ -350,9 +350,9 @@
       <div style="text-align:center;margin-bottom:0.5rem;">
         <div class="section-pill pill-emerald-dark">LIVE PREVIEW</div>
       </div>
-      <h2 class="section-heading white text-center" data-reveal>See exactly what<br>you'll get inside.</h2>
-
-      <div class="mock-dashboard" data-reveal data-delay="100">
+      <h2 class="section-heading white text-center" data-reveal="fade-right">See exactly what<br>you'll get inside.</h2>
+ 
+       <div class="mock-dashboard" data-reveal="zoom-in" data-delay="100">
         <!-- Top bar -->
         <div class="mdb-topbar">
           <div class="mdb-logo">SkillBridge <span>AI</span></div>
@@ -470,12 +470,12 @@
   </section>
 
   <!-- ═══════════════════════════════════ COMPARISON TABLE -->
-  <section class="section" id="compare" style="background:var(--cream-3, #FAF7F2);">
+  <section class="section" id="compare">
     <div class="container">
-      <h2 class="section-heading text-center" data-reveal>Why SkillBridge is different</h2>
-      <p class="section-sub text-center" data-reveal style="margin-top:-0.5rem;">Not another course platform.</p>
-
-      <div class="table-wrap" data-reveal>
+      <h2 class="section-heading text-center" data-reveal="fade-down">Why SkillBridge is different</h2>
+       <p class="section-sub text-center" data-reveal="fade-up" style="margin-top:-0.5rem;">Not another course platform.</p>
+ 
+       <div class="table-wrap" data-reveal="scale-up">
         <table class="compare-table">
           <thead>
             <tr>
@@ -496,6 +496,63 @@
             <tr class="trow"><td>Career Outcome Focus</td><td class="sb-col">✅</td><td>❌</td><td>❌</td><td>✅</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════ FAQ SECTION -->
+  <section class="section" id="faq">
+    <div class="container" style="max-width: 800px;">
+      <div style="text-align:center;margin-bottom:0.5rem;">
+        <div class="section-pill pill-emerald">FAQ</div>
+      </div>
+      <h2 class="section-heading text-center" data-reveal="zoom-in">Frequently Asked Questions</h2>
+      <p class="section-sub text-center" data-reveal="fade-up" style="margin-top:-0.5rem;">Everything you need to know about the platform.</p>
+
+      <div class="faq-list">
+        <!-- FAQ Item 1 -->
+        <div class="faq-item" data-reveal="fade-up">
+          <button class="faq-q" id="faq-q-1">
+            Is SkillBridge really free?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">
+            <p>Yes, our core AI roadmap generator, skill gap analyzer, and basic tasks are 100% free. We also offer premium mentorship and advanced interview practice modules.</p>
+          </div>
+        </div>
+
+        <!-- FAQ Item 2 -->
+        <div class="faq-item" data-reveal="fade-up" data-delay="100">
+          <button class="faq-q" id="faq-q-2">
+            How does the Job Readiness Score work?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">
+            <p>The Job Readiness Score calculates a rating based on your roadmap completion, coding task scores, project milestones, and AI mock interview feedback. It acts as a verified skill certificate trusted by employers.</p>
+          </div>
+        </div>
+
+        <!-- FAQ Item 3 -->
+        <div class="faq-item" data-reveal="fade-up" data-delay="200">
+          <button class="faq-q" id="faq-q-3">
+            Can I share my portfolio with recruiters?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">
+            <p>Absolutely! You can export a beautifully generated PDF portfolio or share your unique dashboard URL directly with hiring managers.</p>
+          </div>
+        </div>
+
+        <!-- FAQ Item 4 -->
+        <div class="faq-item" data-reveal="fade-up" data-delay="300">
+          <button class="faq-q" id="faq-q-4">
+            How does the AI personalize the roadmap?
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-a">
+            <p>Our AI maps your career goals against real-time industry demands, analyzes your skill level, and designs a customized daily roadmap to keep you focused.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -603,7 +660,7 @@
         opacity: Math.random() * 0.6 + 0.2,
         rotation: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.005,
-        color: Math.random() > 0.7 ? '#059669' : '#0D0D0D'
+        color: Math.random() > 0.7 ? '#D946EF' : (Math.random() > 0.5 ? '#7C3AED' : 'rgba(255,255,255,0.2)')
       });
     }
 
