@@ -806,47 +806,126 @@ async function generateCourseNotes(taskId, title) {
   // Create a dedicated high-fidelity popup for course notes
   const viewer = document.createElement('div');
   viewer.id = 'course-viewer-modal';
-  viewer.style.cssText = `position:fixed;inset:0;background:rgba(255,255,255,0.98);z-index:10000;display:flex;flex-direction:column;padding:0;overflow-y:auto;font-family:'Inter',sans-serif;`;
+  viewer.style.cssText = `position:fixed;inset:0;background:rgba(5,1,13,0.95);backdrop-filter:blur(20px);z-index:10000;display:flex;flex-direction:column;padding:0;overflow-y:auto;font-family:'Inter',sans-serif;color:#FFFFFF;animation:viewerFadeIn 0.4s ease-out both;`;
 
   viewer.innerHTML = `
-    <nav style="padding:20px 40px;background:white;border-bottom:1px solid #E2E8F0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;">
+    <style>
+      @keyframes viewerFadeIn {
+        from { opacity: 0; transform: scale(0.98) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+      @keyframes shimmerDark {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      .shimmer-dark {
+        background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%);
+        background-size: 200% 100%;
+        animation: shimmerDark 1.5s infinite;
+      }
+      .viewer-card {
+        background: rgba(12, 5, 31, 0.65);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        padding: 36px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      }
+      .viewer-markdown h1, .viewer-markdown h2, .viewer-markdown h3 {
+        color: #FFFFFF;
+        margin-top: 1.8rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+      .viewer-markdown h1 { font-size: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+      .viewer-markdown h2 { font-size: 1.5rem; color: #D946EF; }
+      .viewer-markdown h3 { font-size: 1.2rem; }
+      .viewer-markdown p {
+        color: #CBD5E1;
+        line-height: 1.75;
+        margin-bottom: 1.2rem;
+      }
+      .viewer-markdown code {
+        background: rgba(255,255,255,0.06);
+        padding: 3px 6px;
+        border-radius: 6px;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.9em;
+        color: #F472B6;
+      }
+      .viewer-markdown pre {
+        background: #0B0424;
+        border: 1px solid rgba(255,255,255,0.08);
+        padding: 20px;
+        border-radius: 12px;
+        overflow-x: auto;
+        margin-bottom: 1.5rem;
+      }
+      .viewer-markdown pre code {
+        background: none;
+        padding: 0;
+        color: #E2E8F0;
+        font-size: 0.88rem;
+      }
+      .viewer-markdown ul, .viewer-markdown ol {
+        margin-bottom: 1.2rem;
+        padding-left: 24px;
+        color: #CBD5E1;
+      }
+      .viewer-markdown li {
+        margin-bottom: 0.5rem;
+      }
+      .viewer-markdown blockquote {
+        border-left: 4px solid #D946EF;
+        background: rgba(217, 70, 239, 0.05);
+        padding: 12px 20px;
+        margin: 1.5rem 0;
+        border-radius: 0 8px 8px 0;
+        color: #E2E8F0;
+      }
+    </style>
+
+    <nav style="padding:20px 40px;background:rgba(12, 5, 31, 0.85);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div style="background:#059669;color:white;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;">SB</div>
+        <div style="background:var(--fuchsia);color:white;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 0 12px rgba(217,70,239,0.4);">SB</div>
         <div>
-          <div style="font-size:12px;color:#64748B;font-weight:600;">COURSE CONTENT</div>
-          <div style="font-size:16px;color:#0F172A;font-weight:700;">${title}</div>
+          <div style="font-size:12px;color:#94A3B8;font-weight:600;">COURSE CONTENT</div>
+          <div style="font-size:16px;color:#FFFFFF;font-weight:700;">${title}</div>
         </div>
       </div>
       <button onclick="document.getElementById('course-viewer-modal').remove()" 
-        style="background:#F1F5F9;border:none;padding:8px 20px;border-radius:12px;font-weight:700;color:#0F172A;cursor:pointer;transition:all 200ms;"
-        onmouseover="this.style.background='#E2E8F0'"
+        style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:12px;font-weight:700;color:#FFFFFF;cursor:pointer;transition:all 200ms;"
+        onmouseover="this.style.background='var(--fuchsia)';this.style.borderColor='var(--fuchsia)';"
+        onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='rgba(255,255,255,0.1)';"
       >Close Viewer</button>
     </nav>
 
     <div style="max-width:1000px;margin:0 auto;width:100%;padding:60px 20px;display:grid;grid-template-columns:1.5fr 1fr;gap:40px;">
       <!-- Left: Notes Content -->
       <div id="viewer-content">
-        <div style="text-align:center;padding:100px 0;">
-          <div class="shimmer" style="height:30px;width:60%;margin:0 auto 20px;border-radius:8px;"></div>
-          <div class="shimmer" style="height:20px;width:40%;margin:0 auto 40px;border-radius:8px;"></div>
-          <p style="color:#059669;font-weight:600;font-size:18px;">✨ Our AI is drafting your comprehensive study notes...</p>
+        <div class="viewer-card" style="text-align:center;padding:100px 0;">
+          <div class="shimmer-dark" style="height:30px;width:60%;margin:0 auto 20px;border-radius:8px;"></div>
+          <div class="shimmer-dark" style="height:20px;width:40%;margin:0 auto 40px;border-radius:8px;"></div>
+          <p style="color:var(--fuchsia);font-weight:600;font-size:18px;">✨ Our AI is drafting your comprehensive study notes...</p>
         </div>
       </div>
 
       <!-- Right: Video & Resources -->
       <div style="display:flex;flex-direction:column;gap:32px;">
-        <div style="background:#F8FAFC;border-radius:24px;padding:24px;border:1px solid #E2E8F0;">
-          <h4 style="margin-bottom:16px;font-size:14px;color:#0F172A;">🎥 Video Masterclass</h4>
-          <div id="viewer-video" style="aspect-ratio:16/9;background:#E2E8F0;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#64748B;font-size:12px;">
+        <div class="viewer-card" style="padding:24px;">
+          <h4 style="margin-bottom:16px;font-size:14px;color:#FFFFFF;display:flex;align-items:center;gap:8px;">🎥 Video Masterclass</h4>
+          <div id="viewer-video" style="aspect-ratio:16/9;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:12px;">
             Searching for best tutorial...
           </div>
         </div>
 
-        <div style="background:linear-gradient(135deg,#0F172A,#1E293B);border-radius:24px;padding:24px;color:white;">
-          <h4 style="margin-bottom:12px;font-size:14px;color:#94A3B8;">🚀 Quick Challenge</h4>
-          <p style="font-size:15px;margin-bottom:20px;">Master this topic to earn +30 XP and unlock the next phase of your roadmap.</p>
+        <div style="background:linear-gradient(135deg,rgba(217, 70, 239, 0.15),rgba(124, 58, 237, 0.15));border:1px solid rgba(217, 70, 239, 0.3);border-radius:24px;padding:24px;color:white;">
+          <h4 style="margin-bottom:12px;font-size:14px;color:#FDA4AF;">🚀 Quick Challenge</h4>
+          <p style="font-size:15px;margin-bottom:20px;color:#E2E8F0;">Master this topic to earn +30 XP and unlock the next phase of your roadmap.</p>
           <button onclick="document.getElementById('course-viewer-modal').remove()" 
-            style="width:100%;background:#059669;color:white;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;"
+            style="width:100%;background:var(--fuchsia);color:white;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(217,70,239,0.3);transition:all 200ms;"
+            onmouseover="this.style.transform='translateY(-2px)';"
+            onmouseout="this.style.transform='translateY(0)';"
           >Return to Dashboard</button>
         </div>
       </div>
@@ -858,10 +937,15 @@ async function generateCourseNotes(taskId, title) {
   searchYouTube(title).then(videos => {
     const videoArea = document.getElementById('viewer-video');
     if (videos && videos.length > 0) {
-      videoArea.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videos[0].id.videoId}" frameborder="0" allowfullscreen></iframe>`;
+      videoArea.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videos[0].id.videoId}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
     } else {
-      videoArea.innerHTML = 'No video found';
+      const fallbackUrl = getFallbackVideoUrl(title);
+      videoArea.innerHTML = `<iframe width="100%" height="100%" src="${fallbackUrl}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
     }
+  }).catch(() => {
+    const videoArea = document.getElementById('viewer-video');
+    const fallbackUrl = getFallbackVideoUrl(title);
+    videoArea.innerHTML = `<iframe width="100%" height="100%" src="${fallbackUrl}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
   });
 
   // 2. Generate Notes
@@ -880,29 +964,72 @@ async function generateCourseNotes(taskId, title) {
   if (result) {
     const cleanHTML = result.replace(/```html|```/g, '').trim();
     contentArea.innerHTML = `
-      <div class="fade-in" style="line-height:1.8;color:#1E293B;font-size:16px;">
-        <h1 style="font-size:32px;font-weight:800;color:#0F172A;margin-bottom:32px;">${title}</h1>
+      <div class="viewer-card viewer-markdown">
+        <h1 style="font-size:32px;font-weight:800;color:#FFFFFF;margin-bottom:32px;border:none;">${title}</h1>
         ${cleanHTML}
       </div>
     `;
   } else {
     // Fallback if AI fails
     contentArea.innerHTML = `
-      <div style="padding:60px;background:#FEF2F2;border-radius:24px;border:1px solid #FEE2E2;text-align:center;">
-        <h2 style="color:#B91C1C;">AI Service Currently Busy</h2>
-        <p style="color:#991B1B;margin:16px 0;">We couldn't generate the notes right now. However, you can still watch the video tutorial on the right!</p>
-        <button onclick="generateCourseNotes('${taskId}','${title}')" style="background:white;border:1px solid #B91C1C;color:#B91C1C;padding:10px 24px;border-radius:12px;cursor:pointer;font-weight:600;">Retry Generation</button>
+      <div class="viewer-card" style="border:1px solid rgba(239, 68, 68, 0.3);background:rgba(239, 68, 68, 0.05);text-align:center;padding:60px 40px;">
+        <h2 style="color:#F87171;font-size:24px;font-weight:700;margin-bottom:16px;">AI Service Currently Busy</h2>
+        <p style="color:#FCA5A5;margin-bottom:24px;font-size:15px;">We couldn't generate the notes right now. However, you can still watch the video tutorial on the right!</p>
+        <button onclick="generateCourseNotes('${taskId}','${title}')" style="background:transparent;border:1px solid #F87171;color:#F87171;padding:12px 30px;border-radius:12px;cursor:pointer;font-weight:700;transition:all 200ms;" onmouseover="this.style.background='#F87171';this.style.color='white';" onmouseout="this.style.background='transparent';this.style.color='#F87171';">Retry Generation</button>
       </div>
     `;
   }
 }
 
+function getFallbackVideoUrl(title) {
+  const t = title.toLowerCase();
+  if (t.includes('router') || t.includes('routing')) {
+    return 'https://www.youtube.com/embed/oTIJunBa1Zw';
+  }
+  if (t.includes('hooks') || t.includes('state') || t.includes('prop') || t.includes('react')) {
+    return 'https://www.youtube.com/embed/Ke90Tje7VS0';
+  }
+  if (t.includes('django')) {
+    return 'https://www.youtube.com/embed/F5mRW0q-A0o';
+  }
+  if (t.includes('python')) {
+    return 'https://www.youtube.com/embed/_uQrJ0TkZlc';
+  }
+  if (t.includes('flexbox') || t.includes('grid') || t.includes('css')) {
+    return 'https://www.youtube.com/embed/3YWtZ3H1JCY';
+  }
+  if (t.includes('html')) {
+    return 'https://www.youtube.com/embed/pQN-pnXPaVg';
+  }
+  if (t.includes('dsa') || t.includes('data structure') || t.includes('algorithm') || t.includes('tree') || t.includes('sort') || t.includes('search')) {
+    return 'https://www.youtube.com/embed/8hly31xKjns';
+  }
+  if (t.includes('sql') || t.includes('database') || t.includes('mongodb') || t.includes('postgres')) {
+    return 'https://www.youtube.com/embed/HXV3zeQKqGY';
+  }
+  if (t.includes('git') || t.includes('github') || t.includes('version control')) {
+    return 'https://www.youtube.com/embed/RGOj5yH7evk';
+  }
+  if (t.includes('system design') || t.includes('architecture')) {
+    return 'https://www.youtube.com/embed/SxgOkLpbV00';
+  }
+  if (t.includes('node') || t.includes('express') || t.includes('backend')) {
+    return 'https://www.youtube.com/embed/Oe421EPjeBE';
+  }
+  if (t.includes('typescript') || t.includes('ts')) {
+    return 'https://www.youtube.com/embed/d56mG7DezGs';
+  }
+  return 'https://www.youtube.com/embed/W6NZfCO5SIk';
+}
+
 async function searchYouTube(query) {
   try {
     const res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)} tutorial&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`);
+    if (!res.ok) throw new Error('YouTube API error status: ' + res.status);
     const data = await res.json();
-    return data.items;
+    return data.items || null;
   } catch (e) {
+    console.warn('YouTube API call failed, using static fallback:', e);
     return null;
   }
 }
@@ -914,7 +1041,7 @@ async function startQuiz(taskId, taskTitle, phase) {
   let quiz;
   try { const match = result?.match(/\{[\s\S]*\}/); quiz = JSON.parse(match?.[0] || '{}'); } catch (e) { quiz = getFallbackQuiz(taskTitle); }
   if (!quiz.questions?.length) quiz = getFallbackQuiz(taskTitle);
-  showQuizModal(taskId, taskTitle, quiz);
+  showQuizModal(taskId, taskTitle, quiz, phase);
 }
 
 function getFallbackQuiz(topic) {
@@ -925,38 +1052,99 @@ function showQuizLoading() {
   document.getElementById('quiz-modal')?.remove();
   const modal = document.createElement('div');
   modal.id = 'quiz-modal';
-  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:10000;display:flex;align-items:center;justify-content:center;`;
-  modal.innerHTML = `<div style="text-align:center;color:white;"><div style="font-size:40px;margin-bottom:16px;">🤖</div><div style="font-size:16px;font-weight:500;">Generating your quiz...</div><div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:8px;">AI is creating personalized questions</div></div>`;
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(5,1,13,0.95);backdrop-filter:blur(20px);z-index:10000;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;`;
+  modal.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:50px;margin-bottom:20px;animation:pulse 1.5s infinite;">🤖</div>
+      <div style="font-size:18px;font-weight:700;color:#FFFFFF;margin-bottom:8px;">Generating Your Quiz...</div>
+      <p style="font-size:13px;color:#94A3B8;margin:0 0 20px;">AI is creating personalized questions for you</p>
+      <div class="shimmer-dark" style="height:4px;width:160px;margin:0 auto;border-radius:2px;"></div>
+    </div>
+  `;
   document.body.appendChild(modal);
 }
 
-function showQuizModal(taskId, title, quiz) {
+function showQuizModal(taskId, title, quiz, phase) {
   document.getElementById('quiz-modal')?.remove();
   let currentQ = 0; let score = 0; let answers = [];
   const modal = document.createElement('div');
   modal.id = 'quiz-modal';
-  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;`;
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(5,1,13,0.9);backdrop-filter:blur(20px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;font-family:'Inter',sans-serif;color:#FFFFFF;animation:viewerFadeIn 0.3s ease-out both;`;
 
   function renderQuestion() {
     const q = quiz.questions[currentQ];
     const progress = ((currentQ) / quiz.questions.length) * 100;
-    modal.innerHTML = `<div style="background:white;border-radius:20px;padding:28px;max-width:540px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.3);"><div style="margin-bottom:20px;"><div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;"><span>Question ${currentQ + 1} of ${quiz.questions.length}</span><span>Score: ${score}/${currentQ}</span></div><div style="height:4px;background:#F1F5F9;border-radius:2px;"><div style="height:100%;width:${progress}%;background:#059669;border-radius:2px;transition:width 300ms;"></div></div></div><div style="font-size:16px;font-weight:500;line-height:1.5;margin-bottom:20px;color:#0F172A;">${q.q}</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">${q.options.map((opt, i) => `<button onclick="selectAnswer(${i}, ${q.answer}, '${q.explanation.replace(/'/g, "\\'")}', this)" style="text-align:left;padding:12px 16px;border-radius:10px;border:1.5px solid #E2E8F0;background:white;cursor:pointer;font-size:14px;transition:all 150ms;display:flex;align-items:center;gap:10px;" onmouseover="if(!this.disabled)this.style.borderColor='#059669';if(!this.disabled)this.style.background='#F0FDF4'" onmouseout="if(!this.disabled)this.style.borderColor='#E2E8F0';if(!this.disabled)this.style.background='white'"><span style="width:28px;height:28px;border-radius:50%;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;">${['A', 'B', 'C', 'D'][i]}</span>${opt}</button>`).join('')}</div><div id="explanation-area"></div></div>`;
+    modal.innerHTML = `
+      <div style="background:rgba(12, 5, 31, 0.85);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:32px;max-width:540px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5);backdrop-filter:blur(10px);">
+        <div style="margin-bottom:24px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:#94A3B8;margin-bottom:8px;font-weight:600;">
+            <span>QUESTION ${currentQ + 1} OF ${quiz.questions.length}</span>
+            <span style="color:var(--fuchsia);">SCORE: ${score}/${currentQ}</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:${progress}%;background:linear-gradient(90deg, #D946EF, #7C3AED);border-radius:3px;transition:width 300ms;"></div>
+          </div>
+        </div>
+        <div style="font-size:16px;font-weight:600;line-height:1.6;margin-bottom:24px;color:#FFFFFF;">${q.q}</div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+          ${q.options.map((opt, i) => `
+            <button onclick="selectAnswer(${i}, ${q.answer}, '${q.explanation.replace(/'/g, "\\'")}', this)" 
+              style="text-align:left;padding:14px 18px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:#E2E8F0;cursor:pointer;font-size:14px;transition:all 150ms;display:flex;align-items:center;gap:12px;" 
+              onmouseover="if(!this.disabled){this.style.borderColor='var(--fuchsia)';this.style.background='rgba(217,70,239,0.05)';}" 
+              onmouseout="if(!this.disabled){this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='rgba(255,255,255,0.02)';}"
+            >
+              <span style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#FFFFFF;">
+                ${['A', 'B', 'C', 'D'][i]}
+              </span>
+              ${opt}
+            </button>
+          `).join('')}
+        </div>
+        <div id="explanation-area"></div>
+      </div>
+    `;
   }
 
   window.selectAnswer = function (selected, correct, explanation, btn) {
     modal.querySelectorAll('button[onclick*="selectAnswer"]').forEach(b => b.disabled = true);
     const isCorrect = selected === correct; if (isCorrect) score++;
     answers.push({ selected, correct });
-    modal.querySelectorAll('button[onclick*="selectAnswer"]').forEach((b, i) => { if (i === correct) { b.style.background = '#F0FDF4'; b.style.borderColor = '#059669'; b.style.color = '#059669'; } else if (i === selected && !isCorrect) { b.style.background = '#FEF2F2'; b.style.borderColor = '#EF4444'; b.style.color = '#EF4444'; } });
+    modal.querySelectorAll('button[onclick*="selectAnswer"]').forEach((b, i) => { if (i === correct) { b.style.background = 'rgba(16,185,129,0.15)'; b.style.borderColor = '#10B981'; b.style.color = '#34D399'; } else if (i === selected && !isCorrect) { b.style.background = 'rgba(239,68,68,0.15)'; b.style.borderColor = '#EF4444'; b.style.color = '#FCA5A5'; } });
     const exp = document.getElementById('explanation-area');
-    if (exp) { exp.innerHTML = `<div style="padding:12px;border-radius:10px;background:${isCorrect ? '#F0FDF4' : '#FEF2F2'};border:1px solid ${isCorrect ? '#A7F3D0' : '#FECACA'};font-size:13px;color:${isCorrect ? '#065F46' : '#991B1B'};margin-bottom:16px;">${isCorrect ? '✓ Correct! ' : '✗ Wrong. '}${explanation}</div><button onclick="nextQuestion()" style="width:100%;background:#059669;color:white;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">${currentQ + 1 < quiz.questions.length ? 'Next Question →' : 'See Results 🏆'}</button>`; }
+    if (exp) { exp.innerHTML = `<div style="padding:14px 18px;border-radius:12px;background:${isCorrect ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'};border:1px solid ${isCorrect ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'};font-size:13px;color:${isCorrect ? '#34D399' : '#FCA5A5'};margin-bottom:20px;line-height:1.5;">${isCorrect ? '✓ Correct! ' : '✗ Incorrect. '}${explanation}</div><button onclick="nextQuestion()" style="width:100%;background:linear-gradient(135deg, #D946EF, #7C3AED);color:white;border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(217,70,239,0.3);transition:all 200ms;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">${currentQ + 1 < quiz.questions.length ? 'Next Question →' : 'See Results 🏆'}</button>`; }
   };
-  window.nextQuestion = function () { currentQ++; if (currentQ < quiz.questions.length) { renderQuestion(); } else { showQuizResults(taskId, score, quiz.questions.length); } };
+  window.nextQuestion = function () { currentQ++; if (currentQ < quiz.questions.length) { renderQuestion(); } else { showQuizResults(taskId, score, quiz.questions.length, title, phase); } };
   renderQuestion();
   document.body.appendChild(modal);
 }
 
-async function showQuizResults(taskId, score, total) {
+window.retryQuizNotes = async function (taskTitle) {
+  const notesArea = document.getElementById('quiz-results-notes');
+  if (!notesArea) return;
+  notesArea.innerHTML = `
+    <div style="text-align:center;padding:60px 0;">
+      <div class="shimmer-dark" style="height:24px;width:70%;margin:0 auto 16px;border-radius:6px;"></div>
+      <div class="shimmer-dark" style="height:16px;width:40%;margin:0 auto 24px;border-radius:6px;"></div>
+      <p style="color:var(--fuchsia);font-weight:600;font-size:15px;margin:0;">✨ Retrying study notes draft for ${taskTitle}...</p>
+    </div>
+  `;
+  const notesPrompt = `Generate a comprehensive, high-fidelity study note for a student learning about the topic "${taskTitle}". 
+  Provide clear headings: "Core Concepts", "Implementation Details", and "Common Pitfalls". 
+  Format it beautifully in clean, readable HTML paragraphs, code blocks, lists, and bold text. Keep it focused and clear. Do not wrap in markdown quotes.`;
+  const notesContent = await callAI(notesPrompt, 800);
+  if (notesContent) {
+    notesArea.innerHTML = `<div class="viewer-markdown">${notesContent}</div>`;
+  } else {
+    notesArea.innerHTML = `
+      <div style="text-align:center;padding:20px;">
+        <p style="color:#EF4444;font-size:14px;">⚠️ Failed to load study notes.</p>
+        <button onclick="retryQuizNotes('${taskTitle}')" style="background:var(--fuchsia);border:none;color:white;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:10px;">Retry Generation</button>
+      </div>
+    `;
+  }
+};
+
+async function showQuizResults(taskId, score, total, taskTitle, phase) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
   const pct = Math.round((score / total) * 100);
@@ -981,8 +1169,162 @@ async function showQuizResults(taskId, score, total) {
 
   if (pct >= 80) await completeTask(taskId, false);
   const modal = document.getElementById('quiz-modal'); if (!modal) return;
-  modal.innerHTML = `<div style="background:white;border-radius:20px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.3);"><div style="width:100px;height:100px;border-radius:50%;background:${pct >= 80 ? 'linear-gradient(135deg,#059669,#34D399)' : pct >= 60 ? 'linear-gradient(135deg,#F59E0B,#FCD34D)' : 'linear-gradient(135deg,#EF4444,#FCA5A5)'};display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(5,150,105,0.3);"><div style="font-size:28px;font-weight:700;color:white;">${pct}%</div><div style="font-size:11px;color:rgba(255,255,255,0.8);">${score}/${total}</div></div><h3 style="font-size:20px;margin-bottom:6px;">${pct >= 80 ? '🎉 Excellent!' : pct >= 60 ? '👍 Good Job!' : '💪 Keep Practicing!'}</h3><p style="color:#64748B;font-size:14px;margin-bottom:20px;">${pct >= 80 ? 'Task marked as complete!' : 'Score 80%+ to complete the task'}</p><div style="background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-radius:12px;padding:16px;margin-bottom:16px;"><div style="font-size:28px;font-weight:700;color:#D97706;">+${xpEarned} XP</div><div style="font-size:13px;color:#92400E;margin-top:4px;">Total XP: ${newXP} | Level ${newLevel}</div>${levelUp ? `<div style="margin-top:8px;font-size:13px;color:#059669;font-weight:600;">🎊 Level Up! You reached Level ${newLevel}!</div>` : ''}</div><button onclick="document.getElementById('quiz-modal').remove();loadTasks();" style="width:100%;background:#059669;color:white;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">${pct >= 80 ? '🏠 Back to Tasks' : '🔄 Try Again Later'}</button></div>`;
+  
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(5,1,13,0.95);backdrop-filter:blur(25px);z-index:10000;display:flex;flex-direction:column;overflow-y:auto;font-family:'Inter',sans-serif;color:#FFFFFF;animation:viewerFadeIn 0.4s ease-out both;`;
+  
+  modal.innerHTML = `
+    <style>
+      .quiz-results-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        width: 100%;
+        padding: 40px 20px;
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 32px;
+      }
+      @media (max-width: 768px) {
+        .quiz-results-container {
+          grid-template-columns: 1fr;
+        }
+      }
+      .quiz-card {
+        background: rgba(12, 5, 31, 0.65);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        padding: 28px;
+        backdrop-filter: blur(12px);
+      }
+    </style>
+
+    <nav style="padding:16px 40px;background:rgba(12, 5, 31, 0.85);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="background:var(--fuchsia);color:white;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 0 12px rgba(217,70,239,0.4);">SB</div>
+        <div>
+          <div style="font-size:12px;color:#94A3B8;font-weight:600;">QUIZ COMPLETED</div>
+          <div style="font-size:16px;color:#FFFFFF;font-weight:700;">${taskTitle}</div>
+        </div>
+      </div>
+      <button onclick="document.getElementById('quiz-modal').remove();loadTasks();" 
+        style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:12px;font-weight:700;color:#FFFFFF;cursor:pointer;transition:all 200ms;"
+        onmouseover="this.style.background='var(--fuchsia)';this.style.borderColor='var(--fuchsia)';"
+        onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='rgba(255,255,255,0.1)';"
+      >Done & Exit</button>
+    </nav>
+
+    <div class="quiz-results-container">
+      <!-- Left Column: Video & Study Notes -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        <!-- 1. Video Tutorial -->
+        <div class="quiz-card">
+          <h4 style="margin:0 0 16px;font-size:14px;color:#FFFFFF;display:flex;align-items:center;gap:8px;">
+            🎥 Topic Masterclass
+          </h4>
+          <div id="quiz-results-video" style="aspect-ratio:16/9;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:12px;">
+            Searching for topic video tutorial...
+          </div>
+        </div>
+
+        <!-- 2. AI Study Notes -->
+        <div class="quiz-card" style="min-height:300px;">
+          <h4 style="margin:0 0 16px;font-size:14px;color:#FFFFFF;display:flex;align-items:center;gap:8px;">
+            📝 Quiz Topic Study Guide
+          </h4>
+          <div id="quiz-results-notes">
+            <div style="text-align:center;padding:60px 0;">
+              <div class="shimmer-dark" style="height:24px;width:70%;margin:0 auto 16px;border-radius:6px;"></div>
+              <div class="shimmer-dark" style="height:16px;width:40%;margin:0 auto 24px;border-radius:6px;"></div>
+              <p style="color:var(--fuchsia);font-weight:600;font-size:15px;margin:0;">✨ Preparing customized study notes based on this topic...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Performance and Actions -->
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        <!-- Score Card -->
+        <div class="quiz-card" style="text-align:center;">
+          <div style="width:110px;height:110px;border-radius:50%;background:${pct >= 80 ? 'linear-gradient(135deg,#059669,#34D399)' : pct >= 60 ? 'linear-gradient(135deg,#F59E0B,#FCD34D)' : 'linear-gradient(135deg,#EF4444,#FCA5A5)'};display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 30px rgba(217,70,239,0.25);position:relative;border:4px solid rgba(255,255,255,0.1);">
+            <div style="font-size:32px;font-weight:800;color:white;line-height:1;">${pct}%</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:4px;">${score}/${total}</div>
+          </div>
+
+          <h3 style="font-size:20px;margin:0 0 8px;font-weight:700;">
+            ${pct >= 80 ? '🎉 Excellent Work!' : pct >= 60 ? '👍 Good Effort!' : '💪 Keep Practicing!'}
+          </h3>
+          <p style="color:#CBD5E1;font-size:14px;margin:0 0 24px;">
+            ${pct >= 80 ? 'You passed the quiz! This task is marked as complete.' : 'You need 80% or higher to complete this task.'}
+          </p>
+
+          <div style="background:linear-gradient(135deg,rgba(217,70,239,0.12),rgba(124,58,237,0.12));border:1px solid rgba(217,70,239,0.2);border-radius:16px;padding:20px;margin-bottom:24px;">
+            <div style="font-size:32px;font-weight:800;color:#D946EF;">+${xpEarned} XP</div>
+            <div style="font-size:12px;color:#A78BFA;margin-top:6px;font-weight:600;">Total XP: ${newXP} | Level ${newLevel}</div>
+            ${levelUp ? `<div style="margin-top:12px;font-size:12px;color:#34D399;font-weight:700;animation:bounce 1s infinite;">🎊 LEVEL UP! Reached Level ${newLevel}!</div>` : ''}
+          </div>
+
+          <button onclick="document.getElementById('quiz-modal').remove();loadTasks();" 
+            style="width:100%;background:linear-gradient(135deg, #D946EF, #7C3AED);color:white;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(217,70,239,0.3);transition:all 200ms;margin-bottom:12px;"
+            onmouseover="this.style.transform='translateY(-2px)';"
+            onmouseout="this.style.transform='translateY(0)';"
+          >
+            ${pct >= 80 ? 'Back to Tasks ✓' : 'Back to Dashboard'}
+          </button>
+          
+          ${pct < 80 ? `
+            <button onclick="document.getElementById('quiz-modal').remove();startQuiz('${taskId}', '${taskTitle}', '${phase}');" 
+              style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:white;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;transition:all 200ms;"
+              onmouseover="this.style.background='rgba(255,255,255,0.1)';"
+              onmouseout="this.style.background='rgba(255,255,255,0.06)';"
+            >
+              🔄 Try Quiz Again
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+
   loadXPDisplay();
+
+  // Load YouTube Video
+  searchYouTube(taskTitle).then(videos => {
+    const videoArea = document.getElementById('quiz-results-video');
+    if (videoArea) {
+      if (videos && videos.length > 0) {
+        videoArea.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videos[0].id.videoId}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
+      } else {
+        const fallbackUrl = getFallbackVideoUrl(taskTitle);
+        videoArea.innerHTML = `<iframe width="100%" height="100%" src="${fallbackUrl}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
+      }
+    }
+  }).catch(() => {
+    const videoArea = document.getElementById('quiz-results-video');
+    if (videoArea) {
+      const fallbackUrl = getFallbackVideoUrl(taskTitle);
+      videoArea.innerHTML = `<iframe width="100%" height="100%" src="${fallbackUrl}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
+    }
+  });
+
+  // Load AI Study Notes
+  const notesPrompt = `Generate a comprehensive, high-fidelity study note for a student learning about the topic "${taskTitle}". 
+  Provide clear headings: "Core Concepts", "Implementation Details", and "Common Pitfalls". 
+  Format it beautifully in clean, readable HTML paragraphs, code blocks, lists, and bold text. Keep it focused and clear. Do not wrap in markdown quotes.`;
+  
+  callAI(notesPrompt, 800).then(notesContent => {
+    const notesArea = document.getElementById('quiz-results-notes');
+    if (notesArea) {
+      if (notesContent) {
+        notesArea.innerHTML = `<div class="viewer-markdown">${notesContent}</div>`;
+      } else {
+        notesArea.innerHTML = `
+          <div style="text-align:center;padding:20px;">
+            <p style="color:#EF4444;font-size:14px;">⚠️ Failed to load study notes.</p>
+            <button onclick="retryQuizNotes('${taskTitle}')" style="background:var(--fuchsia);border:none;color:white;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-top:10px;">Retry Generation</button>
+          </div>
+        `;
+      }
+    }
+  });
 }
 
 // ── FIX 4: XP DISPLAY IN DASHBOARD ──────────────────────────
@@ -1713,37 +2055,50 @@ function downloadRoadmapPDF() {
 
 
 async function callAI(prompt, maxTokens = 800) {
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_KEY}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'SkillBridge'
-      },
-      body: JSON.stringify({
-        model: 'openrouter/free',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: maxTokens,
-        temperature: 0.7
-      })
-    });
+  const models = [
+    'openrouter/free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'google/gemini-2.0-flash-exp:free',
+    'deepseek/deepseek-v4-flash:free'
+  ];
 
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      console.error('OpenRouter API Error:', res.status, errorData);
-      window.lastAIError = { status: res.status, data: errorData };
-      return null;
+  for (const model of models) {
+    try {
+      console.log(`[callAI] Attempting prompt with model: ${model}`);
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_KEY}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'SkillBridge'
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: maxTokens,
+          temperature: 0.7
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          console.log(`[callAI] Success with model: ${model}`);
+          return content;
+        }
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        console.warn(`[callAI] Model ${model} returned status ${res.status}:`, errBody);
+      }
+    } catch (e) {
+      console.error(`[callAI] Model ${model} failed with error:`, e);
     }
-
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content || null;
-  } catch (e) {
-    console.error('AI Call failed:', e);
-    window.lastAIError = { status: 'Network Error', data: e.message };
-    return null;
+    // Wait 500ms before trying the next fallback model
+    await new Promise(r => setTimeout(r, 500));
   }
+  return null;
 }
 
 // ── RESUME & PORTFOLIO FUNCTIONS ─────────────────────────────
