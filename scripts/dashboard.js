@@ -2944,22 +2944,26 @@ function setCompanyType(idx, btn) {
   btn.style.borderColor = '#059669';
 }
 
+let currentR1Test = null;
+
 async function startRound1Test() {
   const area = document.getElementById('r1-test-area');
-  area.innerHTML = '<div style="padding:40px;text-align:center;">🧠 Generating technical test for ' + selectedCompanyType + '...</div>';
+  area.innerHTML = '<div style="padding:40px;text-align:center;"><div style="font-size:24px; margin-bottom:12px; animation: pulse 1.5s infinite;">🧠</div><div style="color:var(--emerald); font-weight:600;">Generating realistic technical test for ' + selectedCompanyType + '...</div><div style="font-size:12px; color:var(--text-muted); margin-top:8px;">This might take a moment.</div></div>';
   area.style.display = 'block';
   document.getElementById('start-r1-btn').style.display = 'none';
 
-  const prompt = `Generate a technical test for ${selectedCompanyType} role. 
-  Include: 3 Technical MCQs and 1 Coding Logic Question.
-  Return ONLY JSON format: {"mcqs": [{"q": "...", "a": ["...", "..."], "correct": 0}], "coding": {"q": "..."}}`;
+  const prompt = `Generate a technical test for a ${selectedCompanyType} software engineering role. 
+  Include exactly 10 Technical MCQs (mix of data structures, web tech, logic) and 1 Coding Question.
+  Return ONLY valid JSON format: {"mcqs": [{"q": "...", "a": ["opt1", "opt2", "opt3", "opt4"], "correct": 0}], "coding": {"q": "..."}}
+  Ensure "correct" is the integer index (0-3) of the correct answer.`;
 
-  const result = await callAI(prompt, 1000);
+  const result = await callAI(prompt);
   try {
     const test = JSON.parse(result.match(/\{[\s\S]*\}/)[0]);
+    currentR1Test = test;
     renderRound1(test);
   } catch (e) {
-    area.innerHTML = 'Failed to generate test. Try again.';
+    area.innerHTML = '<div style="color:var(--rose); padding:20px;">Failed to generate test. Please try again.</div>';
     document.getElementById('start-r1-btn').style.display = 'block';
   }
 }
@@ -3032,26 +3036,56 @@ async function submitRound1() {
   }
 
   showToast('AI is evaluating your answers...', 'info');
-  // Wait a moment for dramatic effect
-  await new Promise(r => setTimeout(r, 2000));
 
-  // Mock scoring logic for demo - in real app, AI would evaluate
-  const score = Math.floor(Math.random() * 20) + 75; // Give them a decent score usually
-  const passed = score >= 70;
+  // Grade MCQs deterministically
+  let mcqScore = 0;
+  if (currentR1Test && currentR1Test.mcqs) {
+    currentR1Test.mcqs.forEach((m, i) => {
+      const selected = document.querySelector(`input[name="mcq-${i}"]:checked`);
+      if (selected && parseInt(selected.value) === m.correct) {
+        mcqScore++;
+      }
+    });
+  }
 
-  await savePlacementAttempt(1, score, passed);
+  // Grade coding challenge with AI
+  const codeAns = document.getElementById('coding-ans')?.value || '';
+  let codeScore = 0;
+  let strengths = 'Syntax structure';
+  let weakAreas = 'Algorithmic Optimization';
+
+  if (codeAns.trim().length > 10 && currentR1Test) {
+    const prompt = `Evaluate this code answer for the question: "${currentR1Test.coding.q}". 
+    Candidate's Code: "${codeAns}". 
+    Score it out of 50. Return ONLY valid JSON: {"score": <number 0-50>, "strength": "<1-3 words>", "weakness": "<1-3 words>"}`;
+    try {
+      const res = await callAI(prompt);
+      const parsed = JSON.parse(res.match(/\{[\s\S]*\}/)[0]);
+      codeScore = parsed.score || 0;
+      strengths = parsed.strength || strengths;
+      weakAreas = parsed.weakness || weakAreas;
+    } catch(e) {
+      console.log('AI coding eval fallback');
+      codeScore = 25; 
+    }
+  }
+
+  // Max 50 for MCQs (10 * 5) + Max 50 for Code
+  const finalScore = (mcqScore * 5) + codeScore;
+  const passed = finalScore >= 70;
+
+  await savePlacementAttempt(1, finalScore, passed);
 
   document.getElementById('r1-test-area').style.display = 'none';
   const res = document.getElementById('r1-result');
   res.style.display = 'block';
   
-  const weakAreas = passed ? 'Data Structures, API Integration' : 'Algorithmic Complexity, Basic Syntax';
-  
   res.innerHTML = `
     <div style="padding:24px;background:var(--bg-card);border-radius:16px;border:1px solid ${passed ? 'var(--emerald)' : 'var(--rose)'};box-shadow:var(--shadow-card);">
       <div style="text-align:center;margin-bottom:20px;">
         <div style="font-size:42px;margin-bottom:12px;text-shadow:0 0 20px ${passed ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)'};">${passed ? '🎉' : '❌'}</div>
-        <div style="font-size:22px;font-weight:800;color:${passed ? 'var(--emerald)' : 'var(--rose)'};">Score: ${score}/100</div>
+        <div style="font-size:22px;font-weight:800;color:${passed ? 'var(--emerald)' : 'var(--rose)'};">Score: ${finalScore}/100</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">(MCQs: ${mcqScore*5}/50 | Coding: ${codeScore}/50)</div>
         <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;">
           ${passed ? 'Outstanding! You have strong fundamentals and unlocked Round 2.' : 'Almost there. Keep practicing your logic and try again!'}
         </p>
@@ -3060,9 +3094,9 @@ async function submitRound1() {
       <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);">
         <h4 style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">AI Analysis</h4>
         <div style="font-size:13px;color:var(--text-primary);line-height:1.6;">
-          <strong>Strengths:</strong> Problem solving approach, Code structure.<br>
+          <strong>Strengths:</strong> ${strengths}.<br>
           <strong style="color:var(--amber);">Areas to Improve:</strong> ${weakAreas}.<br>
-          <strong>Recommendation:</strong> Practice more timed challenges before real interviews.
+          <strong>Recommendation:</strong> ${passed ? 'Ready for technical interview.' : 'Review core concepts and practice more timed challenges.'}
         </div>
       </div>
       
@@ -3072,7 +3106,7 @@ async function submitRound1() {
 
   if (passed) {
     placementProgress.r1 = true;
-    placementProgress.r1Score = score;
+    placementProgress.r1Score = finalScore;
     updatePlacementProgress();
   }
 }
