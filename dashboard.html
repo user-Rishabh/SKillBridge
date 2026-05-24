@@ -33,6 +33,86 @@
        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     </script>
 
+    <style>
+      /* ─── DEEP TECH TERMINAL THEME OVERRIDES ─── */
+      :root {
+        --bg-base: #05070a;
+        --bg-surface: rgba(13, 17, 23, 0.6);
+        --bg-card: rgba(13, 17, 23, 0.8);
+        --emerald: #00E5FF;
+        --emerald-dark: #008b9e;
+        --fuchsia: #7000FF;
+        --amber: #fec42e;
+        --rose: #ffb4ab;
+        --text-primary: #dce4e6;
+        --text-secondary: #bac9cd;
+        --text-muted: #859397;
+        --border: rgba(255, 255, 255, 0.12);
+        --font-sans: 'Inter', sans-serif;
+        --font-mono: 'JetBrains Mono', monospace;
+        --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      }
+
+      body, .app-container, .main-content {
+        background-color: var(--bg-base) !important;
+        color: var(--text-primary) !important;
+        font-family: var(--font-sans) !important;
+      }
+      
+      /* Sidebar */
+      .sidebar {
+        background: var(--bg-base) !important;
+        border-right: 1px solid var(--border) !important;
+      }
+      .nav-item.active {
+        background: rgba(0, 229, 255, 0.1) !important;
+        color: var(--emerald) !important;
+        border-right: 3px solid var(--emerald) !important;
+      }
+      .nav-item:hover { color: var(--emerald) !important; }
+
+      /* Cards & Glassmorphism */
+      .stat-card, .panel-card, .dashboard-view .main-section > div, .right-panel > div,
+      [id^="tab-"] > div {
+        background: var(--bg-surface) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        box-shadow: var(--shadow-card) !important;
+        color: var(--text-primary) !important;
+      }
+
+      h1, h2, h3, h4, h5, h6, .card-title {
+        color: var(--text-primary) !important;
+      }
+
+      /* Top Navbar */
+      .main-content > div:first-child {
+        background: rgba(5, 7, 10, 0.85) !important;
+        border-bottom: 1px solid var(--border) !important;
+      }
+      #greeting-text { color: var(--text-primary) !important; }
+      #greeting-sub { color: var(--text-secondary) !important; font-family: var(--font-mono) !important; }
+
+      /* Buttons */
+      button[style*="#059669"], .btn-primary {
+        background: var(--emerald) !important;
+        color: #000 !important;
+        border: none !important;
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.4) !important;
+      }
+
+      /* Tab Animation */
+      .tab-pane-enter {
+        animation: tabFadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      
+      @keyframes tabFadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    </style>
 </head>
 
 <body>

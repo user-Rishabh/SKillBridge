@@ -9,7 +9,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/animations.css">
@@ -17,6 +17,133 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.js"></script>
   <script src="scripts/auth.js" defer></script>
+
+  <style>
+    /* ─── DEEP TECH TERMINAL THEME OVERRIDES ─── */
+    :root {
+      --bg-base: #05070a;
+      --bg-surface: rgba(13, 17, 23, 0.6);
+      --bg-card: rgba(13, 17, 23, 0.8);
+      --emerald: #00E5FF; /* Electric Blue */
+      --emerald-dark: #008b9e;
+      --fuchsia: #7000FF;
+      --amber: #fec42e;
+      --rose: #ffb4ab;
+      --text-primary: #dce4e6;
+      --text-secondary: #bac9cd;
+      --text-muted: #859397;
+      --border: rgba(255, 255, 255, 0.12);
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --shadow-fuchsia: 0 0 20px rgba(0, 229, 255, 0.3);
+      --grad-brand: linear-gradient(135deg, #00E5FF 0%, #008b9e 100%);
+    }
+
+    body {
+      background-color: var(--bg-base) !important;
+      color: var(--text-primary) !important;
+      font-family: var(--font-sans) !important;
+    }
+    
+    h1, h2, h3, h4, h5, h6 { font-family: var(--font-sans) !important; }
+
+    /* Button Styling */
+    .btn-primary, .btn-cta-primary {
+      background: var(--emerald) !important;
+      color: #000 !important;
+      border: none !important;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.4) !important;
+      border-radius: 8px !important;
+      font-weight: 700 !important;
+    }
+    .btn-primary:hover, .btn-cta-primary:hover {
+      background: #baf2ff !important;
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.6) !important;
+      transform: translateY(-2px);
+    }
+    
+    .pill-emerald {
+      background: rgba(0, 229, 255, 0.1) !important;
+      color: var(--emerald) !important;
+      border: 1px solid rgba(0, 229, 255, 0.2) !important;
+    }
+    
+    .text-emerald { color: var(--emerald) !important; text-shadow: 0 0 10px rgba(0, 229, 255, 0.3); }
+
+    /* Glassmorphism Cards */
+    .hero-dashboard-card, .feature-card, .step-card, .faq-item, .mdb-stat-card, .mdb-skills-panel, .mdb-weak-panel, .before-card, .after-card, .mdb-sidebar, .mdb-two-col {
+      background: var(--bg-surface) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 16px !important;
+      box-shadow: var(--shadow-card) !important;
+    }
+
+    .feature-card:hover, .step-card:hover {
+      border-color: rgba(0, 229, 255, 0.5) !important;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.15) !important;
+      transform: translateY(-4px) scale(1.02);
+      transition: all 300ms ease;
+    }
+
+    .hero-dashboard-card { border-radius: 20px !important; }
+
+    /* Terminal Elements */
+    .hero-sub, .pain-desc, .win-desc, .step-desc, .fc-desc, .faq-a p {
+      font-family: var(--font-mono) !important;
+      font-size: 0.9em !important;
+      color: var(--text-secondary) !important;
+      line-height: 1.6;
+    }
+    
+    .navbar {
+      background: rgba(5, 7, 10, 0.8) !important;
+      backdrop-filter: blur(20px) !important;
+      border-bottom: 1px solid var(--border) !important;
+    }
+
+    .hero-text { position: relative; }
+    .hero-text::before {
+      content: '> user@skillbridge:~/system_initialize()..._';
+      display: block;
+      margin-bottom: 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--emerald);
+      opacity: 0.8;
+      animation: blink 1s step-end infinite;
+    }
+    
+    @keyframes blink {
+      50% { opacity: 0.3; }
+    }
+    
+    .hero-heading { font-weight: 800 !important; letter-spacing: -0.03em !important; }
+
+    /* SVGs & Icons */
+    .ring-fill { stroke: var(--emerald) !important; }
+    .emerald-circle, .vs-header-icon { 
+      background: rgba(0, 229, 255, 0.1) !important; 
+      color: var(--emerald) !important; 
+      border: 1px solid rgba(0, 229, 255, 0.2);
+    }
+
+    /* Lighting */
+    .dp-bg-orb, .hero-orb-1, .hero-orb-2, .hero-orb-3, .cta-glow {
+      background: radial-gradient(circle, rgba(0, 229, 255, 0.15) 0%, transparent 70%) !important;
+    }
+    
+    /* Terminal Block inside Mock Dashboard */
+    .mdb-next-task {
+      background: #000 !important;
+      border: 1px solid var(--border) !important;
+      font-family: var(--font-mono) !important;
+    }
+    .mdb-nt-pin { color: var(--emerald) !important; }
+    .mdb-nt-btn { font-family: var(--font-sans) !important; }
+  </style>
 </head>
 <body>
 

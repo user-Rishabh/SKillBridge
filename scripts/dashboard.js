@@ -2570,9 +2570,17 @@ function initInteractions() {
 function initTabs() {
   const tabs = document.querySelectorAll('[data-tab]');
   function switchTab(tabName) {
-    document.querySelectorAll('[id^="tab-"]').forEach(sec => { sec.style.display = 'none'; });
+    document.querySelectorAll('[id^="tab-"]').forEach(sec => { 
+      sec.style.display = 'none'; 
+      sec.classList.remove('tab-pane-enter');
+    });
     const target = document.getElementById('tab-' + tabName);
-    if (target) { target.style.display = 'block'; }
+    if (target) { 
+      target.style.display = 'block'; 
+      // Force reflow to trigger animation restart
+      void target.offsetWidth;
+      target.classList.add('tab-pane-enter');
+    }
     tabs.forEach(t => { t.className = `nav-item ${t.dataset.tab === tabName ? 'active' : ''}`; });
     localStorage.setItem('activeTab', tabName);
     if (tabName === 'roadmap') loadRoadmapTab();
