@@ -27,6 +27,12 @@
     <!-- jsPDF -->
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
+    <!-- PDF.js for reading PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    </script>
+
 </head>
 
 <body>
@@ -1434,9 +1440,9 @@
   </div>
 
   <!-- Round progress tracker -->
-  <div style="background:white;
+  <div style="background:var(--bg-card);
     border-radius:14px;
-    border:1px solid #E2E8F0;
+    border:1px solid var(--border);
     padding:20px;margin-bottom:24px;">
     <div style="display:grid;
       grid-template-columns:repeat(4,1fr);
@@ -1540,10 +1546,7 @@
   </div>
 
   <!-- ═══════════ RESUME SECTION ═══════════ -->
-  <div id="section-resume" style="
-    background:white;border-radius:16px;
-    border:1px solid #E2E8F0;
-    padding:24px;margin-bottom:20px;">
+  <div id="section-resume" class="placement-card" style="display:block;">
 
     <div style="display:flex;
       justify-content:space-between;
@@ -1597,36 +1600,14 @@
 
     <!-- Action buttons -->
     <div id="resume-action-buttons"
-      style="display:none;
-      display:grid;grid-template-columns:1fr 1fr;
-      gap:10px;margin-bottom:16px;">
-      <button onclick="analyzeResume()"
-        style="padding:11px;background:#059669;
+      style="display:none; text-align:center; margin-bottom:20px;">
+      <button onclick="processAndAnalyzeResume()"
+        style="padding:14px 28px;background:var(--grad-brand);
         color:white;border:none;border-radius:10px;
-        font-size:13px;font-weight:500;
-        cursor:pointer;">
-        🔍 Analyze Resume
-      </button>
-      <button onclick="getResumeImprovements()"
-        style="padding:11px;background:transparent;
-        border:1px solid #059669;color:#059669;
-        border-radius:10px;font-size:13px;
-        cursor:pointer;">
-        📈 Get Improvements
-      </button>
-      <button onclick="generateAIResume()"
-        style="padding:11px;background:transparent;
-        border:1px solid #E2E8F0;
-        border-radius:10px;font-size:13px;
-        cursor:pointer;">
-        ✨ Generate AI Resume
-      </button>
-      <button onclick="downloadResumeAsPDF()"
-        style="padding:11px;background:#0F172A;
-        color:white;border:none;
-        border-radius:10px;font-size:13px;
-        cursor:pointer;">
-        ⬇️ Download PDF
+        font-size:15px;font-weight:600;
+        cursor:pointer;box-shadow:var(--shadow-fuchsia);
+        transition:all 200ms;">
+        ✨ Analyze & Unlock Round 1
       </button>
     </div>
 
@@ -1635,10 +1616,7 @@
   </div>
 
   <!-- ═══════════ ROUND 1 ═══════════════ -->
-  <div id="section-round1" style="
-    background:white;border-radius:16px;
-    border:1px solid #E2E8F0;
-    padding:24px;margin-bottom:20px;">
+  <div id="section-round1" class="placement-card" style="display:none;">
 
     <div style="display:flex;
       justify-content:space-between;
@@ -1735,12 +1713,7 @@
   </div>
 
   <!-- ═══════════ ROUND 2 ═══════════════ -->
-  <div id="section-round2" style="
-    background:white;border-radius:16px;
-    border:1px solid #E2E8F0;
-    padding:24px;margin-bottom:20px;
-    opacity:0.5;pointer-events:none;
-    transition:all 400ms;">
+  <div id="section-round2" class="placement-card" style="display:none;">
 
     <div style="display:flex;
       justify-content:space-between;
@@ -1769,11 +1742,12 @@
 
     <button id="start-r2-btn"
       onclick="startRound2Interview()"
-      style="width:100%;padding:12px;
-      background:#D97706;color:white;
+      style="width:100%;padding:14px;
+      background:var(--grad-brand);color:white;
       border:none;border-radius:10px;
-      font-size:14px;font-weight:500;
-      cursor:pointer;">
+      font-size:15px;font-weight:600;
+      cursor:pointer;box-shadow:var(--shadow-fuchsia);
+      transition:all 200ms;">
       Start Technical Interview →
     </button>
 
@@ -1787,12 +1761,7 @@
   </div>
 
   <!-- ═══════════ ROUND 3 ═══════════════ -->
-  <div id="section-round3" style="
-    background:white;border-radius:16px;
-    border:1px solid #E2E8F0;
-    padding:24px;margin-bottom:20px;
-    opacity:0.5;pointer-events:none;
-    transition:all 400ms;">
+  <div id="section-round3" class="placement-card" style="display:none;">
 
     <div style="display:flex;
       justify-content:space-between;
@@ -1861,21 +1830,23 @@
     </div>
 
     <!-- Permission warning -->
-    <div style="background:#FEF3C7;
+    <div style="background:var(--bg-surface);
+      border:1px solid var(--border);
       border-radius:8px;padding:10px 14px;
       margin-bottom:14px;font-size:13px;
-      color:#92400E;">
+      color:var(--amber);">
       ⚠️ Requires camera + microphone access.
       Use Chrome or Edge for best experience.
     </div>
 
     <button id="start-r3-btn"
       onclick="startVideoInterview()"
-      style="width:100%;padding:12px;
-      background:#DC2626;color:white;
+      style="width:100%;padding:14px;
+      background:var(--grad-brand);color:white;
       border:none;border-radius:10px;
-      font-size:14px;font-weight:500;
-      cursor:pointer;">
+      font-size:15px;font-weight:600;
+      cursor:pointer;box-shadow:var(--shadow-fuchsia);
+      transition:all 200ms;">
       Start Video Interview 🎥 →
     </button>
 
