@@ -3114,11 +3114,16 @@ async function submitRound1() {
 // ── Round 2: Technical Interview ─────────
 let r2TimerInterval;
 let r2TimeLeft = 20 * 60; // 20 mins
+let r2ChatHistory = [];
 
 async function startRound2Interview() {
   const area = document.getElementById('r2-chat-area');
   area.style.display = 'block';
   document.getElementById('start-r2-btn').style.display = 'none';
+
+  r2ChatHistory = [
+    { role: 'ai', text: `Hello! I am your Technical AI Interviewer for the ${selectedCompanyType} role. I've reviewed your resume. Are you ready to begin?` }
+  ];
 
   area.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; background:var(--bg-surface); padding:10px 16px; border-radius:10px; border:1px solid var(--border);">
@@ -3159,22 +3164,23 @@ async function sendR2Message() {
   if (!msg) return;
   input.value = '';
 
+  r2ChatHistory.push({ role: 'user', text: msg });
   addChatMessage('user', msg);
+
+  // If user has provided 4 answers (total 8 messages including the intro), conclude and evaluate.
+  if (r2ChatHistory.length >= 8) {
+    clearInterval(r2TimerInterval);
+    showTyping('r2-messages');
+    await finishRound2();
+    return;
+  }
 
   showTyping('r2-messages');
   const response = await getAIInterviewResponse(msg);
   hideTyping('r2-messages');
   
+  r2ChatHistory.push({ role: 'ai', text: response });
   addChatMessage('ai', response);
-
-  // Auto-pass after 4 interactions (8 messages total)
-  const msgs = document.getElementById('r2-messages').children.length;
-  if (msgs >= 8) {
-    setTimeout(() => {
-      clearInterval(r2TimerInterval);
-      finishRound2();
-    }, 3000);
-  }
 }
 
 function addChatMessage(role, text) {
@@ -3214,28 +3220,62 @@ async function getAIInterviewResponse(userMsg) {
 }
 
 async function finishRound2() {
+  // Update UI to show evaluation state
+  const inputRow = document.getElementById('r2-input')?.parentElement;
+  if(inputRow) inputRow.innerHTML = '<div style="color:var(--emerald); padding:14px; font-weight:600; text-align:center; width:100%; border:1px solid var(--border); border-radius:10px; background:var(--bg-surface); animation:pulse 1.5s infinite;">Concluding interview & evaluating responses...</div>';
+
+  // Evaluate transcript
+  const transcript = r2ChatHistory.map(m => `${m.role.toUpperCase()}: ${m.text}`).join('\n');
+  const prompt = `Evaluate this technical interview transcript for a ${selectedCompanyType} software engineering role. 
+  Transcript:
+  ${transcript}
+  Score the candidate out of 100 based strictly on the accuracy, depth, and logic of their answers.
+  If the candidate gave short, generic, non-technical, or nonsensical answers (or just said "hi/yes"), score them very low (0-30).
+  Return ONLY valid JSON: {"score": <number 0-100>, "feedback": "<2-3 sentences of highly constructive feedback detailing exact weaknesses or strengths>"}
+  Do not return markdown or backticks, just the JSON string.`;
+
+  let finalScore = 0;
+  let aiFeedback = "Interview completed, but the evaluator encountered an issue parsing the feedback.";
+  try {
+    const res = await callAI(prompt);
+    const parsed = JSON.parse(res.match(/\{[\s\S]*\}/)[0]);
+    finalScore = parsed.score || 0;
+    aiFeedback = parsed.feedback || aiFeedback;
+  } catch(e) {
+    console.log('R2 Evaluation error fallback');
+    finalScore = 40; // Fallback to failing score
+  }
+
+  const passed = finalScore >= 70;
+
   document.getElementById('r2-chat-area').style.display = 'none';
-  const res = document.getElementById('r2-result');
-  res.style.display = 'block';
-  res.innerHTML = `
-    <div style="padding:24px;background:var(--bg-card);border-radius:16px;border:1px solid var(--emerald);box-shadow:var(--shadow-card);">
+  const resArea = document.getElementById('r2-result');
+  resArea.style.display = 'block';
+  
+  resArea.innerHTML = `
+    <div style="padding:24px;background:var(--bg-card);border-radius:16px;border:1px solid ${passed ? 'var(--emerald)' : 'var(--rose)'};box-shadow:var(--shadow-card);">
       <div style="text-align:center;margin-bottom:20px;">
-        <div style="font-size:42px;margin-bottom:12px;text-shadow:0 0 20px rgba(16,185,129,0.4);">🚀</div>
-        <div style="font-size:22px;font-weight:800;color:var(--emerald);">Technical Round Cleared!</div>
-        <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;">Your technical foundation and communication are strong. Final Video Round Unlocked.</p>
+        <div style="font-size:42px;margin-bottom:12px;text-shadow:0 0 20px ${passed ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)'};">${passed ? '🚀' : '❌'}</div>
+        <div style="font-size:22px;font-weight:800;color:${passed ? 'var(--emerald)' : 'var(--rose)'};">Score: ${finalScore}/100</div>
+        <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;">
+          ${passed ? 'Your technical foundation and communication are strong. Final Video Round Unlocked.' : 'You must provide detailed technical answers to clear this round.'}
+        </p>
       </div>
       <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);">
         <h4 style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Interviewer Feedback</h4>
         <div style="font-size:13px;color:var(--text-primary);line-height:1.6;">
-          Candidate demonstrated clear understanding of core concepts. Able to articulate logic effectively under pressure. Highly recommended for final round.
+          ${aiFeedback}
         </div>
       </div>
-      <button onclick="scrollToRound('step-r3')" style="width:100%;margin-top:20px;padding:12px;background:var(--emerald);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Proceed to Final Video Round →</button>
+      ${passed ? `<button onclick="scrollToRound('step-r3')" style="width:100%;margin-top:20px;padding:14px;background:var(--grad-brand);color:white;border:none;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;box-shadow:var(--shadow-fuchsia);transition:all 200ms;">Proceed to Final Video Round →</button>` : ''}
     </div>
   `;
-  placementProgress.r2 = true;
-  await savePlacementAttempt(2, 85, true);
-  updatePlacementProgress();
+
+  await savePlacementAttempt(2, finalScore, passed);
+  if(passed) {
+    placementProgress.r2 = true;
+    updatePlacementProgress();
+  }
 }
 
 // ── Round 3: Video Interview ─────────────
