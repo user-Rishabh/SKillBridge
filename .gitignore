@@ -1,0 +1,11 @@
+# API Keys & Configurations
+scripts/config.js
+
+# Local Scratch / Testing Scripts
+scratch/
+.env
+
+# Dependencies
+node_modules/
+dist/
+.DS_Store

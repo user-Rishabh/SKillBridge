@@ -2,11 +2,12 @@
  * SkillBridge Dashboard — Full Logic
  */
 
-const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
-const OPENROUTER_KEY = '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';
-const GEMINI_KEY = 'AIzaSyDS7TYMoat41MabOAIXGAEgOc_4s7hQSts';
-const YOUTUBE_API_KEY = 'AIzaSyDE3b7vCrg4HMwQLtjCcbmGMLp6-vZ4Lao';
+const SUPABASE_URL = window.ENV_CONFIG?.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = window.ENV_CONFIG?.SUPABASE_ANON_KEY || '';
+const OPENROUTER_KEY = window.ENV_CONFIG?.OPENROUTER_KEY || '';
+const GEMINI_KEY = window.ENV_CONFIG?.GEMINI_KEY || '';
+const YOUTUBE_API_KEY = window.ENV_CONFIG?.YOUTUBE_API_KEY || '';
+
 
 let supabase;
 try {

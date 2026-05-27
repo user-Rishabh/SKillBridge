@@ -16,7 +16,9 @@
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.js"></script>
+  <script src="scripts/config.js"></script>
   <script src="scripts/auth.js" defer></script>
+
 
   <style>
     /* ─── DEEP TECH TERMINAL THEME OVERRIDES ─── */
@@ -143,9 +145,54 @@
     }
     .mdb-nt-pin { color: var(--emerald) !important; }
     .mdb-nt-btn { font-family: var(--font-sans) !important; }
+    /* Animations - Code/Tech Theme */
+    @keyframes moveDataStreams {
+      0% { background-position: 0px 0px, 0px 0px, 0px 0px; }
+      100% { background-position: 500px 500px, -300px 400px, 400px -600px; }
+    }
+    
+    @keyframes scanlines {
+      0% { background-position: 0 0; }
+      100% { background-position: 0 100px; }
+    }
+    
+    @keyframes pulseOrb {
+      0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.3; }
+      50% { transform: scale(1.3) translate(20px, -20px); opacity: 0.6; }
+    }
+
+    .data-stripes {
+      position: fixed; inset: 0; z-index: -2; pointer-events: none;
+      /* Fine vertical and horizontal tech lines mimicking data flow */
+      background-image: 
+        linear-gradient(90deg, rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(112, 0, 255, 0.03) 2px, transparent 2px);
+      background-size: 60px 60px, 60px 60px, 150px 150px;
+      animation: moveDataStreams 30s linear infinite;
+    }
+
+    .scan-line {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background: linear-gradient(to bottom, transparent 50%, rgba(0, 229, 255, 0.04) 51%);
+      background-size: 100% 4px;
+      animation: scanlines 2s linear infinite;
+    }
+
+    .tech-glow-1, .tech-glow-2 {
+      position: fixed; border-radius: 50%; pointer-events: none; z-index: -3;
+      filter: blur(120px); animation: pulseOrb 15s ease-in-out infinite alternate;
+    }
+    .tech-glow-1 { width: 50vw; height: 50vw; background: rgba(0, 229, 255, 0.1); top: -20vh; left: -10vw; }
+    .tech-glow-2 { width: 60vw; height: 60vw; background: rgba(112, 0, 255, 0.08); bottom: -30vh; right: -10vw; animation-delay: -5s; }
   </style>
 </head>
 <body>
+  <!-- Animated Background Elements -->
+  <div class="data-stripes"></div>
+  <div class="scan-line"></div>
+  <div class="tech-glow-1"></div>
+  <div class="tech-glow-2"></div>
 
   <!-- Scroll Progress -->
   <div class="scroll-progress" id="progress-bar"></div>
