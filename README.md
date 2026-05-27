@@ -28,7 +28,7 @@ SkillBridge transforms the journey into a **clear, structured system**:
 * 💼 Real-world Project Building
 * 👨‍🏫 Mentorship Support
 * 📈 Job Readiness Score
-
+* placenent 
 ---
 
 ## ✨ Key Features
