@@ -1,11 +1,11 @@
-# 🚀 SkillBridge — AI-Powered Career Platform
+# SkillBridge — AI-Powered Career Platform
 
 SkillBridge is a modern AI-driven career platform designed to help college students bridge the gap between learning and getting placed.
 It provides personalized roadmaps, real-world projects, mentorship, and a job readiness score — all in one system.
 
 ---
 
-## 🌟 Problem Statement
+## Problem Statement
 
 > 75% of graduates don’t get relevant jobs — not because they lack intelligence, but because they lack direction.
 
@@ -18,54 +18,54 @@ Students often:
 
 ---
 
-## 💡 Solution — SkillBridge
+## Solution — SkillBridge
 
 SkillBridge transforms the journey into a **clear, structured system**:
 
-* 🎯 Personalized AI Career Roadmaps
-* 📊 Skill Gap Analysis based on industry data
-* 🧠 Daily Task Engine (what to learn, daily)
-* 💼 Real-world Project Building
-* 👨‍🏫 Mentorship Support
-* 📈 Job Readiness Score
+* Personalized AI Career Roadmaps
+* Skill Gap Analysis based on industry data
+* Daily Task Engine (what to learn, daily)
+* Real-world Project Building
+* Mentorship Support
+*Job Readiness Score
 * placement 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🧠 AI-Powered Roadmap
+###  AI-Powered Roadmap
 
 * Customized learning path based on your goal (e.g., Frontend, ML, etc.)
 * Step-by-step progression system
 
-### 📊 Skill Gap Analyzer
+###  Skill Gap Analyzer
 
 * Identifies missing skills
 * Suggests what to learn next
 
-### 📅 Daily Task Engine
+### Daily Task Engine
 
 * No more confusion
 * Clear daily tasks aligned with your roadmap
 
-### 💼 Project-Based Learning
+###  Project-Based Learning
 
 * Build real projects instead of passive learning
 * Track progress visually
 
-### 📈 Job Readiness Score
+### Job Readiness Score
 
 * Single metric showing how job-ready you are
 * Updates dynamically
 
-### 👨‍🏫 Mentorship (Planned / Optional)
+###  Mentorship (Planned / Optional)
 
 * Feedback from experienced developers
 * Guidance on improvement
 
 ---
 
-## 🖥️ Dashboard Features
+##  Dashboard Features
 
 * Interactive AI roadmap visualization
 * Progress tracking (skills, projects, readiness)
@@ -76,7 +76,7 @@ SkillBridge transforms the journey into a **clear, structured system**:
 
 ---
 
-## 🔐 Authentication (Supabase)
+##  Authentication (Supabase)
 
 * Email/Password Login
 * Google OAuth
@@ -86,7 +86,7 @@ SkillBridge transforms the journey into a **clear, structured system**:
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 
@@ -104,7 +104,7 @@ SkillBridge transforms the journey into a **clear, structured system**:
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 ### 1. Clone Repository
 
@@ -141,7 +141,7 @@ http://localhost:3000
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### profiles
 
@@ -158,17 +158,17 @@ http://localhost:3000
 
 ---
 
-## 🔄 Future Improvements
+## Future Improvements
 
-* 🤖 AI Chat Assistant for doubts
-* 📄 Downloadable roadmap PDFs
-* 🧠 Smarter skill recommendation engine
-* 📊 Advanced analytics dashboard
-* 🌐 Full backend integration
+* AI Chat Assistant for doubts
+* Downloadable roadmap PDFs
+* Smarter skill recommendation engine
+* Advanced analytics dashboard
+* Full backend integration
 
 ---
 
-## 🎯 Project Goal
+## Project Goal
 
 This project is built as a **portfolio-level SaaS product** to demonstrate:
 
@@ -179,14 +179,7 @@ This project is built as a **portfolio-level SaaS product** to demonstrate:
 
 ---
 
-
-## 🤝 Contribution
-
-This is a personal project, but suggestions and feedback are welcome.
-
----
-
-## 📧 Contact
+## Contact
 
 * GitHub:github.com/user-Rishabh/SKillBridge
 * Email: rishabmishra075@gmail.com
