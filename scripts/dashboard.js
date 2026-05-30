@@ -2571,6 +2571,12 @@ function initInteractions() {
 function initTabs() {
   const tabs = document.querySelectorAll('[data-tab]');
   function switchTab(tabName) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (typeof r2IsListening !== 'undefined' && r2IsListening && r2Recognition) {
+      r2Recognition.stop();
+    }
     document.querySelectorAll('[id^="tab-"]').forEach(sec => { 
       sec.style.display = 'none'; 
       sec.classList.remove('tab-pane-enter');
@@ -3125,6 +3131,187 @@ let r2TimerInterval;
 let r2TimeLeft = 20 * 60; // 20 mins
 let r2ChatHistory = [];
 
+// Speech Synthesis (AI Speaks)
+function speakText(text) {
+  if (!('speechSynthesis' in window)) {
+    console.warn("Speech Synthesis not supported in this browser.");
+    return;
+  }
+
+  // Cancel any active speech first
+  window.speechSynthesis.cancel();
+
+  const startVisuals = () => {
+    const waveEl = document.getElementById('r2-audio-waves');
+    const statusText = document.getElementById('r2-status-text');
+    const statusDot = document.getElementById('r2-status-dot');
+    if (waveEl) waveEl.style.display = 'flex';
+    if (statusText) statusText.textContent = 'AI is speaking...';
+    if (statusDot) statusDot.style.color = '#EC4899'; // Pink fuchsia dot
+  };
+
+  const stopVisuals = () => {
+    const waveEl = document.getElementById('r2-audio-waves');
+    const statusText = document.getElementById('r2-status-text');
+    const statusDot = document.getElementById('r2-status-dot');
+    if (waveEl) waveEl.style.display = 'none';
+    if (statusText) statusText.textContent = 'Live Interview';
+    if (statusDot) statusDot.style.color = 'var(--amber)';
+  };
+
+  const speak = () => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = window.speechSynthesis.getVoices();
+    
+    // Find a premium/clear English voice
+    const englishVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||
+                         voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural')) ||
+                         voices.find(v => v.lang.startsWith('en')) ||
+                         voices[0];
+    if (englishVoice) {
+      utterance.voice = englishVoice;
+    }
+    utterance.rate = 0.95; // Slightly slower for readability
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => {
+      startVisuals();
+    };
+
+    utterance.onend = () => {
+      stopVisuals();
+    };
+
+    utterance.onerror = () => {
+      stopVisuals();
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // If voices are not loaded yet, wait for them
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      speak();
+      window.speechSynthesis.onvoiceschanged = null; // Clear listener
+    };
+  } else {
+    speak();
+  }
+}
+
+// Speech Recognition (User Speaks)
+let r2Recognition = null;
+let r2IsListening = false;
+
+function toggleR2SpeechRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast("Speech Recognition is not supported in this browser. Please use Chrome or Edge.", "error");
+    return;
+  }
+
+  const micBtn = document.getElementById('r2-mic-btn');
+  const micIcon = document.getElementById('r2-mic-icon');
+  const inputEl = document.getElementById('r2-input');
+
+  if (r2IsListening) {
+    if (r2Recognition) r2Recognition.stop();
+    return;
+  }
+
+  if (!r2Recognition) {
+    r2Recognition = new SpeechRecognition();
+    r2Recognition.continuous = false;
+    r2Recognition.interimResults = false;
+    r2Recognition.lang = 'en-US';
+
+    r2Recognition.onstart = () => {
+      r2IsListening = true;
+      if (micBtn) {
+        micBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+        micBtn.style.borderColor = '#EF4444';
+        micBtn.style.color = '#EF4444';
+        micBtn.style.animation = 'pulseGlowRed 1.5s infinite';
+      }
+      if (micIcon) micIcon.style.transform = 'scale(1.15)';
+      if (inputEl) inputEl.placeholder = 'Listening... Speak clearly now...';
+      showToast("Microphone is active. Start speaking!", "info");
+    };
+
+    r2Recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      if (inputEl) {
+        inputEl.value = transcript;
+        inputEl.placeholder = 'Type or use mic to answer...';
+      }
+    };
+
+    r2Recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error !== 'no-speech') {
+        showToast(`Speech recognition error: ${event.error}`, "error");
+      }
+      stopListeningUI();
+    };
+
+    r2Recognition.onend = () => {
+      stopListeningUI();
+    };
+  }
+
+  try {
+    // If AI is currently speaking, cancel it before user starts speaking
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    r2Recognition.start();
+  } catch (e) {
+    console.error('Recognition start error:', e);
+  }
+
+  function stopListeningUI() {
+    r2IsListening = false;
+    if (micBtn) {
+      micBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+      micBtn.style.borderColor = 'var(--border)';
+      micBtn.style.color = 'var(--text-muted)';
+      micBtn.style.animation = 'none';
+    }
+    if (micIcon) micIcon.style.transform = 'scale(1)';
+    if (inputEl && inputEl.placeholder === 'Listening... Speak clearly now...') {
+      inputEl.placeholder = 'Type or use mic to answer...';
+    }
+  }
+}
+
+// Inject custom styles for mic button and pulse animation if not exists
+if (!document.getElementById('r2-voice-styles')) {
+  const styleEl = document.createElement('style');
+  styleEl.id = 'r2-voice-styles';
+  styleEl.innerHTML = `
+    @keyframes pulseGlowRed {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    @keyframes r2Wave {
+      0% { height: 4px; }
+      100% { height: 14px; }
+    }
+    .r2-audio-bar {
+      display: inline-block;
+      width: 2px;
+      background: #EC4899;
+      border-radius: 1px;
+    }
+  `;
+  document.head.appendChild(styleEl);
+}
+
+// Expose functions globally for HTML event handlers
+window.toggleR2SpeechRecognition = toggleR2SpeechRecognition;
+
 async function startRound2Interview() {
   const area = document.getElementById('r2-chat-area');
   area.style.display = 'block';
@@ -3136,7 +3323,15 @@ async function startRound2Interview() {
 
   area.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; background:var(--bg-surface); padding:10px 16px; border-radius:10px; border:1px solid var(--border);">
-      <div style="font-size:12px; color:var(--text-secondary);"><span style="color:var(--amber);">●</span> Live Interview</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="color:var(--amber); transition: color 0.3s;" id="r2-status-dot">●</span>
+        <span id="r2-status-text" style="font-size:12px; color:var(--text-secondary); font-weight: 500;">Live Interview</span>
+        <div id="r2-audio-waves" style="display:none; align-items:center; gap:2px; margin-left:6px;">
+          <span class="r2-audio-bar" style="height:6px; animation: r2Wave 0.6s ease-in-out infinite alternate;"></span>
+          <span class="r2-audio-bar" style="height:10px; animation: r2Wave 0.6s ease-in-out infinite alternate 0.15s;"></span>
+          <span class="r2-audio-bar" style="height:4px; animation: r2Wave 0.6s ease-in-out infinite alternate 0.3s;"></span>
+        </div>
+      </div>
       <div style="font-weight:700; font-size:14px; color:var(--emerald);" id="r2-timer">20:00</div>
     </div>
     <div id="r2-messages" style="height:340px; overflow-y:auto; border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; display:flex; flex-direction:column; gap:12px; background:var(--bg-base); box-shadow:inset 0 4px 20px rgba(0,0,0,0.2);">
@@ -3145,9 +3340,12 @@ async function startRound2Interview() {
         Hello! I am your Technical AI Interviewer for the ${selectedCompanyType} role. I've reviewed your resume. Are you ready to begin?
       </div>
     </div>
-    <div style="display:flex; gap:10px;">
-      <input type="text" id="r2-input" style="flex:1; padding:14px; border:1px solid var(--border); border-radius:10px; background:var(--bg-surface); color:var(--text-primary); outline:none; transition:all 200ms;" placeholder="Type your response here..." onfocus="this.style.borderColor='var(--fuchsia)'" onblur="this.style.borderColor='var(--border)'" onkeypress="if(event.key==='Enter') sendR2Message()">
-      <button onclick="sendR2Message()" style="padding:0 24px; background:var(--grad-brand); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; box-shadow:var(--shadow-fuchsia);">Send</button>
+    <div style="display:flex; gap:10px; align-items:center; width:100%;">
+      <input type="text" id="r2-input" style="flex:1; padding:14px; border:1px solid var(--border); border-radius:10px; background:var(--bg-surface); color:var(--text-primary); outline:none; transition:all 200ms;" placeholder="Type or use mic to answer..." onfocus="this.style.borderColor='var(--fuchsia)'" onblur="this.style.borderColor='var(--border)'" onkeypress="if(event.key==='Enter') sendR2Message()">
+      <button id="r2-mic-btn" onclick="toggleR2SpeechRecognition()" style="flex-shrink:0; background:rgba(255, 255, 255, 0.05); border:1px solid var(--border); color:var(--text-muted); cursor:pointer; border-radius:10px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; transition:all 200ms;" title="Speak your response">
+        <svg id="r2-mic-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+      </button>
+      <button onclick="sendR2Message()" style="flex-shrink:0; padding:0 24px; background:var(--grad-brand); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; box-shadow:var(--shadow-fuchsia); height:48px;">Send</button>
     </div>
   `;
   
@@ -3165,6 +3363,14 @@ async function startRound2Interview() {
       finishRound2();
     }
   }, 1000);
+
+  // Warm up voices and speak intro question
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.getVoices();
+  }
+  setTimeout(() => {
+    speakText(`Hello! I am your Technical AI Interviewer for the ${selectedCompanyType} role. I've reviewed your resume. Are you ready to begin?`);
+  }, 100);
 }
 
 async function sendR2Message() {
@@ -3172,6 +3378,15 @@ async function sendR2Message() {
   const msg = input.value.trim();
   if (!msg) return;
   input.value = '';
+
+  // Cancel any active SpeechSynthesis speaking
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  // Stop mic listening if active
+  if (r2IsListening && r2Recognition) {
+    r2Recognition.stop();
+  }
 
   r2ChatHistory.push({ role: 'user', text: msg });
   addChatMessage('user', msg);
@@ -3190,6 +3405,9 @@ async function sendR2Message() {
   
   r2ChatHistory.push({ role: 'ai', text: response });
   addChatMessage('ai', response);
+
+  // Speak the interviewer's new response
+  speakText(response);
 }
 
 function addChatMessage(role, text) {
@@ -3229,6 +3447,14 @@ async function getAIInterviewResponse(userMsg) {
 }
 
 async function finishRound2() {
+  // Cancel active speech synthesis & recognition when finishing
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  if (typeof r2IsListening !== 'undefined' && r2IsListening && r2Recognition) {
+    r2Recognition.stop();
+  }
+
   // Update UI to show evaluation state
   const inputRow = document.getElementById('r2-input')?.parentElement;
   if(inputRow) inputRow.innerHTML = '<div style="color:var(--emerald); padding:14px; font-weight:600; text-align:center; width:100%; border:1px solid var(--border); border-radius:10px; background:var(--bg-surface); animation:pulse 1.5s infinite;">Concluding interview & evaluating responses...</div>';
@@ -3287,9 +3513,62 @@ async function finishRound2() {
   }
 }
 
-// ── Round 3: Video Interview ─────────────
-let mediaRecorder;
-let interviewInterval;
+// ── Round 3: Conversational AI Video Interview ───────────
+let r3ChatHistory = [];
+let r3QuestionCount = 0;
+const R3_MAX_QUESTIONS = 5;
+let r3Recognition = null;
+let r3IsListening = false;
+let r3InterviewActive = false;
+
+// Promise-based TTS so we can await it finishing before we start listening
+function r3Speak(text) {
+  return new Promise((resolve) => {
+    if (!('speechSynthesis' in window)) { resolve(); return; }
+    window.speechSynthesis.cancel();
+    const doSpeak = () => {
+      const utt = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||
+                    voices.find(v => v.lang.startsWith('en')) || voices[0];
+      if (voice) utt.voice = voice;
+      utt.rate = 0.92; utt.pitch = 1.0;
+      utt.onstart  = () => r3SetStatus('speaking');
+      utt.onend    = () => { r3SetStatus('idle'); resolve(); };
+      utt.onerror  = () => { r3SetStatus('idle'); resolve(); };
+      window.speechSynthesis.speak(utt);
+    };
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.onvoiceschanged = null; doSpeak(); };
+    } else { doSpeak(); }
+  });
+}
+
+function r3SetStatus(state) {
+  const el = document.getElementById('r3-status-bar');
+  if (!el) return;
+  const map = {
+    idle:     ['var(--amber)', '●',  'Interview Live'],
+    speaking: ['#EC4899',     '🔊', 'AI is speaking...'],
+    listening:['#10B981',     '🎤', 'Your turn — speak now'],
+    thinking: ['#818CF8',     '⏳', 'AI is thinking...'],
+  };
+  const [color, icon, label] = map[state] || map.idle;
+  el.innerHTML = `<span style="color:${color};margin-right:6px;">${icon}</span><span style="font-size:13px;color:var(--text-secondary);font-weight:500;">${label}</span>`;
+}
+
+function r3AddMsg(role, text) {
+  const c = document.getElementById('r3-transcript');
+  if (!c) return;
+  if (c.firstElementChild?.classList.contains('r3-ph')) c.innerHTML = '';
+  const isAI = role === 'ai';
+  const d = document.createElement('div');
+  d.style.cssText = `display:flex;flex-direction:column;align-items:${isAI?'flex-start':'flex-end'};margin-bottom:12px;`;
+  d.innerHTML = `<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;">${isAI?'🤖 Interviewer':'👤 You'}</div>
+    <div style="background:${isAI?'var(--bg-card)':'rgba(0,229,255,0.12)'};color:var(--text-primary);padding:10px 14px;border-radius:12px;${isAI?'border-top-left-radius:2px;border:1px solid var(--border);':'border-top-right-radius:2px;border:1px solid var(--emerald);'}font-size:13px;max-width:88%;line-height:1.6;">${text}</div>`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
 
 async function startVideoInterview() {
   try {
@@ -3300,98 +3579,202 @@ async function startVideoInterview() {
     document.getElementById('camera-off-msg').style.display = 'none';
     document.getElementById('live-indicator').style.display = 'block';
     document.getElementById('start-r3-btn').style.display = 'none';
-    document.getElementById('r3-controls').style.display = 'grid';
+    document.getElementById('r3-controls').style.display = 'none'; // replaced by new UI
     document.getElementById('ai-q-display').style.display = 'block';
 
-    showNextVideoQuestion();
+    // Inject conversational UI
+    if (!document.getElementById('r3-conv-ui')) {
+      const ui = document.createElement('div');
+      ui.id = 'r3-conv-ui';
+      ui.innerHTML = `
+        <div id="r3-status-bar" style="display:flex;align-items:center;gap:8px;background:var(--bg-surface);padding:10px 16px;border-radius:10px;border:1px solid var(--border);margin:12px 0;">
+          <span style="color:var(--amber);">●</span><span style="font-size:13px;color:var(--text-secondary);">Initializing...</span>
+        </div>
+        <div id="r3-transcript" style="height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--bg-base);display:flex;flex-direction:column;gap:4px;margin-bottom:12px;box-shadow:inset 0 4px 20px rgba(0,0,0,.2);">
+          <div class="r3-ph" style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Interview conversation will appear here...</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div id="r3-listen-indicator" style="display:none;flex:1;padding:12px 16px;background:rgba(16,185,129,.08);border:1px solid var(--emerald);border-radius:10px;font-size:13px;color:var(--emerald);">🎤 Listening — speak your answer clearly...</div>
+          <button onclick="endVideoInterview()" style="padding:10px 20px;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;">⏹ End Interview</button>
+        </div>`;
+      document.getElementById('r3-result').before(ui);
+    }
+
+    r3ChatHistory = []; r3QuestionCount = 0; r3InterviewActive = true;
+    if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+
+    await r3Speak('Welcome to your final video interview. I will ask you a few questions based on your background. Please speak your answers clearly. Let us begin.');
+    if (r3InterviewActive) await r3NextQuestion();
   } catch (err) {
-    showToast('Camera/Mic permission denied');
+    showToast('Camera or Microphone permission denied. Allow access and try again.', 'error');
   }
 }
 
-function showNextVideoQuestion() {
-  const questions = [
-    "Tell me about a difficult technical challenge you solved.",
-    "How do you stay updated with new technologies?",
-    "Describe your most successful project from your resume.",
-    "Why should we hire you for this role?"
-  ];
-  let i = 0;
-  const display = document.getElementById('ai-q-display');
-  display.textContent = questions[0];
+async function r3NextQuestion() {
+  if (!r3InterviewActive) return;
+  r3QuestionCount++;
+  if (r3QuestionCount > R3_MAX_QUESTIONS) { await r3Finish(); return; }
 
-  interviewInterval = setInterval(() => {
-    i++;
-    if (i < questions.length) {
-      display.textContent = questions[i];
-    } else {
-      clearInterval(interviewInterval);
-      display.textContent = "Interview complete. Analyzing performance...";
-      setTimeout(endVideoInterview, 3000);
+  r3SetStatus('thinking');
+  const resumeCtx = (placementResumeText || '').substring(0, 500);
+  const histStr = r3ChatHistory.map(m => `${m.role === 'ai' ? 'Interviewer' : 'Candidate'}: ${m.text}`).join('\n');
+
+  const prompt = r3QuestionCount === 1
+    ? `You are a professional technical interviewer. Candidate resume: "${resumeCtx}". Ask your first interview question — behavioral or technical, based on their resume. ONE question only, 2 sentences max, no numbering, no preamble.`
+    : `You are a professional technical interviewer. Resume: "${resumeCtx}"\n\nConversation:\n${histStr}\n\nAsk the next question (${r3QuestionCount}/${R3_MAX_QUESTIONS}). Follow up naturally on their answer OR move to a new relevant topic. ONE question only, 1-2 sentences, no preamble or numbering.`;
+
+  const question = await callAI(prompt) || 'Can you describe a challenging project you have worked on and what you learned from it?';
+
+  r3ChatHistory.push({ role: 'ai', text: question });
+  r3AddMsg('ai', question);
+  const qd = document.getElementById('ai-q-display');
+  if (qd) qd.textContent = question;
+
+  await r3Speak(question);
+  if (!r3InterviewActive) return;
+
+  r3SetStatus('listening');
+  document.getElementById('r3-listen-indicator').style.display = 'flex';
+  r3Listen();
+}
+
+function r3Listen() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('Speech recognition needs Chrome or Edge.', 'error');
+    r3ChatHistory.push({ role: 'user', text: '[No speech recognition available]' });
+    setTimeout(() => r3NextQuestion(), 2000);
+    return;
+  }
+  if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
+  r3Recognition = new SR();
+  r3Recognition.continuous = false;
+  r3Recognition.interimResults = true;
+  r3Recognition.lang = 'en-US';
+
+  let finalText = '';
+  let silTimer = null;
+  const li = document.getElementById('r3-listen-indicator');
+
+  r3Recognition.onresult = (e) => {
+    finalText = '';
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
     }
-  }, 15000); // 15s per question
+    if (li) li.textContent = `🎤 ${finalText || interim || 'Listening...'}`;
+    if (silTimer) clearTimeout(silTimer);
+    if (finalText) silTimer = setTimeout(() => r3Recognition.stop(), 1500);
+  };
+
+  r3Recognition.onend = async () => {
+    r3IsListening = false;
+    if (li) li.style.display = 'none';
+    if (!r3InterviewActive) return;
+    const ans = finalText.trim() || '[No response detected]';
+    r3ChatHistory.push({ role: 'user', text: ans });
+    r3AddMsg('user', ans);
+    await r3NextQuestion();
+  };
+
+  r3Recognition.onerror = async (e) => {
+    r3IsListening = false;
+    if (li) li.style.display = 'none';
+    if (!r3InterviewActive) return;
+    r3ChatHistory.push({ role: 'user', text: '[Response unclear]' });
+    await r3NextQuestion();
+  };
+
+  r3IsListening = true;
+  try { r3Recognition.start(); } catch(e) {}
+}
+
+async function r3Finish() {
+  r3InterviewActive = false;
+  if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
+  r3SetStatus('thinking');
+  const qd = document.getElementById('ai-q-display');
+  if (qd) qd.textContent = '✅ Generating your results...';
+
+  await r3Speak('The interview is now complete. Please give me a moment to evaluate your performance.');
+
+  const histStr = r3ChatHistory.map(m => `${m.role==='ai'?'Interviewer':'Candidate'}: ${m.text}`).join('\n\n');
+  const evalPrompt = `Expert interviewer evaluating this transcript:\n${histStr}\n\nReturn JSON only: {"score":number,"hire":"Strong Hire|Hire|No Hire","communication":"Excellent|Good|Average|Poor","technical":"Excellent|Good|Average|Poor","strengths":["...","..."],"improvements":["...","..."],"summary":"2-3 sentence assessment"}`;
+  const raw = await callAI(evalPrompt, 500);
+
+  let sc=78, hire='Hire', comm='Good', tech='Good', summary='The candidate demonstrated solid communication skills and relevant experience.';
+  let strengths=['Clear communication','Relevant experience'], improvements=['Add specific metrics','Show deeper technical depth'];
+  try {
+    if (raw) { const p = JSON.parse(raw.match(/\{[\s\S]*\}/)[0]); sc=p.score||sc; hire=p.hire||hire; comm=p.communication||comm; tech=p.technical||tech; strengths=p.strengths||strengths; improvements=p.improvements||improvements; summary=p.summary||summary; }
+  } catch(e) {}
+
+  const video = document.getElementById('interview-video');
+  if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+  ['live-indicator','ai-q-display'].forEach(id => { const e=document.getElementById(id); if(e) e.style.display='none'; });
+  const ui = document.getElementById('r3-conv-ui');
+  if (ui) ui.style.display = 'none';
+
+  const hireColor = hire === 'Strong Hire' ? 'var(--emerald)' : hire === 'Hire' ? 'var(--amber)' : 'var(--rose)';
+  const res = document.getElementById('r3-result');
+  res.style.display = 'block';
+  res.innerHTML = `
+    <div style="padding:28px;background:var(--bg-card);border-radius:16px;border:2px solid var(--emerald);box-shadow:0 0 30px rgba(16,185,129,.15);">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:48px;margin-bottom:12px;">🏆</div>
+        <div style="font-size:24px;font-weight:800;color:var(--emerald);">Interview Complete!</div>
+        <p style="font-size:14px;color:var(--text-secondary);margin-top:6px;">${summary}</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
+        <div style="background:var(--bg-surface);padding:18px;border-radius:12px;border:1px solid var(--border);text-align:center;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Score</div>
+          <div style="font-size:30px;font-weight:800;color:var(--fuchsia);">${sc}/100</div>
+        </div>
+        <div style="background:var(--bg-surface);padding:18px;border-radius:12px;border:1px solid var(--border);text-align:center;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Decision</div>
+          <div style="font-size:20px;font-weight:700;color:${hireColor};">${hire}</div>
+        </div>
+        <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);text-align:center;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Communication</div>
+          <div style="font-size:16px;font-weight:600;color:var(--amber);">${comm}</div>
+        </div>
+        <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);text-align:center;">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Technical</div>
+          <div style="font-size:16px;font-weight:600;color:var(--amber);">${tech}</div>
+        </div>
+      </div>
+      <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div><div style="font-size:11px;color:var(--emerald);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">✅ Strengths</div><ul style="padding-left:16px;font-size:13px;color:var(--text-secondary);line-height:1.7;">${strengths.map(s=>`<li>${s}</li>`).join('')}</ul></div>
+          <div><div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📈 Improve</div><ul style="padding-left:16px;font-size:13px;color:var(--text-secondary);line-height:1.7;">${improvements.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+        </div>
+      </div>
+      <button onclick="generateFinalReport()" style="width:100%;padding:14px;background:var(--grad-brand);color:white;border:none;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;box-shadow:var(--shadow-fuchsia);">⬇️ Download Full Placement Report</button>
+    </div>`;
+
+  placementProgress.r3 = true;
+  await savePlacementAttempt(3, sc, sc >= 60);
+  updatePlacementProgress();
+  await r3Speak(`Your interview score is ${sc} out of 100. Decision: ${hire}. Well done for completing the interview!`);
+}
+
+async function endVideoInterview() {
+  r3InterviewActive = false;
+  if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  if (!document.getElementById('r3-result').innerHTML.trim()) await r3Finish();
 }
 
 function toggleMic() {
   const video = document.getElementById('interview-video');
-  const stream = video.srcObject;
-  const audioTrack = stream.getAudioTracks()[0];
+  if (!video.srcObject) return;
+  const audioTrack = video.srcObject.getAudioTracks()[0];
+  if (!audioTrack) return;
   audioTrack.enabled = !audioTrack.enabled;
   document.getElementById('mic-toggle-btn').textContent = `🎤 Mic: ${audioTrack.enabled ? 'ON' : 'OFF'}`;
 }
 
-async function endVideoInterview() {
-  clearInterval(interviewInterval);
-  const video = document.getElementById('interview-video');
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
-  }
 
-  document.getElementById('r3-controls').style.display = 'none';
-  document.getElementById('ai-q-display').style.display = 'none';
-  document.getElementById('live-indicator').style.display = 'none';
-  
-  // Calculate mock final score
-  const finalScore = Math.floor(Math.random() * 15) + 80;
-
-  const res = document.getElementById('r3-result');
-  res.style.display = 'block';
-  res.innerHTML = `
-    <div style="padding:32px; background:var(--bg-card); border-radius:16px; border:2px solid var(--emerald); box-shadow:0 0 30px rgba(16,185,129,0.15);">
-      <div style="text-align:center; margin-bottom:24px;">
-        <div style="font-size:48px; margin-bottom:16px; text-shadow:0 0 20px rgba(16,185,129,0.5);">🏆</div>
-        <div style="font-size:26px; font-weight:800; color:var(--emerald);">Placement Cycle Complete!</div>
-        <p style="font-size:15px; color:var(--text-secondary); margin-top:8px;">You have successfully completed all 3 rounds. Here is your final evaluation.</p>
-      </div>
-      
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px;">
-        <div style="background:var(--bg-surface); padding:20px; border-radius:12px; border:1px solid var(--border); text-align:center;">
-          <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Final Hire Score</div>
-          <div style="font-size:32px; font-weight:800; color:var(--fuchsia); text-shadow:0 0 10px var(--fuchsia-glow);">${finalScore}/100</div>
-        </div>
-        <div style="background:var(--bg-surface); padding:20px; border-radius:12px; border:1px solid var(--border); text-align:center;">
-          <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Decision</div>
-          <div style="font-size:24px; font-weight:700; color:var(--emerald); line-height:1.2;">Strong Hire</div>
-        </div>
-      </div>
-      
-      <div style="background:var(--bg-surface); padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:24px;">
-        <h4 style="font-size:14px; color:var(--text-primary); margin-bottom:12px;">Overall AI Feedback</h4>
-        <div style="font-size:14px; color:var(--text-secondary); line-height:1.6;">
-          <strong style="color:var(--emerald);">Communication:</strong> Excellent body language and clear articulation of complex topics.<br><br>
-          <strong style="color:var(--amber);">Areas for Growth:</strong> Could provide more quantifiable metrics when discussing past projects.<br><br>
-          <strong style="color:var(--fuchsia);">Next Steps:</strong> You are ready for real ${selectedCompanyType} interviews. Download your report below.
-        </div>
-      </div>
-      
-      <button onclick="generateFinalReport()" style="width:100%; padding:14px; background:var(--grad-brand); color:white; border:none; border-radius:10px; font-weight:600; font-size:15px; cursor:pointer; box-shadow:var(--shadow-fuchsia); transition:all 200ms;">⬇️ Download Full Placement Report</button>
-
-    </div>
-  `;
-  placementProgress.r3 = true;
-  await savePlacementAttempt(3, 90, true);
-  updatePlacementProgress();
-}
 
 // ── Helpers ──────────────────────────────
 async function geminiCall(prompt) {
