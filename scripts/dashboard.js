@@ -70,27 +70,93 @@ const conversation = [
 console.log('🚀 SkillBridge Dashboard JS Loading...');
 
 // ── INITIALIZATION ──────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 SkillBridge Dashboard: DOM Ready');
-  initTheme();
-  initInteractions();
-  initTabs();
-  initSupabase();
-  checkOnboarding();
-});
+document.addEventListener('DOMContentLoaded',
+  async () => {
+    // STEP 1: Supabase init FIRST
+    initSupabase();
+
+    // STEP 2: Only proceed if supabase loaded
+    if (!supabase?.auth) {
+      console.error('Supabase not ready');
+      return;
+    }
+
+    // STEP 3: Everything else after
+    initTheme();
+    initInteractions();
+    initTabs();
+    await checkOnboarding();
+  }
+);
 
 // ── Supabase Init ────────────────────────────────────────────
 function initSupabase() {
   try {
-    const lib = window.supabase || window.supabasejs;
-    if (lib) {
-      supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      console.log('✅ Supabase client initialized');
-    } else {
-      console.error('❌ Supabase library not found!');
+    // Try all possible window locations
+    const lib = window.supabase 
+      || window.Supabase
+      || window.supabasejs;
+    
+    if (!lib || !lib.createClient) {
+      // Show user-friendly error instead of alert
+      const body = document.getElementById(
+        'dashboard-body'
+      ) || document.body;
+      body.innerHTML = `
+        <div style="
+          min-height:100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-family:sans-serif;
+          background:#F8FAFC;
+        ">
+          <div style="
+            text-align:center;
+            padding:40px;
+            background:white;
+            border-radius:16px;
+            border:1px solid #E2E8F0;
+            max-width:400px;
+          ">
+            <div style="font-size:40px;
+              margin-bottom:16px;">⚠️</div>
+            <h2 style="color:#0F172A;
+              margin-bottom:8px;">
+              Connection Error
+            </h2>
+            <p style="color:#64748B;
+              font-size:14px;margin-bottom:20px;">
+              Failed to load required libraries.
+              Please check your internet connection
+              and refresh the page.
+            </p>
+            <button onclick="location.reload()"
+              style="
+                background:#059669;
+                color:white;
+                border:none;
+                padding:10px 24px;
+                border-radius:8px;
+                font-size:14px;
+                cursor:pointer;
+              ">
+              🔄 Refresh Page
+            </button>
+          </div>
+        </div>
+      `;
+      return;
     }
+
+    supabase = lib.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+    console.log('✅ Supabase initialized');
+
   } catch (err) {
-    console.error('❌ Error initializing Supabase:', err);
+    console.error('Supabase init error:', err);
   }
 }
 
