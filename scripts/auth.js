@@ -6,20 +6,7 @@
 console.log("🚀 Auth script loading...");
 
 // Load Environment Configuration synchronously
-let ENV_CONFIG = {};
-try {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', '/scripts/config.json', false);
-    xhr.send(null);
-    if (xhr.status === 200) {
-        ENV_CONFIG = JSON.parse(xhr.responseText);
-    } else {
-        throw new Error(`XHR status ${xhr.status}`);
-    }
-} catch (err) {
-    console.warn("⚠️ Could not load config.json, falling back to window.ENV_CONFIG:", err);
-    ENV_CONFIG = window.ENV_CONFIG || {};
-}
+const ENV_CONFIG = window.ENV_CONFIG || {};
 
 const SUPABASE_URL = ENV_CONFIG.SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = ENV_CONFIG.SUPABASE_ANON_KEY || '';
