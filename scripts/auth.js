@@ -6,9 +6,8 @@
 console.log("🚀 Auth script loading...");
 
 // ── CONFIGURATION ──────────────────────────────────────────
-const SUPABASE_URL = window.ENV_CONFIG?.SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = window.ENV_CONFIG?.SUPABASE_ANON_KEY || "";
-
+const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
 
 // Initialize Supabase Client
 let supabase;
@@ -37,7 +36,7 @@ function showMsg(form, type, text) {
     }
 
     msgContainer.innerHTML = `<div class="msg ${type}">${text}</div>`;
-    
+
     if (type === 'error') {
         setTimeout(() => {
             if (msgContainer.innerHTML.includes(text)) {
@@ -72,7 +71,7 @@ if (signinForm) {
     signinForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         console.log("📥 Sign-in form submitted - Beginning validation");
-        
+
         const email = document.getElementById('signin-email').value.trim();
         const password = document.getElementById('signin-password').value;
 
@@ -169,7 +168,7 @@ if (signupForm) {
             } else {
                 console.log("✅ Supabase Auth Success:", data);
                 showMsg('signup', 'success', '✅ Account created! Redirecting...');
-                
+
                 // Save profile
                 if (data.user) {
                     console.log("📂 Saving profile data...");
