@@ -10,13 +10,13 @@ const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
 
 // Initialize Supabase Client
-let supabase;
+let supabaseAuth;
 try {
     // Standard CDN version often puts it in 'supabase' or 'supabasejs'
     const lib = window.supabase || window.supabasejs;
     if (typeof lib !== 'undefined') {
-        supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        window.supabaseClient = supabase;
+        supabaseAuth = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        window.supabaseClient = supabaseAuth;
         console.log("✅ Supabase client initialized");
     } else {
         console.error("❌ Supabase library not found! Check your CDN script in auth.html.");
@@ -48,9 +48,9 @@ function showMsg(form, type, text) {
 
 // ── AUTH GUARD ──────────────────────────────────────────────
 async function checkSession() {
-    if (!supabase) return;
+    if (!supabaseAuth) return;
     try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabaseAuth.auth.getSession();
         if (error) throw error;
         if (session) {
             console.log("👤 User already logged in, redirecting...");
@@ -84,8 +84,8 @@ if (signinForm) {
         showMsg('signin', 'loading', '⏳ Signing you in...');
 
         try {
-            console.log("🚀 Calling supabase.auth.signInWithPassword...");
-            const { data, error } = await supabase.auth.signInWithPassword({
+            console.log("🚀 Calling supabaseAuth.auth.signInWithPassword...");
+            const { data, error } = await supabaseAuth.auth.signInWithPassword({
                 email,
                 password
             });
@@ -147,8 +147,8 @@ if (signupForm) {
         showMsg('signup', 'loading', '⏳ Creating your account...');
 
         try {
-            console.log("🚀 Calling supabase.auth.signUp...");
-            const { data, error } = await supabase.auth.signUp({
+            console.log("🚀 Calling supabaseAuth.auth.signUp...");
+            const { data, error } = await supabaseAuth.auth.signUp({
                 email,
                 password,
                 options: {
@@ -177,10 +177,12 @@ if (signupForm) {
                         college_name: college,
                         branch: branch
                     });
-                    supabase.from('profiles').upsert({
+                    supabaseAuth.from('profiles').upsert({
                         id: data.user.id,
                         full_name: name,
-                        goal: serializedGoal
+                        dream_job: dreamJob,
+                        college_name: college,
+                        branch: branch
                     }).then(({ error: pError }) => {
                         if (pError) console.warn("⚠️ Profile save warning:", pError);
                         else console.log("✅ Profile saved");
@@ -204,12 +206,12 @@ if (signupForm) {
 
 async function signInWithGoogle() {
     console.log("🔵 Google Sign-In initiated");
-    if (!supabase) {
+    if (!supabaseAuth) {
         alert("Supabase not loaded");
         return;
     }
     showMsg('signin', 'loading', '⏳ Opening Google...');
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabaseAuth.auth.signInWithOAuth({
         provider: 'google',
         options: {
             redirectTo: window.location.origin + '/dashboard.html'
@@ -220,12 +222,12 @@ async function signInWithGoogle() {
 
 async function signInWithGitHub() {
     console.log("⚫ GitHub Sign-In initiated");
-    if (!supabase) {
+    if (!supabaseAuth) {
         alert("Supabase not loaded");
         return;
     }
     showMsg('signin', 'loading', '⏳ Opening GitHub...');
-    const { error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabaseAuth.auth.signInWithOAuth({
         provider: 'github',
         options: {
             redirectTo: window.location.origin + '/dashboard.html'
