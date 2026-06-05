@@ -10,6 +10,8 @@ try {
   xhr.send(null);
   if (xhr.status === 200) {
     ENV_CONFIG = JSON.parse(xhr.responseText);
+  } else {
+    throw new Error(`XHR status ${xhr.status}`);
   }
 } catch (err) {
   console.warn("⚠️ Could not load config.json, falling back to window.ENV_CONFIG:", err);
