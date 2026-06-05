@@ -5,9 +5,22 @@
 
 console.log("🚀 Auth script loading...");
 
-// ── CONFIGURATION ──────────────────────────────────────────
-const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
+// Load Environment Configuration synchronously
+let ENV_CONFIG = {};
+try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', '/scripts/config.json', false);
+    xhr.send(null);
+    if (xhr.status === 200) {
+        ENV_CONFIG = JSON.parse(xhr.responseText);
+    }
+} catch (err) {
+    console.warn("⚠️ Could not load config.json, falling back to window.ENV_CONFIG:", err);
+    ENV_CONFIG = window.ENV_CONFIG || {};
+}
+
+const SUPABASE_URL = ENV_CONFIG.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = ENV_CONFIG.SUPABASE_ANON_KEY || '';
 
 // Initialize Supabase Client
 let supabaseAuth;

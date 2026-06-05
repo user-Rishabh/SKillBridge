@@ -2,23 +2,27 @@
  * SkillBridge Dashboard — Full Logic
  */
 
-const SUPABASE_URL = 'https://jmogxwejdrkqsrmpxxya.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imptb2d4d2VqZHJrcXNybXB4eHlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTczMDQsImV4cCI6MjA5MjA3MzMwNH0.0W-zyGlPlJsYOJjNfMCPIATFMfli2jwQ-vi79YXUngs';
-const OPENROUTER_KEY = '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';
-const GEMINI_KEY = 'AIzaSyDS7TYMoat41MabOAIXGAEgOc_4s7hQSts';
-const YOUTUBE_API_KEY = 'AIzaSyDE3b7vCrg4HMwQLtjCcbmGMLp6-vZ4Lao';
-
-
-let supabase;
+// Load Environment Configuration synchronously
+let ENV_CONFIG = {};
 try {
-  const lib = window.supabase || window.supabasejs;
-  if (lib) {
-    supabase = lib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase client initialized at top-level');
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', '/scripts/config.json', false);
+  xhr.send(null);
+  if (xhr.status === 200) {
+    ENV_CONFIG = JSON.parse(xhr.responseText);
   }
 } catch (err) {
-  console.error('❌ Error initializing Supabase at top-level:', err);
+  console.warn("⚠️ Could not load config.json, falling back to window.ENV_CONFIG:", err);
+  ENV_CONFIG = window.ENV_CONFIG || {};
 }
+
+const SUPABASE_URL = ENV_CONFIG.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = ENV_CONFIG.SUPABASE_ANON_KEY || '';
+const OPENROUTER_KEY = ENV_CONFIG.OPENROUTER_KEY || '';
+const GEMINI_KEY = ENV_CONFIG.GEMINI_KEY || '';
+const YOUTUBE_API_KEY = ENV_CONFIG.YOUTUBE_API_KEY || '';
+
+let supabase;
 let currentUserId;
 let currentUserName;
 
@@ -69,93 +73,91 @@ const conversation = [
 
 console.log('🚀 SkillBridge Dashboard JS Loading...');
 
-// ── INITIALIZATION ──────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',
   async () => {
-    // STEP 1: Supabase init FIRST
+    // 1. Supabase FIRST
     initSupabase();
+    if (!supabase) return;
 
-    // STEP 2: Only proceed if supabase loaded
-    if (!supabase?.auth) {
-      console.error('Supabase not ready');
-      return;
-    }
-
-    // STEP 3: Everything else after
+    // 2. Theme
     initTheme();
-    initInteractions();
-    initTabs();
-    await checkOnboarding();
+    
+    // 3. Check auth
+    try {
+      const { data: { session } } = 
+        await supabase.auth.getSession();
+      
+      if (!session) {
+        window.location.href = 'auth.html';
+        return;
+      }
+      
+      currentUserId = session.user.id;
+      
+      // 4. Get profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      
+      console.log('Profile loaded:', profile);
+      
+      // 5. Init everything
+      initInteractions();
+      initTabs();
+      
+      if (profile?.onboarding_completed) {
+        // Hide onboarding, show dashboard
+        const overlay = document.getElementById(
+          'onboarding-overlay'
+        );
+        if (overlay) overlay.style.display = 'none';
+        await initDashboard(profile);
+      } else {
+        // Show onboarding
+        showOnboarding(profile);
+      }
+    } catch(err) {
+      console.error('Init error:', err);
+      window.location.href = 'auth.html';
+    }
   }
 );
 
-// ── Supabase Init ────────────────────────────────────────────
 function initSupabase() {
   try {
-    // Try all possible window locations
     const lib = window.supabase 
-      || window.Supabase
-      || window.supabasejs;
-    
+      || window.supabasejs
+      || window.Supabase;
     if (!lib || !lib.createClient) {
-      // Show user-friendly error instead of alert
-      const body = document.getElementById(
-        'dashboard-body'
-      ) || document.body;
-      body.innerHTML = `
-        <div style="
-          min-height:100vh;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          font-family:sans-serif;
-          background:#F8FAFC;
-        ">
-          <div style="
-            text-align:center;
-            padding:40px;
-            background:white;
-            border-radius:16px;
-            border:1px solid #E2E8F0;
-            max-width:400px;
-          ">
-            <div style="font-size:40px;
-              margin-bottom:16px;">⚠️</div>
-            <h2 style="color:#0F172A;
-              margin-bottom:8px;">
-              Connection Error
-            </h2>
-            <p style="color:#64748B;
-              font-size:14px;margin-bottom:20px;">
-              Failed to load required libraries.
-              Please check your internet connection
-              and refresh the page.
+      console.error('Supabase lib not found');
+      document.body.innerHTML = `
+        <div style="display:flex;align-items:center;
+          justify-content:center;min-height:100vh;
+          font-family:sans-serif;background:#0F172A;">
+          <div style="text-align:center;color:white;">
+            <h2>⚠️ Connection Error</h2>
+            <p style="color:#94A3B8;margin:12px 0;">
+              Failed to load. Please refresh.
             </p>
             <button onclick="location.reload()"
-              style="
-                background:#059669;
-                color:white;
-                border:none;
-                padding:10px 24px;
-                border-radius:8px;
-                font-size:14px;
-                cursor:pointer;
-              ">
-              🔄 Refresh Page
+              style="background:#059669;color:white;
+              border:none;padding:10px 24px;
+              border-radius:8px;cursor:pointer;
+              font-size:14px;">
+              🔄 Refresh
             </button>
           </div>
-        </div>
-      `;
+        </div>`;
       return;
     }
-
     supabase = lib.createClient(
-      SUPABASE_URL,
+      SUPABASE_URL, 
       SUPABASE_ANON_KEY
     );
-    console.log('✅ Supabase initialized');
-
-  } catch (err) {
+    console.log('✅ Supabase ready');
+  } catch(err) {
     console.error('Supabase init error:', err);
   }
 }
@@ -1412,26 +1414,54 @@ async function loadXPDisplay() {
 
 // ── Dashboard Loading ────────────────────────────────────────
 async function initDashboard(profile) {
-  currentUserName = profile.full_name || 'Student';
+  if (!profile) {
+    console.error('No profile data');
+    return;
+  }
+  
+  currentUserName = profile.full_name 
+    || 'Student';
+  
+  // Update greeting
+  const greetEl = document.getElementById(
+    'greeting-text'
+  );
+  if (greetEl) greetEl.textContent = 
+    `Welcome back, ${
+      currentUserName.split(' ')[0]
+    } 👋`;
+  
+  const subEl = document.getElementById(
+    'greeting-sub'
+  );
+  if (subEl) subEl.textContent = 
+    profile.goal 
+      ? `Path: ${profile.goal}` 
+      : 'Set your goal to start';
 
-  // Set basic profile text
-  setText('greeting-text', `Welcome back, ${currentUserName.split(' ')[0]} 👋`);
-  const goalText = getGoalText(profile.goal);
-  setText('greeting-sub', goalText ? `Path: ${goalText}` : 'Select a goal to start');
+  // Load XP display
+  const xpEl = document.getElementById(
+    'xp-display-text'
+  );
+  if (xpEl) xpEl.textContent = 
+    `Level ${profile.level||1} · ${
+      profile.xp||0} XP`;
 
-  // Run secondary loads in parallel for performance
-  Promise.all([
-    loadDashboardStats(),
-    loadNotifications(profile.notifications),
-    updateStreakDisplay(currentUserId),
-    loadXPDisplay(profile),
-    loadTodaysFocus(),
-    buildActivityHeatmap(currentUserId),
-    loadShortRoadmap(profile.roadmap_data)
-  ]);
-
-  recordTodayLogin(currentUserId);
-  if (window.lucide) lucide.createIcons();
+  // Load all data
+  try {
+    await Promise.all([
+      loadDashboardStats(),
+      updateStreakDisplay(currentUserId),
+      buildActivityHeatmap(currentUserId),
+      loadTodaysFocus(),
+      loadShortRoadmap(profile.roadmap_data),
+      loadNotifications(profile.notifications)
+    ]);
+    recordTodayLogin(currentUserId);
+    console.log('✅ Dashboard fully loaded');
+  } catch(err) {
+    console.error('Dashboard load error:', err);
+  }
 }
 
 // ── Notifications System ─────────────────────────────────────

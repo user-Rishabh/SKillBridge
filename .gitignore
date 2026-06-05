@@ -1,5 +1,6 @@
 # API Keys & Configurations
 scripts/config.js
+scripts/config.json
 
 # Local Scratch / Testing Scripts
 scratch/

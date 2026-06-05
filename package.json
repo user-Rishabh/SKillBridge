@@ -4,7 +4,8 @@
   "description": "India's AI-Powered Career Readiness Co-pilot",
   "main": "index.html",
   "scripts": {
-    "dev": "node load-env.js && npx serve ."
+    "dev": "node load-env.js && npx serve .",
+    "build": "node load-env.js"
   },
   "keywords": [],
   "author": "",
