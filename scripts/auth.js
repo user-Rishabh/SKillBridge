@@ -214,7 +214,7 @@ async function signInWithGoogle() {
     const { error } = await supabaseAuth.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: window.location.origin + '/dashboard.html'
+            redirectTo: 'https://s-kill-bridge.vercel.app/dashboard.html'
         }
     });
     if (error) showMsg('signin', 'error', '❌ ' + error.message);
@@ -230,7 +230,7 @@ async function signInWithGitHub() {
     const { error } = await supabaseAuth.auth.signInWithOAuth({
         provider: 'github',
         options: {
-            redirectTo: window.location.origin + '/dashboard.html'
+            redirectTo: 'https://s-kill-bridge.vercel.app/dashboard.html'
         }
     });
     if (error) showMsg('signin', 'error', '❌ ' + error.message);
