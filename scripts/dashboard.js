@@ -24,7 +24,6 @@ const OPENROUTER_KEY = ENV_CONFIG.OPENROUTER_KEY || '';
 const GEMINI_KEY = ENV_CONFIG.GEMINI_KEY || '';
 const YOUTUBE_API_KEY = ENV_CONFIG.YOUTUBE_API_KEY || '';
 
-let supabase;
 let currentUserId;
 let currentUserName;
 
