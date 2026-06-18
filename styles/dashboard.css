@@ -356,6 +356,12 @@ body {
   background: var(--grad-card);
   pointer-events: none;
   border-radius: inherit;
+  z-index: 0;
+}
+
+.hero-card > *, .panel-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-card {
