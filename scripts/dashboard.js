@@ -2161,42 +2161,81 @@ async function callAI(prompt, maxTokens = 800) {
     'openrouter/free'
   ];
 
-  for (const model of models) {
+  if (OPENROUTER_KEY) {
+    for (const model of models) {
+      try {
+        console.log(`[callAI] Attempting prompt with model: ${model}`);
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENROUTER_KEY}`,
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'SkillBridge'
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: maxTokens,
+            temperature: 0.7
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const content = data.choices?.[0]?.message?.content;
+          if (content) {
+            console.log(`[callAI] Success with model: ${model}`);
+            return content;
+          }
+        } else {
+          const errBody = await res.json().catch(() => ({}));
+          console.warn(`[callAI] Model ${model} returned status ${res.status}:`, errBody);
+          if (res.status === 401) {
+            // Unauthorized - stop trying other OpenRouter models
+            break;
+          }
+        }
+      } catch (e) {
+        console.error(`[callAI] Model ${model} failed with error:`, e);
+      }
+      // Wait 500ms before trying the next fallback model
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  // Fallback to Gemini if OpenRouter key is missing or failed
+  if (GEMINI_KEY) {
     try {
-      console.log(`[callAI] Attempting prompt with model: ${model}`);
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      console.log('[callAI] Falling back to Gemini API...');
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_KEY}`,
-          'HTTP-Referer': window.location.origin,
-          'X-Title': 'SkillBridge'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: model,
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: maxTokens,
-          temperature: 0.7
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            maxOutputTokens: maxTokens,
+            temperature: 0.7
+          }
         })
       });
 
       if (res.ok) {
         const data = await res.json();
-        const content = data.choices?.[0]?.message?.content;
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (content) {
-          console.log(`[callAI] Success with model: ${model}`);
+          console.log('[callAI] Success with Gemini API');
           return content;
         }
       } else {
         const errBody = await res.json().catch(() => ({}));
-        console.warn(`[callAI] Model ${model} returned status ${res.status}:`, errBody);
+        console.error('[callAI] Gemini API returned status:', res.status, errBody);
       }
     } catch (e) {
-      console.error(`[callAI] Model ${model} failed with error:`, e);
+      console.error('[callAI] Gemini API fallback failed:', e);
     }
-    // Wait 500ms before trying the next fallback model
-    await new Promise(r => setTimeout(r, 500));
   }
+
   return null;
 }
 
@@ -4784,44 +4823,97 @@ async function sendMentorMessage() {
   const topicsEl = document.getElementById('chat-topics-count');
   if (topicsEl) topicsEl.textContent = topicsCovered.size;
 
-  const messages = [
-    { role: 'system', content: window.mentorSystemPrompt },
-    ...mentorHistory.slice(-6)
-  ];
+  let success = false;
+  let reply = '';
 
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_KEY}`,
-        'HTTP-Referer': window.location.origin
-      },
-      body: JSON.stringify({
-        model: 'openrouter/free',
-        messages,
-        max_tokens: 400,
-        temperature: 0.7
-      })
-    });
+  // Try OpenRouter first if key is present
+  if (OPENROUTER_KEY) {
+    try {
+      const messages = [
+        { role: 'system', content: window.mentorSystemPrompt },
+        ...mentorHistory.slice(-6)
+      ];
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      console.error("OpenRouter API Error:", res.status, errData);
-      throw new Error(errData.error?.message || 'API failed: ' + res.status);
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENROUTER_KEY}`,
+          'HTTP-Referer': window.location.origin
+        },
+        body: JSON.stringify({
+          model: 'openrouter/free',
+          messages,
+          max_tokens: 400,
+          temperature: 0.7
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        reply = data.choices?.[0]?.message?.content || '';
+        if (reply) {
+          success = true;
+          console.log('[sendMentorMessage] Success with OpenRouter');
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.error("OpenRouter API Error:", res.status, errData);
+      }
+    } catch (err) {
+      console.error("OpenRouter chat error:", err);
     }
+  }
 
-    const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content || 'Sorry, I had trouble responding. Please try again!';
+  // Fallback to Gemini if OpenRouter failed or key is missing
+  if (!success && GEMINI_KEY) {
+    try {
+      console.log('[sendMentorMessage] Falling back to Gemini API...');
+      
+      // Convert OpenAI style history to Gemini history
+      const contents = mentorHistory.slice(-6).map(h => ({
+        role: h.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: h.content }]
+      }));
 
-    if (typing) typing.style.display = 'none';
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          systemInstruction: {
+            parts: [{ text: window.mentorSystemPrompt || 'You are Atlas, a professional career mentor.' }]
+          },
+          generationConfig: {
+            maxOutputTokens: 400,
+            temperature: 0.7
+          }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        if (reply) {
+          success = true;
+          console.log('[sendMentorMessage] Success with Gemini API');
+        }
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        console.error('[sendMentorMessage] Gemini API returned status:', res.status, errBody);
+      }
+    } catch (err) {
+      console.error("Gemini fallback chat error:", err);
+    }
+  }
+
+  if (typing) typing.style.display = 'none';
+
+  if (success && reply) {
     addMentorMessage('ai', reply);
     mentorHistory.push({ role: 'assistant', content: reply });
-
-  } catch (err) {
-    console.error("Mentor chat error:", err);
-    if (typing) typing.style.display = 'none';
-    addMentorMessage('ai', `Network issue or API error! Please check your connection and try again. 🔌 (${err.message})`);
+  } else {
+    addMentorMessage('ai', 'Network issue or API error! Please check your connection and try again. 🔌 (All fallback providers failed)');
   }
 }
 
