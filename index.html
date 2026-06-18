@@ -13,6 +13,7 @@
 
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/animations.css">
+  <script src="scripts/theme.js"></script>
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.js"></script>
@@ -209,7 +210,21 @@
         <a href="#compare" class="nav-link" id="nav-compare">Compare</a>
       </div>
 
-      <a href="auth.html" class="btn btn-primary nav-cta" id="nav-cta">Get Started Free</a>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <button class="theme-toggle-btn" id="theme-toggle"
+          style="
+            width:38px;height:38px;
+            border-radius:50%;border:1px solid var(--border);
+            background:var(--bg-card);cursor:pointer;
+            display:flex;align-items:center;
+            justify-content:center;
+            transition:all 200ms;
+            color:var(--text-secondary);"
+          onmouseover="this.style.background='var(--bg-card-hover)'"
+          onmouseout="this.style.background='var(--bg-card)'">
+        </button>
+        <a href="auth.html" class="btn btn-primary nav-cta" id="nav-cta">Get Started Free</a>
+      </div>
     </div>
   </nav>
 

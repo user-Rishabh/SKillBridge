@@ -1559,8 +1559,9 @@ function toggleTheme() {
 }
 
 function initTheme() {
-  document.documentElement.setAttribute('data-theme', 'dark');
-  localStorage.setItem('theme', 'dark');
+  if (typeof updateThemeIcons === 'function') {
+    updateThemeIcons();
+  }
 }
 
 // ── XP & Progression ─────────────────────────────────────────
@@ -2650,13 +2651,9 @@ async function renderDashboard() {
 }
 
 function initTheme() {
-  const saved = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
-  document.getElementById('theme-toggle') && (document.getElementById('theme-toggle').onclick = () => {
-    const target = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', target);
-    localStorage.setItem('theme', target);
-  });
+  if (typeof updateThemeIcons === 'function') {
+    updateThemeIcons();
+  }
 }
 
 function initInteractions() {
