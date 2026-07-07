@@ -356,6 +356,12 @@ body {
   background: var(--grad-card);
   pointer-events: none;
   border-radius: inherit;
+  z-index: 0;
+}
+
+.hero-card > *, .panel-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-card {
@@ -1565,4 +1571,372 @@ button[style*="background: #047857"] {
 @media (max-width: 768px) {
   .sidebar { display: none; }
   .dashboard-view { padding: 16px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DAY MODE (LIGHT BLUISH THEME) OVERRIDES FOR DASHBOARD
+   ══════════════════════════════════════════════════════════════ */
+:root[data-theme="day"] {
+  /* ── Core Palette ── */
+  --bg-base:        #eef4fa;
+  --bg-surface:     rgba(255, 255, 255, 0.75);
+  --bg-card:        rgba(255, 255, 255, 0.9);
+  --bg-card-hover:  rgba(255, 255, 255, 0.98);
+  --bg-glass:       rgba(238, 244, 250, 0.8);
+
+  /* ── Borders ── */
+  --border:         rgba(37, 99, 235, 0.08);
+  --border-bright:  rgba(37, 99, 235, 0.25);
+  --border-violet:  rgba(79, 70, 229, 0.2);
+
+  /* ── Brand Colors ── */
+  --fuchsia:        #2563eb;
+  --fuchsia-dim:    rgba(37, 99, 235, 0.08);
+  --fuchsia-glow:   rgba(37, 99, 235, 0.25);
+  --violet:         #4f46e5;
+  --violet-dim:     rgba(79, 70, 229, 0.08);
+  --emerald:        #10B981;
+  --emerald-dim:    rgba(16, 185, 129, 0.08);
+  --amber:          #d97706;
+  --rose:           #e11d48;
+  --sky:            #0284c7;
+
+  /* ── Gradient ── */
+  --grad-brand:     linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  --grad-card:      linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 244, 248, 0.9) 100%);
+  --grad-glow-top:  radial-gradient(ellipse 60% 40% at 50% 0%, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
+  --grad-glow-btm:  radial-gradient(ellipse 40% 30% at 80% 100%, rgba(79, 70, 229, 0.08) 0%, transparent 60%);
+
+  /* ── Text ── */
+  --text-primary:   #0f172a;
+  --text-secondary: #334155;
+  --text-muted:     #64748b;
+  --text-brand:     #2563eb;
+
+  /* ── Sidebar specifics ── */
+  --sidebar-bg:     #ffffff;
+  --sidebar-border: rgba(37, 99, 235, 0.08);
+  --sidebar-text:   #0f172a;
+  --sidebar-text-muted: #64748b;
+
+  /* ── Shape & Shadow ── */
+  --shadow-card:    0 10px 30px rgba(37, 99, 235, 0.06), 0 1px 3px rgba(37, 99, 235, 0.02);
+  --shadow-glow:    0 0 40px rgba(37, 99, 235, 0.1);
+  --shadow-fuchsia: 0 0 20px rgba(37, 99, 235, 0.15);
+}
+
+/* ── App Container & Main Background ── */
+html[data-theme="day"] body {
+  background-color: var(--bg-base) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="day"] .app-container {
+  background: var(--bg-base) !important;
+}
+
+/* ── Data Stripes & Tech overlays ── */
+html[data-theme="day"] .data-stripes {
+  background-image: 
+    linear-gradient(90deg, rgba(37, 99, 235, 0.02) 1px, transparent 1px),
+    linear-gradient(rgba(37, 99, 235, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 70, 229, 0.02) 2px, transparent 2px) !important;
+}
+
+html[data-theme="day"] .scan-line {
+  background: linear-gradient(to bottom, transparent 50%, rgba(37, 99, 235, 0.02) 51%) !important;
+}
+
+html[data-theme="day"] .tech-glow-1 {
+  background: rgba(37, 99, 235, 0.05) !important;
+}
+html[data-theme="day"] .tech-glow-2 {
+  background: rgba(79, 70, 229, 0.04) !important;
+}
+
+html[data-theme="day"] .app-container::before {
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, transparent 65%) !important;
+}
+html[data-theme="day"] .app-container::after {
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, transparent 65%) !important;
+}
+
+/* ── Sidebar (Day Overrides) ── */
+html[data-theme="day"] .sidebar {
+  background: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--sidebar-border) !important;
+}
+html[data-theme="day"] .sidebar::after {
+  background: linear-gradient(180deg, transparent, rgba(37, 99, 235, 0.15), transparent) !important;
+}
+html[data-theme="day"] .logo-text {
+  background: var(--grad-brand) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html[data-theme="day"] .nav-item {
+  color: var(--sidebar-text-muted) !important;
+}
+html[data-theme="day"] .nav-item:hover {
+  color: var(--sidebar-text) !important;
+  background: rgba(37, 99, 235, 0.04) !important;
+  border-color: rgba(37, 99, 235, 0.08) !important;
+}
+html[data-theme="day"] .nav-item.active {
+  color: #2563eb !important;
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: rgba(37, 99, 235, 0.25) !important;
+  box-shadow: inset 0 0 15px rgba(37, 99, 235, 0.03) !important;
+}
+html[data-theme="day"] .nav-item.active::before {
+  background: #2563eb !important;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.3) !important;
+}
+html[data-theme="day"] .nav-item.active svg,
+html[data-theme="day"] .nav-item.active i {
+  color: #2563eb !important;
+}
+html[data-theme="day"] .sidebar-footer {
+  border-top: 1px solid var(--sidebar-border) !important;
+}
+html[data-theme="day"] .user-profile {
+  color: var(--sidebar-text) !important;
+}
+html[data-theme="day"] .user-profile:hover {
+  background: rgba(37, 99, 235, 0.04) !important;
+}
+html[data-theme="day"] .user-name {
+  color: #0f172a !important;
+}
+
+/* ── Top Header Menu ── */
+html[data-theme="day"] .main-content > div:first-child {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+html[data-theme="day"] #greeting-text {
+  color: #0f172a !important;
+}
+html[data-theme="day"] #greeting-sub {
+  color: #64748b !important;
+}
+
+/* ── Streak & XP Badges ── */
+html[data-theme="day"] #streak-badge {
+  background: #FEF3C7 !important;
+  border: 1px solid rgba(217, 119, 6, 0.25) !important;
+  color: #B45309 !important;
+}
+html[data-theme="day"] #xp-badge {
+  background: #EFF6FF !important;
+  border: 1px solid rgba(37, 99, 235, 0.25) !important;
+  color: #1D4ED8 !important;
+}
+
+/* ── New Session Button & Primaries ── */
+html[data-theme="day"] button[onclick="startNewSession()"],
+html[data-theme="day"] .btn-primary {
+  background: var(--grad-brand) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
+  border: none !important;
+}
+html[data-theme="day"] button[onclick="startNewSession()"]:hover,
+html[data-theme="day"] .btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35) !important;
+  filter: brightness(1.05);
+}
+
+/* ── Cards & Glass overrides ── */
+html[data-theme="day"] .stat-card,
+html[data-theme="day"] .hero-card,
+html[data-theme="day"] .panel-card,
+html[data-theme="day"] .project-card,
+html[data-theme="day"] .tasks-column {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.08) !important;
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.04) !important;
+}
+
+html[data-theme="day"] .stat-card:hover,
+html[data-theme="day"] .project-card:hover {
+  border-color: #2563eb !important;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme="day"] .stat-card:hover::after,
+html[data-theme="day"] .project-card:hover::after {
+  background: linear-gradient(90deg, transparent, #2563eb, transparent) !important;
+}
+
+html[data-theme="day"] .hero-card::before,
+html[data-theme="day"] .panel-card::before {
+  background: var(--grad-card) !important;
+}
+
+/* ── Heatmap ── */
+html[data-theme="day"] .heat-cell {
+  background: rgba(37, 99, 235, 0.04) !important;
+}
+html[data-theme="day"] .heat-cell.level-1 { background: rgba(37, 99, 235, 0.18) !important; }
+html[data-theme="day"] .heat-cell.level-2 { background: rgba(37, 99, 235, 0.38) !important; }
+html[data-theme="day"] .heat-cell.level-3 { background: rgba(37, 99, 235, 0.65) !important; }
+html[data-theme="day"] .heat-cell.level-4 { 
+  background: #2563eb !important; 
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.3) !important; 
+}
+
+/* ── Modals & Popups ── */
+html[data-theme="day"] #quiz-modal > div,
+html[data-theme="day"] #task-detail-modal > div,
+html[data-theme="day"] #xp-modal > div,
+html[data-theme="day"] #create-project-modal > div {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15) !important;
+}
+
+html[data-theme="day"] #quiz-modal button {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(37, 99, 235, 0.12) !important;
+  color: var(--text-primary) !important;
+}
+html[data-theme="day"] #quiz-modal button:hover {
+  border-color: #2563eb !important;
+  background: rgba(37, 99, 235, 0.04) !important;
+}
+
+/* ── inputs & fields ── */
+html[data-theme="day"] input:not([type="checkbox"]):not([type="radio"]),
+html[data-theme="day"] textarea,
+html[data-theme="day"] select {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html[data-theme="day"] input:focus,
+html[data-theme="day"] textarea:focus,
+html[data-theme="day"] select:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+}
+
+/* ── Specific custom containers (Milestones & Roadmap display) ── */
+html[data-theme="day"] #full-roadmap-display > div > div[style*="background:linear-gradient"],
+html[data-theme="day"] #full-roadmap-display > div[style*="background:linear-gradient"] {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+}
+
+html[data-theme="day"] #generate-roadmap-btn {
+  background: var(--grad-brand) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="day"] [onclick*="roadmap-goal-input"] {
+  background: rgba(37, 99, 235, 0.05) !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  color: #2563eb !important;
+}
+html[data-theme="day"] [onclick*="roadmap-goal-input"]:hover {
+  background: rgba(37, 99, 235, 0.1) !important;
+}
+
+html[data-theme="day"] .weak-list .bar-track,
+html[data-theme="day"] .progress-bg {
+  background: #e2e8f0 !important;
+}
+
+html[data-theme="day"] .progress-fill {
+  background: var(--grad-brand) !important;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.25) !important;
+}
+
+/* ── Green tint success containers ── */
+html[data-theme="day"] [style*="background:#ECFDF5"],
+html[data-theme="day"] [style*="background: #ECFDF5"],
+html[data-theme="day"] [style*="background:#F0FDF4"],
+html[data-theme="day"] [style*="background: #F0FDF4"],
+html[data-theme="day"] [style*="background:#D1FAE5"],
+html[data-theme="day"] [style*="background: #D1FAE5"] {
+  background: #ECFDF5 !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  color: #065F46 !important;
+}
+
+html[data-theme="day"] [style*="color:#059669"]:not(button):not(a),
+html[data-theme="day"] [style*="color: #059669"]:not(button):not(a) {
+  color: #059669 !important;
+}
+
+/* ── Toast notifications & dropdowns ── */
+html[data-theme="day"] #toast-container > div {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="day"] #notif-dropdown {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+  color: #0f172a !important;
+}
+html[data-theme="day"] #notif-dropdown [style*="background:white"],
+html[data-theme="day"] #notif-dropdown [style*="background: white"] {
+  background: transparent !important;
+}
+html[data-theme="day"] #notif-dropdown span {
+  color: #0f172a !important;
+}
+
+/* ── Chat panels ── */
+html[data-theme="day"] #mentorship-chat,
+html[data-theme="day"] #mentor-chat-messages,
+html[data-theme="day"] [id*="chat-messages"] {
+  background: #f8fafc !important;
+  border-color: rgba(37, 99, 235, 0.08) !important;
+}
+html[data-theme="day"] [class*="ai-bubble"],
+html[data-theme="day"] [class*="bot-bubble"],
+html[data-theme="day"] [style*="border-radius:18px 18px 18px 4px"],
+html[data-theme="day"] [style*="border-radius: 18px 18px 18px 4px"] {
+  background: #ffffff !important;
+  border: 1px solid rgba(79, 70, 229, 0.15) !important;
+  color: #334155 !important;
+}
+html[data-theme="day"] [class*="user-bubble"],
+html[data-theme="day"] [style*="border-radius:18px 18px 4px 18px"],
+html[data-theme="day"] [style*="border-radius: 18px 18px 4px 18px"] {
+  background: rgba(37, 99, 235, 0.06) !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="day"] [id*="chat-input"], 
+html[data-theme="day"] [id*="mentor-input"] {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* ── Onboarding overlay chat ── */
+html[data-theme="day"] #onboarding-overlay {
+  background: rgba(240, 244, 248, 0.95) !important;
+}
+html[data-theme="day"] #onboarding-overlay [style*="background:white"],
+html[data-theme="day"] #onboarding-overlay [style*="background:#fff"],
+html[data-theme="day"] #onboarding-overlay [style*="background: white"] {
+  background: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.08) !important;
+}
+
+/* ── Scrollbars ── */
+html[data-theme="day"] ::-webkit-scrollbar-thumb {
+  background: rgba(37, 99, 235, 0.2) !important;
+}
+html[data-theme="day"] ::-webkit-scrollbar-thumb:hover {
+  background: #2563eb !important;
 }

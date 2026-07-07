@@ -2643,3 +2643,477 @@ button { font-family: inherit; border: none; background: none; }
   .footer-links-grid { grid-template-columns: 1fr 1fr; }
   .cta-btns { flex-direction: column; align-items: center; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   DAY MODE (LIGHT BLUISH THEME) OVERRIDES
+   ══════════════════════════════════════════════════════════════ */
+:root[data-theme="day"] {
+  /* Brand Colors — Royal Blue / Cobalt blue accent for day theme */
+  --emerald:        #2563eb;
+  --emerald-dark:   #1d4ed8;
+  --emerald-light:  rgba(37,99,235,0.08);
+  --fuchsia:        #4f46e5;
+  --fuchsia-dim:    rgba(79,70,229,0.08);
+  --fuchsia-glow:   rgba(79,70,229,0.25);
+  --violet:         #6366f1;
+  --violet-dim:     rgba(99,102,241,0.08);
+  --mint:           #3b82f6;
+  --gold:           #d97706;
+  --amber:          #d97706;
+  --red:            #ef4444;
+
+  /* Surfaces & Core Palette - Light bluish tone */
+  --bg-base:        #f0f4f8;
+  --bg-surface:     rgba(255, 255, 255, 0.7);
+  --bg-card:        rgba(255, 255, 255, 0.85);
+  --bg-card-hover:  rgba(255, 255, 255, 0.95);
+  --bg-glass:       rgba(240, 244, 248, 0.8);
+  --cream:          #f0f4f8;
+  --cream-2:        #e2e8f0;
+  --cream-3:        rgba(37,99,235,0.02);
+  --white-warm:     rgba(255,255,255,0.85);
+  --black:          #1e293b;
+  --black-2:        #334155;
+  --black-3:        rgba(255,255,255,0.85);
+
+  /* Text - Slate colors for premium contrast */
+  --text-primary:   #0f172a;
+  --text-secondary: #334155;
+  --text-muted:     #64748b;
+  --text-light:     #8b9ebb;
+  --text-white:     #ffffff;
+
+  /* Borders */
+  --border:         rgba(37, 99, 235, 0.08);
+  --border-strong:  rgba(37, 99, 235, 0.15);
+  --border-white:   rgba(37, 99, 235, 0.08);
+  --border-bright:  rgba(37, 99, 235, 0.2);
+
+  /* Gradients */
+  --grad-brand:     linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  --grad-card:      linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 244, 248, 0.9) 100%);
+  --grad-glow-top:  radial-gradient(ellipse 60% 40% at 50% 0%, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
+  --grad-glow-btm:  radial-gradient(ellipse 40% 30% at 80% 100%, rgba(79, 70, 229, 0.08) 0%, transparent 60%);
+
+  /* Shadows */
+  --shadow-sm:      0 1px 3px rgba(37, 99, 235, 0.04);
+  --shadow-md:      0 4px 16px rgba(37, 99, 235, 0.06);
+  --shadow-lg:      0 12px 40px rgba(37, 99, 235, 0.1);
+}
+
+/* ── Landing Page (index.html) Day Overrides ── */
+html[data-theme="day"] body {
+  background-color: var(--bg-base) !important;
+  color: var(--text-primary) !important;
+}
+
+html[data-theme="day"] .navbar {
+  background: rgba(240, 244, 248, 0.85) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+html[data-theme="day"] .btn-primary,
+html[data-theme="day"] .btn-cta-primary,
+html[data-theme="day"] .nav-cta {
+  color: #ffffff !important;
+  background: var(--grad-brand) !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
+}
+
+html[data-theme="day"] .btn-primary:hover,
+html[data-theme="day"] .btn-cta-primary:hover,
+html[data-theme="day"] .nav-cta:hover {
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35) !important;
+  filter: brightness(1.05);
+}
+
+html[data-theme="day"] .btn-outline {
+  border-color: rgba(37, 99, 235, 0.4) !important;
+  color: #2563eb !important;
+}
+html[data-theme="day"] .btn-outline:hover {
+  background: rgba(37, 99, 235, 0.06) !important;
+  border-color: #2563eb !important;
+}
+
+html[data-theme="day"] .btn-cta-outline {
+  border-color: rgba(37, 99, 235, 0.4) !important;
+  color: #2563eb !important;
+}
+html[data-theme="day"] .btn-cta-outline:hover {
+  border-color: #2563eb !important;
+  background: rgba(37, 99, 235, 0.06) !important;
+}
+
+html[data-theme="day"] .data-stripes {
+  background-image: 
+    linear-gradient(90deg, rgba(37, 99, 235, 0.02) 1px, transparent 1px),
+    linear-gradient(rgba(37, 99, 235, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79, 70, 229, 0.02) 2px, transparent 2px) !important;
+}
+
+html[data-theme="day"] .scan-line {
+  background: linear-gradient(to bottom, transparent 50%, rgba(37, 99, 235, 0.02) 51%) !important;
+}
+
+html[data-theme="day"] .tech-glow-1 {
+  background: rgba(37, 99, 235, 0.05) !important;
+}
+html[data-theme="day"] .tech-glow-2 {
+  background: rgba(79, 70, 229, 0.04) !important;
+}
+
+html[data-theme="day"] .hero-heading {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .hero-heading span.text-emerald {
+  color: #2563eb !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="day"] .hero-weekly-badge {
+  background: #EFF6FF !important;
+  color: #1D4ED8 !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+html[data-theme="day"] .ring-bg {
+  stroke: rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme="day"] .ring-pct {
+  color: #0f172a !important;
+}
+
+html[data-theme="day"] .ring-label-inner {
+  color: #475569 !important;
+}
+
+html[data-theme="day"] .ring-sublabel {
+  color: #475569 !important;
+}
+
+html[data-theme="day"] .hdc-next-task {
+  background: #f8fafc !important;
+  border: 1px solid rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme="day"] .hdc-next-title {
+  color: #0f172a !important;
+}
+
+html[data-theme="day"] .hdc-next-meta {
+  color: #64748b !important;
+}
+
+html[data-theme="day"] .before-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(239, 68, 68, 0.15) !important;
+}
+
+html[data-theme="day"] .before-card:hover {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.06) !important;
+}
+
+html[data-theme="day"] .after-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.2) !important;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.04) !important;
+}
+
+html[data-theme="day"] .after-card:hover {
+  border-color: #2563eb !important;
+  box-shadow: 0 15px 40px rgba(37, 99, 235, 0.12) !important;
+}
+
+html[data-theme="day"] .problem-vs-grid p {
+  color: #475569 !important;
+}
+
+html[data-theme="day"] .vs-card-header {
+  color: #0f172a !important;
+}
+
+html[data-theme="day"] .step-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme="day"] .step-card p {
+  color: #475569 !important;
+}
+
+html[data-theme="day"] .step-card:hover {
+  border-color: rgba(37, 99, 235, 0.3) !important;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.06) !important;
+}
+
+html[data-theme="day"] .step-card.step-active {
+  border-color: #2563eb !important;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1) !important;
+}
+
+html[data-theme="day"] .step-num-badge {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+html[data-theme="day"] .step-num-badge.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="day"] .feature-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.08) !important;
+}
+html[data-theme="day"] .feature-card:hover {
+  border-color: #2563eb !important;
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme="day"] .fc-title {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .fc-desc {
+  color: #475569 !important;
+}
+html[data-theme="day"] .fc-stat {
+  color: #2563eb !important;
+  border-top: 1px solid rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme="day"] .mock-dashboard {
+  background: #f8fafc !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme="day"] .mdb-topbar {
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.08) !important;
+}
+html[data-theme="day"] .mdb-logo {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .mdb-username {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .mdb-last-updated {
+  color: #64748b !important;
+}
+
+html[data-theme="day"] .mdb-sidebar {
+  background: #f1f5f9 !important;
+  border-right: 1px solid rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme="day"] .mdb-nav-item {
+  color: #475569 !important;
+}
+
+html[data-theme="day"] .mdb-nav-item.active {
+  background: rgba(37, 99, 235, 0.08) !important;
+  color: #2563eb !important;
+}
+
+html[data-theme="day"] .mdb-stat-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.08) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.02) !important;
+}
+html[data-theme="day"] .mdb-stat-card .mdb-stat-label {
+  color: #64748b !important;
+}
+
+html[data-theme="day"] .mdb-panel-title {
+  color: #0f172a !important;
+}
+
+html[data-theme="day"] .weak-skill {
+  color: #334155 !important;
+}
+
+html[data-theme="day"] .mdb-next-task {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.08) !important;
+}
+html[data-theme="day"] .mdb-nt-why {
+  color: #475569 !important;
+}
+
+html[data-theme="day"] .compare-table {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.1) !important;
+}
+html[data-theme="day"] .compare-table th {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-bottom: 2px solid rgba(37, 99, 235, 0.1) !important;
+}
+html[data-theme="day"] .compare-table td {
+  color: #334155 !important;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.06) !important;
+}
+html[data-theme="day"] .compare-table .sb-col {
+  background: rgba(37, 99, 235, 0.03) !important;
+}
+html[data-theme="day"] .compare-table tr:hover td {
+  background: rgba(37, 99, 235, 0.02) !important;
+}
+
+html[data-theme="day"] .faq-item {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.08) !important;
+}
+html[data-theme="day"] .faq-q {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .faq-a p {
+  color: #475569 !important;
+}
+
+html[data-theme="day"] .footer {
+  background: #f8fafc !important;
+  border-top: 1px solid rgba(37, 99, 235, 0.08) !important;
+  color: #334155 !important;
+}
+html[data-theme="day"] .footer-logo {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .footer-col h5 {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .footer-col a {
+  color: #475569 !important;
+}
+html[data-theme="day"] .footer-col a:hover {
+  color: #2563eb !important;
+}
+html[data-theme="day"] .footer-bottom {
+  border-top: 1px solid rgba(37, 99, 235, 0.06) !important;
+  color: #64748b !important;
+}
+
+
+/* ── Auth Page (auth.html) Day Overrides ── */
+html[data-theme="day"] .left-panel {
+  background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 50%, #dbeafe 100%) !important;
+}
+html[data-theme="day"] .left-panel .brand-logo {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .left-panel .brand-tagline {
+  color: #475569 !important;
+}
+html[data-theme="day"] .left-panel .dot-grid-overlay {
+  background-image: radial-gradient(circle, rgba(37, 99, 235, 0.08) 1px, transparent 1px) !important;
+}
+
+html[data-theme="day"] .left-panel .f-card {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(37, 99, 235, 0.1) !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.05) !important;
+}
+html[data-theme="day"] .left-panel .f-card p {
+  color: #334155 !important;
+}
+html[data-theme="day"] .left-panel .f-card span {
+  color: #2563eb !important;
+}
+html[data-theme="day"] .left-panel .card-a {
+  border-left: 4px solid #2563eb !important;
+}
+
+html[data-theme="day"] .left-panel .terminal-widget {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  box-shadow: 0 15px 35px rgba(37, 99, 235, 0.06) !important;
+}
+html[data-theme="day"] .left-panel .term-header {
+  background: #f1f5f9 !important;
+}
+html[data-theme="day"] .left-panel .term-body {
+  color: #2563eb !important;
+}
+
+html[data-theme="day"] .left-panel .skill-badge {
+  background: #ffffff !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  color: #334155 !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.03) !important;
+}
+
+html[data-theme="day"] .right-panel {
+  background: #f8fafc !important;
+}
+html[data-theme="day"] .welcome-text h1 {
+  color: #0f172a !important;
+}
+html[data-theme="day"] .welcome-text p {
+  color: #475569 !important;
+}
+
+html[data-theme="day"] .tab-switcher {
+  background: #f1f5f9 !important;
+}
+html[data-theme="day"] .tab-btn {
+  color: #64748b !important;
+}
+html[data-theme="day"] .tab-btn.active {
+  background: #ffffff !important;
+  color: #2563eb !important;
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.05) !important;
+}
+
+html[data-theme="day"] .auth-form label {
+  color: #334155 !important;
+}
+html[data-theme="day"] .auth-form input,
+html[data-theme="day"] .auth-form select {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+html[data-theme="day"] .auth-form input:focus,
+html[data-theme="day"] .auth-form select:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
+}
+html[data-theme="day"] .auth-form select option {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="day"] .submit-btn {
+  background: var(--grad-brand) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2) !important;
+}
+html[data-theme="day"] .submit-btn:hover {
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3) !important;
+}
+
+html[data-theme="day"] .divider {
+  color: #64748b !important;
+}
+html[data-theme="day"] .divider::before,
+html[data-theme="day"] .divider::after {
+  background: #e2e8f0 !important;
+}
+
+html[data-theme="day"] .google-btn,
+html[data-theme="day"] .github-btn {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+}
+html[data-theme="day"] .google-btn:hover,
+html[data-theme="day"] .github-btn:hover {
+  background: #f8fafc !important;
+  border-color: #2563eb !important;
+}

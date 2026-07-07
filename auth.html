@@ -22,6 +22,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/animations.css">
+  <script src="scripts/theme.js"></script>
 
   <style>
     :root {
@@ -720,6 +721,28 @@
 </head>
 
 <body>
+
+  <!-- Theme Toggle Button -->
+  <button class="theme-toggle-btn" id="theme-toggle"
+    style="
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 1000;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 200ms;
+      color: var(--text-primary);"
+    onmouseover="this.style.background='var(--bg-card-hover)'"
+    onmouseout="this.style.background='var(--bg-card)'">
+  </button>
 
   <div class="auth-layout">
     <!-- ── LEFT PANEL ────────────────────────────────────────── -->

@@ -20,6 +20,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
     <!-- Scripts -->
+    <script src="scripts/theme.js"></script>
     <script src="scripts/config.js"></script>
     <!-- 2. Your dashboard JS AFTER supabase -->
     <script src="scripts/dashboard.js" defer></script>
@@ -285,6 +286,20 @@
                     Level 1 · 0 XP
                   </span>
                 </div>
+
+                <!-- Theme Toggle Button -->
+                <button class="theme-toggle-btn" id="theme-toggle"
+                  style="
+                    width:38px;height:38px;
+                    border-radius:50%;border:none;
+                    background:#F1F5F9;cursor:pointer;
+                    display:flex;align-items:center;
+                    justify-content:center;
+                    transition:background 200ms;
+                    color:var(--text-secondary);"
+                  onmouseover="this.style.background='#E2E8F0'"
+                  onmouseout="this.style.background='#F1F5F9'">
+                </button>
 
                 <!-- Notifications bell -->
                 <div style="position:relative;">
