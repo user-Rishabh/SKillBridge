@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
@@ -115,6 +116,7 @@ function App() {
 
       <div className="ticks"></div>
       <section id="spacer"></section>
+      <SpeedInsights />
     </>
   )
 }
