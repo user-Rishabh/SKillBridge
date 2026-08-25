@@ -476,246 +476,477 @@ async function saveTasksFromRoadmap(roadmap, userId) {
 }
 
 // ── TASK SYSTEM: TIMELINE & QUIZ ONLY ──────────────────────
+// ── QUICK TEST ASSESSMENT ENGINE ──────────────────────
 async function loadTasks() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
-
-  const [tasksRes, profileRes] = await Promise.all([
-    supabase.from('tasks').select('*').eq('user_id', session.user.id),
-    supabase.from('profiles').select('roadmap_data').eq('id', session.user.id).single()
-  ]);
-
-  let tasks = tasksRes.data || [];
-  const roadmap = profileRes.data?.roadmap_data;
-
-  if (tasks.length === 0 && roadmap) {
-    await saveTasksFromRoadmap(roadmap, session.user.id);
-    const { data: retryTasks } = await supabase.from('tasks').select('*').eq('user_id', session.user.id);
-    tasks = retryTasks || [];
-  }
-
-  // Sort tasks by roadmap sequence
-  if (roadmap?.phases) {
-    const taskOrder = [];
-    roadmap.phases.forEach(p => (p.tasks || []).forEach(t => taskOrder.push(t.title)));
-    tasks.sort((a, b) => taskOrder.indexOf(a.title) - taskOrder.indexOf(b.title));
-  }
-
-  renderTasks(tasks);
+  await loadQuickTestTab();
 }
 
-function renderTasks(tasks) {
-  const container = document.getElementById('tasks-container') || document.querySelector('[data-section="tasks"]');
-  if (!container) return;
+const QUICK_TEST_QUESTIONS = {
+  software: [
+    { skill: "CSS", text: "Which CSS display property creates a grid layout container?", options: ["display: flex", "display: grid", "display: block", "display: table"], correct: 1 },
+    { skill: "JavaScript", text: "Which method is commonly used to fetch data from a REST API in JavaScript?", options: ["document.query()", "fetch()", "requestData()", "getAPI()"], correct: 1 },
+    { skill: "React", text: "Which hook handles side effects (e.g. data fetching) in functional components?", options: ["useState", "useEffect", "useContext", "useReducer"], correct: 1 },
+    { skill: "APIs", text: "What HTTP status code represents a successful REST API request?", options: ["200 OK", "404 Not Found", "500 Internal Error", "301 Redirect"], correct: 0 },
+    { skill: "Git", text: "Which Git command uploads local commits to a remote repository?", options: ["git pull", "git push", "git commit", "git clone"], correct: 1 },
+    { skill: "HTML", text: "Which HTML5 semantic element is most appropriate for primary navigation?", options: ["<div>", "<nav>", "<section>", "<header>"], correct: 1 },
+    { skill: "React", text: "How do you pass data down to child components in React?", options: ["State", "Props", "Hooks", "Reducers"], correct: 1 },
+    { skill: "JavaScript", text: "Which keyword declares a block-scoped variable that can be reassigned?", options: ["var", "let", "const", "define"], correct: 1 },
+    { skill: "APIs", text: "What data format is standard for exchanging info in modern REST APIs?", options: ["XML", "JSON", "CSV", "YAML"], correct: 1 },
+    { skill: "CSS", text: "Which CSS property is used to change the text color?", options: ["text-color", "font-color", "color", "background-color"], correct: 2 }
+  ],
+  design: [
+    { skill: "Typography", text: "Which font style is generally preferred for body paragraphs to enhance readability?", options: ["Decorative", "Script", "Sans-serif", "Serif"], correct: 2 },
+    { skill: "Color Theory", text: "Which color scheme uses colors next to each other on the color wheel?", options: ["Monochromatic", "Complementary", "Triadic", "Analogous"], correct: 3 },
+    { skill: "Figma", text: "What feature in Figma allows creating reusable design elements that sync changes?", options: ["Groups", "Frames", "Components", "Instances"], correct: 2 },
+    { skill: "Design Principles", text: "Which principle directs the user's eye to the most important element first?", options: ["Contrast", "Visual Hierarchy", "Proximity", "Alignment"], correct: 1 },
+    { skill: "Wireframing", text: "What is the primary goal of a low-fidelity wireframe?", options: ["Test visual styling & colors", "Establish visual layout & user flows", "Interactive components testing", "Client proposal presentation"], correct: 1 },
+    { skill: "UX Research", text: "Which research method collects qualitative, open-ended feedback directly from users?", options: ["Surveys", "Usability testing interviews", "A/B testing analytics", "Heatmaps"], correct: 1 },
+    { skill: "Prototyping", text: "What Figma transition enables fluid screen animations automatically?", options: ["Static", "Smart Animate", "Instant", "Overlay"], correct: 1 },
+    { skill: "Design Systems", text: "What is the core building block of a consistent design system?", options: ["Images", "Design Tokens and UI components", "Font files", "Mockups"], correct: 2 },
+    { skill: "Accessibility", text: "What is the minimum recommended contrast ratio for normal body text under WCAG AA?", options: ["2:1", "3:1", "4.5:1", "7:1"], correct: 2 },
+    { skill: "Usability Testing", text: "What metric evaluates user frustration and error counts during product trials?", options: ["Bounce rate", "Task success rate and error count", "Click-through rate", "Conversion rate"], correct: 1 }
+  ],
+  data: [
+    { skill: "SQL", text: "Which SQL clause filters records before aggregation in a SELECT statement?", options: ["ORDER BY", "GROUP BY", "WHERE", "HAVING"], correct: 2 },
+    { skill: "Python", text: "Which data structure is mutable and ordered in Python?", options: ["Tuple", "List", "Set", "Dictionary"], correct: 1 },
+    { skill: "Neural Networks", text: "What activation function is commonly used for binary classification output?", options: ["ReLU", "Sigmoid", "Tanh", "Softmax"], correct: 1 },
+    { skill: "SQL", text: "Which SQL join returns all rows from the left table and matched rows from the right?", options: ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "FULL OUTER JOIN"], correct: 1 },
+    { skill: "Python", text: "Which library is primary for numerical and matrix operations in Python?", options: ["Pandas", "Matplotlib", "NumPy", "TensorFlow"], correct: 2 },
+    { skill: "SQL", text: "Which keyword is used to group query results?", options: ["ORDER BY", "GROUP BY", "WHERE", "SORT"], correct: 1 },
+    { skill: "Neural Networks", text: "Which optimizer is widely preferred for adaptive learning rate gradient descent?", options: ["SGD", "Adam", "Adagrad", "RMSprop"], correct: 1 },
+    { skill: "Data Cleaning", text: "How do you typically handle missing numerical values in a feature column?", options: ["Delete the column", "Impute with mean/median or drop rows", "Fill with zeros", "Ignore them"], correct: 1 },
+    { skill: "SQL", text: "Which SQL aggregation function computes the average?", options: ["SUM", "COUNT", "AVG", "MIN"], correct: 2 },
+    { skill: "Python", text: "Which function gets the length of a list in Python?", options: ["size()", "length()", "len()", "count()"], correct: 2 }
+  ]
+};
 
-  window.allTasks = tasks;
+async function loadQuickTestTab() {
+  if (!supabase || !currentUserId) return;
 
-  if (!tasks || tasks.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:60px 20px;background:var(--bg-surface);border-radius:24px;border:1px solid var(--border);backdrop-filter:blur(12px);">
-        <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-        <h3 style="font-size:18px;font-weight:700;color:var(--text-main);margin-bottom:8px;">Ready to Start Your Learning Journey?</h3>
-        <p style="font-size:13px;color:var(--text-muted);max-width:360px;margin:0 auto 20px;">Complete onboarding to generate your customized AI Career Roadmap with structured tasks!</p>
+  // 1. Fetch user profile data
+  const { data: profile } = await supabase.from('profiles').select('goal, session_history').eq('id', currentUserId).single();
+  const goal = profile?.goal || "Frontend Developer";
+  const history = profile?.session_history || [];
+
+  // 2. Identify career track
+  const trackInfo = getCareerTrackFromGoal(goal);
+  document.getElementById('qt-current-path').textContent = trackInfo.spec;
+  document.getElementById('qt-test-path').textContent = trackInfo.spec;
+
+  // 3. Filter assessment history
+  const assessments = history.filter(h => h.type === 'assessment');
+
+  if (assessments.length > 0) {
+    const latest = assessments[0];
+
+    // Render score box
+    document.getElementById('qt-score-box').innerHTML = `
+      <div id="qt-overall-score" style="font-size: 48px; font-weight: 800; color: var(--emerald); margin-bottom: 4px;">${latest.score}%</div>
+      <div id="qt-score-level" style="font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 12px;">
+        ${latest.score >= 80 ? 'Strong Performance' : latest.score >= 60 ? 'Good Progress' : 'Needs Improvement'}
+      </div>
+      <div class="cc-progress-container" style="max-width: 260px; margin: 0 auto;">
+        <div id="qt-overall-bar" class="cc-progress-bar" style="width: ${latest.score}%;"></div>
       </div>
     `;
+
+    document.getElementById('qt-last-tested').textContent = `Last tested: ${latest.date}`;
+
+    // Render skill breakdowns
+    const breakdownHTML = Object.entries(latest.skills).map(([skillName, score]) => {
+      const level = score >= 80 ? 'Strong' : score >= 60 ? 'Good' : score >= 40 ? 'Developing' : 'Needs Improvement';
+      const color = score >= 80 ? 'var(--emerald)' : score >= 60 ? 'var(--emerald)' : score >= 40 ? 'var(--warning)' : 'var(--text-error)';
+      return `
+        <div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+            <span style="color:#ffffff; font-weight:600;">${skillName}</span>
+            <span style="color:${color}; font-weight:700;">${score}% · ${level}</span>
+          </div>
+          <div class="cc-progress-container">
+            <div class="cc-progress-bar" style="width: ${score}%; background: ${color};"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('qt-skill-breakdown-list').innerHTML = breakdownHTML;
+
+    // AI Insight
+    document.getElementById('qt-ai-insight').textContent = latest.insight;
+
+    // Recommendation card
+    document.getElementById('qt-recommendation-title').textContent = latest.weakSkill;
+    const weakScore = latest.skills[latest.weakSkill] || 0;
+    document.getElementById('qt-recommendation-score').textContent = `${weakScore}%`;
+
+    // History list
+    const historyHTML = assessments.slice(0, 5).map((a, aIdx) => {
+      let diffText = "";
+      if (aIdx < assessments.length - 1) {
+        const prev = assessments[aIdx + 1];
+        const diff = a.score - prev.score;
+        if (diff > 0) diffText = `<span style="color:var(--emerald); font-size:11px; font-weight:600; margin-top:2px; display:block;">↑ +${diff}% from previous test</span>`;
+        else if (diff < 0) diffText = `<span style="color:var(--text-error); font-size:11px; font-weight:600; margin-top:2px; display:block;">↓ ${diff}% from previous test</span>`;
+      }
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; font-size:13px;">
+          <div>
+            <strong style="color:#ffffff;">${a.date}</strong>
+            <div style="color:var(--text-muted); font-size:11px; margin-top:2px;">${a.trackName}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700; color:var(--emerald);">${a.score}%</div>
+            ${diffText}
+          </div>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('qt-history-list').innerHTML = historyHTML;
+  } else {
+    // Welcome / No Assessment taken yet state
+    document.getElementById('qt-score-box').innerHTML = `
+      <div style="padding: 30px 0; color: var(--text-muted); font-size: 13px;">
+        You haven't taken your first assessment yet.
+      </div>
+    `;
+    document.getElementById('qt-last-tested').textContent = "Last tested: Never";
+
+    // Placeholder skill list based on track
+    const placeholderSkills = trackInfo.track === "UI/UX & Design" ? ["Typography", "Color Theory", "Figma", "Design Principles", "UX Research"] : ["JavaScript", "React", "CSS", "APIs", "Git"];
+    document.getElementById('qt-skill-breakdown-list').innerHTML = placeholderSkills.map(skillName => `
+      <div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+          <span style="color:#ffffff; font-weight:600;">${skillName}</span>
+          <span style="color:var(--text-muted); font-weight:700;">--</span>
+        </div>
+        <div class="cc-progress-container">
+          <div class="cc-progress-bar" style="width: 0%;"></div>
+        </div>
+      </div>
+    `).join('');
+
+    document.getElementById('qt-ai-insight').textContent = "Take your first assessment to unlock personalized recommendations and tailor your study roadmap.";
+    document.getElementById('qt-recommendation-title').textContent = "API Integration";
+    document.getElementById('qt-recommendation-score').textContent = "Pending";
+    document.getElementById('qt-history-list').innerHTML = `<div style="font-size:12px; color:var(--text-muted); text-align:center; padding: 12px 0;">No previous assessments found.</div>`;
+  }
+}
+
+function startQuickTest() {
+  // Hide success and dashboard
+  document.getElementById('qt-dashboard-view').style.display = 'none';
+  document.getElementById('qt-success-view').style.display = 'none';
+  document.getElementById('qt-analysis-view').style.display = 'none';
+
+  // Get user path and select matching question pool
+  const pathTitle = document.getElementById('qt-current-path').textContent || "Frontend Development";
+  let pool = QUICK_TEST_QUESTIONS.software;
+  const normalized = pathTitle.toLowerCase();
+  if (normalized.includes("design") || normalized.includes("ui") || normalized.includes("ux")) {
+    pool = QUICK_TEST_QUESTIONS.design;
+  } else if (normalized.includes("ml") || normalized.includes("ai") || normalized.includes("data") || normalized.includes("scientist")) {
+    pool = QUICK_TEST_QUESTIONS.data;
+  }
+
+  window.qtQuestions = pool;
+  window.qtAnswers = new Array(pool.length).fill(null);
+  window.qtCurrentIndex = 0;
+
+  // Show test panel
+  document.getElementById('qt-test-view').style.display = 'block';
+  renderQtQuestion();
+}
+
+function renderQtQuestion() {
+  const index = window.qtCurrentIndex;
+  const questions = window.qtQuestions;
+  const currentQ = questions[index];
+
+  document.getElementById('qt-question-counter').textContent = `${index + 1} / ${questions.length}`;
+  const progressPct = Math.round(((index + 1) / questions.length) * 100);
+  document.getElementById('qt-test-progress-bar').style.width = `${progressPct}%`;
+  document.getElementById('qt-question-text').textContent = currentQ.text;
+
+  // Render options
+  const savedAnswer = window.qtAnswers[index];
+  const optionsHTML = currentQ.options.map((opt, optIdx) => {
+    const isSelected = savedAnswer === optIdx;
+    return `
+      <label 
+        style="
+          display: flex; 
+          align-items: center; 
+          gap: 12px; 
+          padding: 14px 18px; 
+          border-radius: 10px; 
+          background: ${isSelected ? 'rgba(0, 229, 255, 0.04)' : 'rgba(255,255,255,0.02)'}; 
+          border: 1.5px solid ${isSelected ? 'var(--emerald)' : 'var(--border)'}; 
+          cursor: pointer; 
+          user-select: none; 
+          transition: all 0.2s;
+        "
+        onmouseover="this.style.borderColor='rgba(0, 229, 255, 0.4)';"
+        onmouseout="this.style.borderColor='${isSelected ? 'var(--emerald)' : 'var(--border)'}';"
+      >
+        <input 
+          type="radio" 
+          name="qt-answer-opt" 
+          value="${optIdx}" 
+          ${isSelected ? 'checked' : ''} 
+          onclick="selectQtAnswer(${optIdx})"
+          style="accent-color: var(--emerald); width: 16px; height: 16px; margin: 0;"
+        >
+        <span style="font-size: 13px; color: ${isSelected ? '#ffffff' : 'var(--text-secondary)'}; font-weight: ${isSelected ? '600' : '500'};">
+          ${opt}
+        </span>
+      </label>
+    `;
+  }).join('');
+
+  document.getElementById('qt-options-container').innerHTML = optionsHTML;
+
+  // Toggle prev/next button views
+  document.getElementById('qt-prev-btn').style.visibility = index === 0 ? 'hidden' : 'visible';
+  document.getElementById('qt-next-btn').textContent = index === questions.length - 1 ? 'Submit Test' : 'Next →';
+}
+
+function selectQtAnswer(optionIdx) {
+  window.qtAnswers[window.qtCurrentIndex] = optionIdx;
+  renderQtQuestion();
+}
+
+function prevQuestion() {
+  if (window.qtCurrentIndex > 0) {
+    window.qtCurrentIndex--;
+    renderQtQuestion();
+  }
+}
+
+async function nextQuestion() {
+  const index = window.qtCurrentIndex;
+  const answers = window.qtAnswers;
+  
+  if (answers[index] === null) {
+    showToast("Please select an answer to continue.", "info");
     return;
   }
 
-  // Group tasks by their roadmap_phase
-  const phasesMap = {};
-  tasks.forEach(task => {
-    const phaseName = task.roadmap_phase || 'General Prep';
-    if (!phasesMap[phaseName]) {
-      phasesMap[phaseName] = [];
+  if (index < window.qtQuestions.length - 1) {
+    window.qtCurrentIndex++;
+    renderQtQuestion();
+  } else {
+    await finishQuickTest();
+  }
+}
+
+function exitQuickTest() {
+  if (confirm("Are you sure you want to exit the test? Your current progress will not be saved.")) {
+    resetQuickTestView();
+  }
+}
+
+function resetQuickTestView() {
+  document.getElementById('qt-test-view').style.display = 'none';
+  document.getElementById('qt-analysis-view').style.display = 'none';
+  document.getElementById('qt-success-view').style.display = 'none';
+  document.getElementById('qt-dashboard-view').style.display = 'block';
+  loadQuickTestTab();
+}
+
+async function finishQuickTest() {
+  document.getElementById('qt-test-view').style.display = 'none';
+  document.getElementById('qt-analysis-view').style.display = 'block';
+
+  // 1. Calculate Score
+  const questions = window.qtQuestions;
+  const answers = window.qtAnswers;
+  let correctCount = 0;
+
+  // Tracks category totals
+  const categoryStats = {}; // { CSS: { correct: 0, total: 0 } }
+
+  questions.forEach((q, idx) => {
+    const isCorrect = answers[idx] === q.correct;
+    if (isCorrect) correctCount++;
+
+    if (!categoryStats[q.skill]) {
+      categoryStats[q.skill] = { correct: 0, total: 0 };
     }
-    phasesMap[phaseName].push(task);
+    categoryStats[q.skill].total++;
+    if (isCorrect) categoryStats[q.skill].correct++;
   });
 
-  const phaseNames = Object.keys(phasesMap);
+  const pctScore = Math.round((correctCount / questions.length) * 100);
 
-  // Compute stats
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'completed').length;
-  const xpEarned = tasks.filter(t => t.status === 'completed').reduce((sum, t) => sum + (t.difficulty === 'Hard' ? 50 : t.difficulty === 'Medium' ? 30 : 15), 0);
+  // Compile skill percentages
+  const skillScores = {};
+  Object.entries(categoryStats).forEach(([skill, stat]) => {
+    skillScores[skill] = Math.round((stat.correct / stat.total) * 100);
+  });
 
-  container.innerHTML = `
-    <!-- Top Stats Row -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
-      <div style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="background: rgba(217, 70, 239, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--fuchsia);">🏆</div>
-        <div>
-          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Total Roadmap Tasks</div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--text-main);">${totalTasks} Tasks</div>
-        </div>
-      </div>
-      
-      <div style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="background: rgba(16, 185, 129, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--emerald);">🎯</div>
-        <div>
-          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Mastered</div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--emerald);">${completedTasks} / ${totalTasks}</div>
-        </div>
-      </div>
+  // Identify weak skill (lowest score, default to APIs/Design Principles if no issues)
+  let weakSkill = "APIs";
+  let minScore = 101;
+  Object.entries(skillScores).forEach(([skill, score]) => {
+    if (score < minScore) {
+      minScore = score;
+      weakSkill = skill;
+    }
+  });
 
-      <div style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; backdrop-filter: blur(12px); transition: all 250ms;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-        <div style="background: rgba(245, 158, 11, 0.1); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--amber);">⚡</div>
-        <div>
-          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">XP Reward</div>
-          <div style="font-size: 18px; font-weight: 700; color: var(--amber);">+${xpEarned} XP</div>
-        </div>
-      </div>
-    </div>
+  // Adjust name for search query matching in roadmap
+  if (weakSkill === "Typography") weakSkill = "Typography";
+  else if (weakSkill === "APIs") weakSkill = "API Integration";
 
-    <!-- Filter Actions Row -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:12px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:16px;">
-      <div style="display:flex; gap:8px;">
-        <button onclick="filterTasks('all')" id="filter-all" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid var(--violet); background:var(--violet); color:white; cursor:pointer; transition:all 200ms; height:34px;">All Mastery Path</button>
-        <button onclick="filterTasks('pending')" id="filter-pending" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; transition:all 200ms; height:34px;">Active & Locked</button>
-        <button onclick="filterTasks('completed')" id="filter-completed" class="task-filter-btn" style="padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid var(--border); background:transparent; color:var(--text-muted); cursor:pointer; transition:all 200ms; height:34px;">Mastered</button>
-      </div>
-      <div style="font-size:12px; color:var(--text-muted); font-weight:500;">
-        Click cards to view official resources & docs
-      </div>
-    </div>
+  // Simulate AI Insight tailoring based on weak skill
+  const pathTitle = document.getElementById('qt-current-path').textContent || "Frontend Development";
+  const insightText = `Your overall score is ${pctScore}%. While you have demonstrated good core competency, ${weakSkill} is currently identified as your primary skill gap. Atlas recommends focusing on this checkpoint next to enhance your job readiness.`;
 
-    <!-- 3 Sections Columns Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; align-items: start;">
-      ${phaseNames.map((phaseName, index) => {
-        const phaseTasks = phasesMap[phaseName];
-        const doneCount = phaseTasks.filter(t => t.status === 'completed').length;
-        const totalCount = phaseTasks.length;
-        const phaseProgress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-        
-        // Colors/Styles for columns
-        const accentColors = [
-          { border: 'var(--emerald-dim)', bg: 'rgba(16, 185, 129, 0.05)', primary: 'var(--emerald)', glow: 'rgba(16, 185, 129, 0.15)', banner: 'linear-gradient(135deg, #059669, #10B981)' },
-          { border: 'var(--violet-dim)', bg: 'rgba(124, 58, 237, 0.05)', primary: 'var(--violet)', glow: 'rgba(124, 58, 237, 0.15)', banner: 'linear-gradient(135deg, #7C3AED, #9333EA)' },
-          { border: 'var(--fuchsia-dim)', bg: 'rgba(217, 70, 239, 0.05)', primary: 'var(--fuchsia)', glow: 'rgba(217, 70, 239, 0.15)', banner: 'linear-gradient(135deg, #D946EF, #C084FC)' }
-        ];
-        
-        const colors = accentColors[index % accentColors.length];
+  // 2. Perform Roadmap reordering adaptation
+  await adaptRoadmapForWeakSkill(weakSkill);
 
-        return `
-          <div class="phase-column" style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; backdrop-filter: blur(12px);">
-            <!-- Column Header Banner -->
-            <div style="background: ${colors.banner}; padding: 20px; color: white; position: relative;">
-              <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.9; margin-bottom: 4px;">
-                Phase 0${index + 1}
-              </div>
-              <h4 style="font-size: 15px; font-weight: 700; margin: 0; line-height: 1.3;">
-                ${phaseName}
-              </h4>
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 11px;">
-                <span style="background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 12px; font-weight: 600;">
-                  ${doneCount}/${totalCount} Mastered
-                </span>
-                <span style="font-weight: 700;">${phaseProgress}% Completed</span>
-              </div>
-              <!-- Header Progress Bar -->
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: rgba(255,255,255,0.25);">
-                <div style="width: ${phaseProgress}%; height: 100%; background: white;"></div>
-              </div>
-            </div>
+  // 3. Save to profile session history
+  const { data: profile } = await supabase.from('profiles').select('session_history').eq('id', currentUserId).single();
+  const history = profile?.session_history || [];
 
-            <!-- Tasks List Container -->
-            <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px; background: rgba(0, 0, 0, 0.15); min-height: 250px;">
-              ${phaseTasks.map((task, tIdx) => {
-                const isCompleted = task.status === 'completed';
-                
-                // Sequential unlocking within this phase:
-                let isUnlocked = true;
-                for (let k = 0; k < tIdx; k++) {
-                  if (phaseTasks[k].status !== 'completed') {
-                     isUnlocked = false;
-                     break;
-                  }
-                }
+  const newAttempt = {
+    type: 'assessment',
+    score: pctScore,
+    correct: correctCount,
+    total: questions.length,
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    trackName: pathTitle,
+    skills: skillScores,
+    insight: insightText,
+    weakSkill: weakSkill
+  };
 
-                const isLocked = !isUnlocked && !isCompleted;
-                const isActive = isUnlocked && !isCompleted;
-                const difficultyColor = { 'Easy': '#10B981', 'Medium': '#F59E0B', 'Hard': '#EF4444' }[task.difficulty] || '#64748B';
+  history.unshift(newAttempt);
+  await supabase.from('profiles').update({ session_history: history }).eq('id', currentUserId);
 
-                return `
-                  <div 
-                    class="task-card-item"
-                    data-task-status="${task.status}"
-                    style="
-                      position: relative;
-                      background: ${isCompleted ? 'rgba(16, 185, 129, 0.04)' : isLocked ? 'rgba(255, 255, 255, 0.01)' : 'rgba(255, 255, 255, 0.04)'};
-                      border: 1.5px solid ${isCompleted ? 'rgba(16, 185, 129, 0.15)' : isLocked ? 'var(--border)' : colors.primary};
-                      border-radius: 14px;
-                      padding: 14px 16px;
-                      cursor: ${isLocked ? 'not-allowed' : 'pointer'};
-                      transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
-                      opacity: ${isLocked ? '0.5' : '1'};
-                      box-shadow: ${isActive ? '0 0 15px ' + colors.glow : 'none'};
-                    "
-                    ${isLocked ? '' : `onclick="openTaskDetail('${task.id}')"`}
-                    ${isLocked ? '' : `
-                      onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='${colors.primary}'; this.style.boxShadow='0 0 15px ${colors.glow}';"
-                      onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='${isCompleted ? 'rgba(16, 185, 129, 0.15)' : colors.primary}'; this.style.boxShadow='${isActive ? '0 0 15px ' + colors.glow : 'none'}';"
-                    `}
-                  >
-                    <!-- Status Icon Badge -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
-                      <span style="font-size: 13px; font-weight: 600; color: ${isLocked ? 'var(--text-muted)' : 'var(--text-main)'}; line-height: 1.4;">
-                        ${task.title}
-                      </span>
-                      <div style="flex-shrink: 0;">
-                        ${isCompleted ? 
-                          `<span style="background: rgba(16, 185, 129, 0.15); color: #34D399; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">✓ DONE</span>` : 
-                          isLocked ? 
-                          `<span style="background: rgba(255, 255, 255, 0.05); color: var(--text-muted); font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">🔒 LOCKED</span>` :
-                          `<span style="background: ${colors.bg}; color: ${colors.primary}; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; display: inline-flex; align-items: center; gap: 3px;">🎯 ACTIVE</span>`
-                        }
-                      </div>
-                    </div>
-
-                    <!-- Meta & Actions -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--border);">
-                      <div style="display: flex; gap: 6px; align-items: center;">
-                        <span style="color: ${difficultyColor}; font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.03em;">
-                          ${task.difficulty}
-                        </span>
-                        <span style="color: var(--border);">•</span>
-                        <span style="color: var(--text-muted); font-weight: 500;">
-                          +${task.difficulty === 'Hard' ? 50 : task.difficulty === 'Medium' ? 30 : 15} XP
-                        </span>
-                      </div>
-                      ${isActive ? `
-                        <button 
-                          onclick="event.stopPropagation(); startQuiz('${task.id}','${task.title.replace(/'/g, "\\'")}','${task.roadmap_phase || ''}')"
-                          style="
-                            background: ${colors.primary};
-                            color: white;
-                            border: none;
-                            padding: 5px 10px;
-                            border-radius: 8px;
-                            font-size: 10px;
-                            font-weight: 700;
-                            cursor: pointer;
-                            display: flex;
-                            align-items: center;
-                            gap: 3px;
-                            transition: all 150ms ease;
-                          "
-                          onmouseover="this.style.filter='brightness(0.9)';"
-                          onmouseout="this.style.filter='none';"
-                        >
-                          Take Quiz ⚡
-                        </button>
-                      ` : ''}
-                    </div>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
+  // Simulate analysis animation duration
+  setTimeout(() => {
+    document.getElementById('qt-analysis-view').style.display = 'none';
+    document.getElementById('qt-success-score').textContent = `${pctScore}%`;
+    document.getElementById('qt-success-gap').textContent = weakSkill;
+    document.getElementById('qt-success-view').style.display = 'block';
+    
+    // Proactively refresh other tabs
+    loadDashboardStats();
+  }, 2200);
 }
+
+async function adaptRoadmapForWeakSkill(weakSkill) {
+  try {
+    const { data: profile } = await supabase.from('profiles').select('roadmap_data').eq('id', currentUserId).single();
+    if (!profile || !profile.roadmap_data) return;
+    
+    const roadmap = profile.roadmap_data;
+    if (!roadmap.phases || roadmap.phases.length === 0) return;
+
+    const weakSkillNormalized = weakSkill.toLowerCase();
+    const isMatchingTask = (title) => {
+      const t = title.toLowerCase();
+      if (weakSkillNormalized.includes("api") && (t.includes("api") || t.includes("fetch") || t.includes("ajax") || t.includes("endpoint") || t.includes("request"))) return true;
+      if (weakSkillNormalized.includes("react") && (t.includes("react") || t.includes("component") || t.includes("hook"))) return true;
+      if (weakSkillNormalized.includes("css") && (t.includes("css") || t.includes("style") || t.includes("layout") || t.includes("flexbox"))) return true;
+      if (weakSkillNormalized.includes("git") && (t.includes("git") || t.includes("github") || t.includes("version"))) return true;
+      if (weakSkillNormalized.includes("javascript") && (t.includes("javascript") || t.includes("es6") || t.includes("js"))) return true;
+      if (weakSkillNormalized.includes("figma") && (t.includes("figma") || t.includes("wireframe") || t.includes("prototype"))) return true;
+      if (weakSkillNormalized.includes("typography") && (t.includes("typography") || t.includes("font") || t.includes("text"))) return true;
+      return t.includes(weakSkillNormalized);
+    };
+
+    // Query tasks to determine completed statuses
+    const { data: dbTasks } = await supabase.from('tasks').select('*').eq('user_id', currentUserId);
+    const completedTaskTitles = new Set((dbTasks || []).filter(t => t.status === 'completed').map(t => t.title));
+
+    // Find the active phase index
+    let activePhaseIndex = -1;
+    for (let pIdx = 0; pIdx < roadmap.phases.length; pIdx++) {
+      const phase = roadmap.phases[pIdx];
+      const hasUncompleted = (phase.tasks || []).some(t => !completedTaskTitles.has(t.title));
+      if (hasUncompleted) {
+        activePhaseIndex = pIdx;
+        break;
+      }
+    }
+
+    if (activePhaseIndex !== -1) {
+      const activePhase = roadmap.phases[activePhaseIndex];
+      const tasksList = activePhase.tasks || [];
+      
+      const completedTasks = tasksList.filter(t => completedTaskTitles.has(t.title));
+      const uncompletedTasks = tasksList.filter(t => !completedTaskTitles.has(t.title));
+      
+      const matchingUncompleted = uncompletedTasks.filter(t => isMatchingTask(t.title));
+      const otherUncompleted = uncompletedTasks.filter(t => !isMatchingTask(t.title));
+      
+      if (matchingUncompleted.length > 0) {
+        // Reorder tasks inside this phase
+        activePhase.tasks = [...completedTasks, ...matchingUncompleted, ...otherUncompleted];
+        console.log(`Reordered Phase ${activePhaseIndex + 1} tasks to prioritize:`, matchingUncompleted.map(t => t.title));
+      } else {
+        // If not found in active phase, look in subsequent phases
+        let foundTask = null;
+        let foundPIdx = -1;
+        let foundTIdx = -1;
+        for (let pIdx = activePhaseIndex + 1; pIdx < roadmap.phases.length; pIdx++) {
+          const phase = roadmap.phases[pIdx];
+          const matchIdx = (phase.tasks || []).findIndex(t => !completedTaskTitles.has(t.title) && isMatchingTask(t.title));
+          if (matchIdx !== -1) {
+            foundTask = phase.tasks[matchIdx];
+            foundPIdx = pIdx;
+            foundTIdx = matchIdx;
+            break;
+          }
+        }
+        if (foundTask && foundPIdx !== -1) {
+          // Remove from later phase
+          roadmap.phases[foundPIdx].tasks.splice(foundTIdx, 1);
+          // Insert into current phase right after completed tasks
+          activePhase.tasks = [...completedTasks, foundTask, ...uncompletedTasks];
+          console.log("Moved task from later phase to current focus:", foundTask.title);
+        }
+      }
+
+      // Save updated roadmap data in Supabase
+      await supabase.from('profiles').update({ roadmap_data: roadmap }).eq('id', currentUserId);
+
+      // Re-sync standard database tasks table
+      await saveTasksFromRoadmap(roadmap, currentUserId);
+    }
+  } catch (err) {
+    console.error("Roadmap adaptation error:", err);
+  }
+}
+
+async function startRecommendedLearning() {
+  const { data: dbTasks } = await supabase.from('tasks').select('*').eq('user_id', currentUserId);
+  if (!dbTasks || dbTasks.length === 0) {
+    switchTab('roadmap');
+    return;
+  }
+
+  // Find first uncompleted task
+  const activeTask = dbTasks.find(t => t.status !== 'completed');
+  if (activeTask) {
+    // Open task study details hub
+    openTaskDetail(activeTask.id);
+  } else {
+    switchTab('roadmap');
+  }
+}
+
+// Bind to window context
+window.startQuickTest = startQuickTest;
+window.renderQtQuestion = renderQtQuestion;
+window.selectQtAnswer = selectQtAnswer;
+window.prevQuestion = prevQuestion;
+window.nextQuestion = nextQuestion;
+window.exitQuickTest = exitQuickTest;
+window.resetQuickTestView = resetQuickTestView;
+window.finishQuickTest = finishQuickTest;
+window.startRecommendedLearning = startRecommendedLearning;
 
 function filterTasks(status) {
   const cards = document.querySelectorAll('.task-card-item');
@@ -830,16 +1061,16 @@ async function openTaskDetail(taskId) {
             </div>
           </a>
 
-          <!-- Link 2: AI Course Notes -->
-          <button onclick="generateCourseNotes('${task.id}', '${task.title.replace(/'/g, "\\'")}')"
+          <!-- Link 2: AI Study Hub -->
+          <button onclick="document.getElementById('task-detail-modal').remove(); generateCourseNotes('${task.id}', '${task.title.replace(/'/g, "\\'")}')"
             style="display:flex;flex-direction:column;gap:8px;padding:16px;background:#F0FDF4;border-radius:16px;border:1px solid #059669;cursor:pointer;text-align:left;transition:all 200ms;"
             onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(5,150,105,0.1)'"
             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'"
           >
-            <span style="font-size:20px;">📝</span>
+            <span style="font-size:20px;">📖</span>
             <div>
-              <div style="font-weight:700;font-size:13px;color:#065F46;">Course Notes</div>
-              <div style="font-size:11px;color:#059669;">AI-generated summary</div>
+              <div style="font-weight:700;font-size:13px;color:#065F46;">Study Hub</div>
+              <div style="font-size:11px;color:#059669;">Docs & Video Guide</div>
             </div>
           </button>
         </div>
@@ -989,7 +1220,7 @@ async function generateCourseNotes(taskId, title) {
           </div>
         </div>
 
-        <div style="background:linear-gradient(135deg,rgba(217, 70, 239, 0.15),rgba(124, 58, 237, 0.15));border:1px solid rgba(217, 70, 239, 0.3);border-radius:24px;padding:24px;color:white;">
+        <div style="background:linear-gradient(135deg,rgba(217, 70, 239, 0.15),rgba(124, 58, 237, 0.15));border:1px solid rgba(217, 70, 239, 0.3);border-radius:24px;padding:24px;color:white;margin-bottom:20px;">
           <h4 style="margin-bottom:12px;font-size:14px;color:#FDA4AF;">🚀 Quick Challenge</h4>
           <p style="font-size:15px;margin-bottom:20px;color:#E2E8F0;">Master this topic to earn +30 XP and unlock the next phase of your roadmap.</p>
           <button onclick="document.getElementById('course-viewer-modal').remove()" 
@@ -997,6 +1228,18 @@ async function generateCourseNotes(taskId, title) {
             onmouseover="this.style.transform='translateY(-2px)';"
             onmouseout="this.style.transform='translateY(0)';"
           >Return to Dashboard</button>
+        </div>
+
+        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:24px;color:white;">
+          <h4 style="margin-bottom:12px;font-size:14px;color:var(--emerald);display:flex;align-items:center;gap:8px;">✓ TASK COMPLETION</h4>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+            Finished studying this topic and the video masterclass? Mark it as complete to advance your roadmap progress.
+          </p>
+          <button onclick="markTaskFromNotes('${taskId}')" 
+            style="width:100%;background:var(--emerald);color:white;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(16,185,129,0.25);transition:all 200ms;"
+            onmouseover="this.style.transform='translateY(-2px)';"
+            onmouseout="this.style.transform='translateY(0)';"
+          >Mark as Complete ✓</button>
         </div>
       </div>
     </div>
@@ -1040,19 +1283,160 @@ async function generateCourseNotes(taskId, title) {
       </div>
     `;
   } else {
-    // Fallback if AI fails
+    // Fallback if AI fails: show local course notes!
+    const localHTML = getLocalCourseNotes(title);
     contentArea.innerHTML = `
-      <div class="viewer-card" style="border:1px solid rgba(239, 68, 68, 0.3);background:rgba(239, 68, 68, 0.05);text-align:center;padding:60px 40px;">
-        <h2 style="color:#F87171;font-size:24px;font-weight:700;margin-bottom:16px;">AI Service Currently Busy</h2>
-        <p style="color:#FCA5A5;margin-bottom:24px;font-size:15px;">We couldn't generate the notes right now. However, you can still watch the video tutorial on the right!</p>
-        <button onclick="generateCourseNotes('${taskId}','${title}')" style="background:transparent;border:1px solid #F87171;color:#F87171;padding:12px 30px;border-radius:12px;cursor:pointer;font-weight:700;transition:all 200ms;" onmouseover="this.style.background='#F87171';this.style.color='white';" onmouseout="this.style.background='transparent';this.style.color='#F87171';">Retry Generation</button>
+      <div class="viewer-card viewer-markdown">
+        <h1 style="font-size:32px;font-weight:800;color:#FFFFFF;margin-bottom:32px;border:none;">${title}</h1>
+        ${localHTML}
+        <div style="margin-top: 24px; padding: 12px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 8px; font-size: 12px; color: var(--emerald);">
+          💡 Local study guide loaded. AI notes generator is currently busy.
+        </div>
       </div>
     `;
   }
 }
 
+async function markTaskFromNotes(taskId) {
+  try {
+    const modal = document.getElementById('course-viewer-modal');
+    if (modal) modal.remove();
+    
+    // Call existing task completion logic
+    await completeTask(taskId, true);
+    
+    // Show toast
+    showToast("Task marked as completed! Roadmap updated.", "success");
+    
+    // Reload dashboard stats and roadmap UI
+    await loadDashboardStats();
+    if (typeof loadRoadmapTab === 'function') loadRoadmapTab();
+  } catch (err) {
+    console.error("Error marking task complete from notes:", err);
+  }
+}
+window.markTaskFromNotes = markTaskFromNotes;
+
+function getLocalCourseNotes(title) {
+  const t = title.toLowerCase();
+  
+  if (t.includes("swot")) {
+    return `
+      <h2>Introduction to Personal SWOT Analysis</h2>
+      <p>A SWOT Analysis is a strategic planning tool used to identify and analyze the internal and external factors that can impact a project, business, or personal career path.</p>
+      
+      <h3>1. Internal Factors: Strengths & Weaknesses</h3>
+      <p>Internal factors are characteristics that you have control over. They represent your current status:</p>
+      <ul>
+        <li><strong>Strengths (S):</strong> Capabilities, skills, advantages, certifications, and strong relationships. Examples include advanced JavaScript skills or experience in UX prototyping.</li>
+        <li><strong>Weaknesses (W):</strong> Areas that require improvement, lack of resources, or skill gaps. Examples include limited experience in database design or public speaking.</li>
+      </ul>
+      
+      <h3>2. External Factors: Opportunities & Threats</h3>
+      <p>External factors are outside your direct control, arising from industry trends or environmental changes:</p>
+      <ul>
+        <li><strong>Opportunities (O):</strong> Emerging technologies, industry shifts, or networking channels that can accelerate your path. Examples include rising demand for React developers or college campus hiring events.</li>
+        <li><strong>Threats (T):</strong> Market competition, changing tech requirements, or economic downturns. Examples include rapid shifts towards AI coding tools or high candidate competition.</li>
+      </ul>
+      
+      <h3>3. Creating Your Personal Strategy</h3>
+      <p>Once you outline your SWOT matrix, translate it into action: use your strengths to capture opportunities, mitigate weaknesses, and prepare safeguards against industry threats.</p>
+    `;
+  }
+  
+  if (t.includes("api") || t.includes("fetch")) {
+    return `
+      <h2>REST APIs & Async Fetching</h2>
+      <p>Representational State Transfer (REST) is an architectural style for designing networked applications. It relies on a stateless, client-server protocol—almost always HTTP.</p>
+      
+      <h3>1. HTTP Methods</h3>
+      <p>REST APIs use standard HTTP verbs to perform actions (often referred to as CRUD operations):</p>
+      <ul>
+        <li><code>GET</code>: Retrieve data from a server (e.g. fetching a user profile).</li>
+        <li><code>POST</code>: Submit data to create a new resource on the server.</li>
+        <li><code>PUT</code> / <code>PATCH</code>: Update an existing resource.</li>
+        <li><code>DELETE</code>: Remove a resource.</li>
+      </ul>
+      
+      <h3>2. The Fetch API in JavaScript</h3>
+      <p>Modern JavaScript uses <code>fetch()</code> to make asynchronous requests. It returns a <code>Promise</code> that resolves into a Response object.</p>
+      <pre><code>fetch('https://api.skillbridge.com/v1/roadmap')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));</code></pre>
+      
+      <h3>3. Common HTTP Status Codes</h3>
+      <ul>
+        <li><code>200 OK</code>: The request succeeded.</li>
+        <li><code>201 Created</code>: A new resource was created successfully.</li>
+        <li><code>400 Bad Request</code>: The server could not understand the request due to invalid syntax.</li>
+        <li><code>401 Unauthorized</code>: Authentication is required.</li>
+        <li><code>404 Not Found</code>: The server cannot find the requested resource.</li>
+      </ul>
+    `;
+  }
+
+  if (t.includes("react")) {
+    return `
+      <h2>React Functional Components & Hooks</h2>
+      <p>React is a popular JavaScript library for building user interfaces, focused on components, virtual DOM representation, and reactive data flow.</p>
+      
+      <h3>1. Component Basics</h3>
+      <p>Functional components are standard JavaScript functions that return JSX (JavaScript XML) which describes what the UI should look like.</p>
+      <pre><code>function Welcome(props) {
+  return &lt;h1&gt;Hello, {props.name}&lt;/h1&gt;;
+}</code></pre>
+      
+      <h3>2. State & Props</h3>
+      <ul>
+        <li><strong>Props:</strong> Read-only attributes passed down from parent to child components to configure them.</li>
+        <li><strong>State:</strong> Internal component data storage that triggers automatic component re-rendering when updated.</li>
+      </ul>
+      
+      <h3>3. React hooks (useState & useEffect)</h3>
+      <p>Hooks let functional components use state and other React lifecycle features.</p>
+      <ul>
+        <li><code>useState</code>: Declares a reactive state variable.</li>
+        <li><code>useEffect</code>: Handles side effects such as data fetching, subscriptions, or manually updating the DOM.</li>
+      </ul>
+    `;
+  }
+
+  // Generic fallback topic
+  return `
+    <h2>Understanding ${title}</h2>
+    <p>This module provides a comprehensive introduction to <strong>${title}</strong>, outlining key principles, methods, and practical use cases designed to build your career competency.</p>
+    
+    <h3>1. Core Concepts</h3>
+    <p>To master this topic, you should focus on the underlying architecture, workflows, and standard industry tools. Review relevant guides and official documentation regularly to reinforce your foundation.</p>
+    
+    <h3>2. Actionable Learning Checklist</h3>
+    <ul>
+      <li>Read official documentation and explore sample implementations.</li>
+      <li>Watch the suggested video masterclass to see practical demonstrations.</li>
+      <li>Build a mini-project or solve exercises to test your hands-on mastery.</li>
+      <li>Mark this checkpoint complete to advance your career roadmap.</li>
+    </ul>
+  `;
+}
+
 function getFallbackVideoUrl(title) {
   const t = title.toLowerCase();
+  if (t.includes('swot')) {
+    return 'https://www.youtube.com/embed/JXXHqM-m1tU';
+  }
+  if (t.includes('figma')) {
+    return 'https://www.youtube.com/embed/jwCmGoU2xo4';
+  }
+  if (t.includes('typography')) {
+    return 'https://www.youtube.com/embed/sByzHoiYFX0';
+  }
+  if (t.includes('color theory') || t.includes('palette')) {
+    return 'https://www.youtube.com/embed/GyVMoeQRL24';
+  }
+  if (t.includes('wireframe') || t.includes('wireframing')) {
+    return 'https://www.youtube.com/embed/0gU32TszVOM';
+  }
   if (t.includes('router') || t.includes('routing')) {
     return 'https://www.youtube.com/embed/c02YoWR9gSY';
   }
@@ -1437,7 +1821,7 @@ async function initDashboard(profile) {
   );
   if (subEl) subEl.textContent = 
     profile.goal 
-      ? `Path: ${profile.goal}` 
+      ? `Path: ${getGoalText(profile.goal)}` 
       : 'Set your goal to start';
 
   // Load XP display
@@ -1675,7 +2059,7 @@ async function loadTodaysFocus() {
   btnEl.textContent = "Start Task →";
   btnEl.onclick = (e) => {
     e.stopPropagation();
-    startQuiz(activeTask.id, activeTask.title, activeTask.roadmap_phase || '');
+    openTaskDetail(activeTask.id);
   };
 }
 
@@ -1798,29 +2182,46 @@ function loadShortRoadmap(roadmap) {
 // ── Career Track Helper ──
 function getCareerTrackFromGoal(goal) {
   if (!goal) return { track: "Software Development", spec: "Frontend Development" };
-  const g = goal.toLowerCase();
+  
+  // Parse JSON if serialized string
+  let trueGoalText = goal;
+  if (typeof goal === 'string' && goal.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(goal);
+      if (parsed && typeof parsed === 'object' && 'goal' in parsed) {
+        trueGoalText = parsed.goal || "";
+      }
+    } catch (e) {
+      console.warn("Failed to parse JSON goal in getCareerTrackFromGoal:", e);
+    }
+  } else if (typeof goal === 'object' && goal !== null) {
+    trueGoalText = goal.goal || "";
+  }
+
+  const g = trueGoalText.toLowerCase();
+  
+  if (g.includes("ui") || g.includes("ux") || g.includes("design") || g.includes("product designer") || g.includes("researcher")) {
+    return { track: "UI/UX & Design", spec: trueGoalText };
+  }
   if (g.includes("frontend") || g.includes("backend") || g.includes("full stack") || g.includes("fullstack") || g.includes("software") || g.includes("mobile") || g.includes("web dev") || g.includes("developer")) {
-    return { track: "Software Development", spec: goal };
+    return { track: "Software Development", spec: trueGoalText };
   }
   if (g.includes("ai") || g.includes("machine learning") || g.includes("ml") || g.includes("data") || g.includes("science") || g.includes("analyst")) {
     if (g.includes("business") || g.includes("product")) {
-      return { track: "Product & Business", spec: goal };
+      return { track: "Product & Business", spec: trueGoalText };
     }
-    return { track: "AI & Data", spec: goal };
+    return { track: "AI & Data", spec: trueGoalText };
   }
   if (g.includes("devops") || g.includes("cloud") || g.includes("sre") || g.includes("platform") || g.includes("infrastructure")) {
-    return { track: "Cloud & DevOps", spec: goal };
+    return { track: "Cloud & DevOps", spec: trueGoalText };
   }
   if (g.includes("cyber") || g.includes("security") || g.includes("soc") || g.includes("appsec") || g.includes("infosec")) {
-    return { track: "Cybersecurity", spec: goal };
-  }
-  if (g.includes("ui") || g.includes("ux") || g.includes("design") || g.includes("product designer") || g.includes("researcher")) {
-    return { track: "UI/UX & Design", spec: goal };
+    return { track: "Cybersecurity", spec: trueGoalText };
   }
   if (g.includes("product manager") || g.includes("pm") || g.includes("business") || g.includes("project manager") || g.includes("analyst")) {
-    return { track: "Product & Business", spec: goal };
+    return { track: "Product & Business", spec: trueGoalText };
   }
-  return { track: "Software Development", spec: goal };
+  return { track: "Software Development", spec: trueGoalText };
 }
 
 // ── Interactive Career Track Switches ──
@@ -1932,15 +2333,27 @@ async function renderFullRoadmap(roadmap) {
   const [tasksRes, projectsRes, profileRes] = await Promise.all([
     supabase.from('tasks').select('*').eq('user_id', currentUserId),
     supabase.from('projects').select('status').eq('user_id', currentUserId),
-    supabase.from('profiles').select('goal, level, xp').eq('id', currentUserId).single()
+    supabase.from('profiles').select('goal, level, xp, roadmap_data').eq('id', currentUserId).single()
   ]);
 
   const dbTasksList = tasksRes.data || [];
   const dbProjectsList = projectsRes.data || [];
   const profile = profileRes.data;
+  const activeRoadmap = profile?.roadmap_data || roadmap;
 
-  const completedTasksCount = dbTasksList.filter(t => t.status === 'completed').length;
-  const totalTasksCount = dbTasksList.length || 1;
+  // Filter tasks to only include those in the current roadmap phases
+  const roadmapTaskTitles = new Set();
+  if (activeRoadmap && activeRoadmap.phases) {
+    activeRoadmap.phases.forEach(phase => {
+      (phase.tasks || []).forEach(task => {
+        if (task.title) roadmapTaskTitles.add(task.title.toLowerCase().trim());
+      });
+    });
+  }
+  const roadmapTasks = dbTasksList.filter(t => t.title && roadmapTaskTitles.has(t.title.toLowerCase().trim()));
+
+  const completedTasksCount = roadmapTasks.filter(t => t.status === 'completed').length;
+  const totalTasksCount = roadmapTasks.length || 1;
   const overallPct = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
   const completedProjects = dbProjectsList.filter(p => p.status === 'completed').length;
 
@@ -1948,13 +2361,13 @@ async function renderFullRoadmap(roadmap) {
 
   // Group tasks by phase name
   const phasesMap = {};
-  dbTasksList.forEach(task => {
+  roadmapTasks.forEach(task => {
     const phaseName = task.roadmap_phase || 'General Prep';
     if (!phasesMap[phaseName]) phasesMap[phaseName] = [];
     phasesMap[phaseName].push(task);
   });
 
-  const roadmapPhases = roadmap.phases || [];
+  const roadmapPhases = activeRoadmap.phases || [];
   
   // Map AI phases to Stage 1, 2, 3
   const stageTasks = [[], [], []];
@@ -2061,15 +2474,15 @@ async function renderFullRoadmap(roadmap) {
   const s5 = getStageStatusDetails(4);
 
   // Active path card variables
-  const goalTitle = profile?.goal || "Frontend Developer";
+  const goalTitle = getGoalText(profile?.goal) || "Frontend Developer";
   const activePhaseNameText = activePhaseIndex === 0 ? "Foundation" : activePhaseIndex === 1 ? "Core Skills" : activePhaseIndex === 2 ? "Advanced Skills" : activePhaseIndex === 3 ? "Real-World Projects" : "Job Ready Prep";
 
   // Current active task for current focus box
-  const activeTask = dbTasksList
+  const activeTask = roadmapTasks
     .sort((a, b) => {
-      if (roadmap?.phases) {
+      if (activeRoadmap?.phases) {
         const taskOrder = [];
-        roadmap.phases.forEach(p => (p.tasks || []).forEach(t => taskOrder.push(t.title)));
+        activeRoadmap.phases.forEach(p => (p.tasks || []).forEach(t => taskOrder.push(t.title)));
         return taskOrder.indexOf(a.title) - taskOrder.indexOf(b.title);
       }
       return 0;
@@ -2089,7 +2502,7 @@ async function renderFullRoadmap(roadmap) {
         <p style="font-size: 12px; color: var(--text-secondary); margin: 6px 0 14px 0; line-height: 1.4;">
           ${getTaskDescription(activeTask.title)}
         </p>
-        <button onclick="startQuiz('${activeTask.id}', '${activeTask.title.replace(/'/g, "\\'")}', '${activeTask.roadmap_phase || ''}')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px; box-shadow: 0 0 12px rgba(0,229,255,0.2);">
+        <button onclick="openTaskDetail('${activeTask.id}')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px; box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);">
           Continue Learning →
         </button>
       </div>
@@ -3120,9 +3533,20 @@ async function loadDashboardStats() {
   const dbProjects = projectsRes.data || [];
   const placementAttempts = placementRes.data || [];
 
-  // 2. Compute dynamic metrics
-  const completedTasks = dbTasks.filter(t => t.status === 'completed').length;
-  const totalTasks = dbTasks.length || 1;
+  // 2. Compute dynamic metrics based on active AI Roadmap tasks only
+  const roadmap = profile?.roadmap_data;
+  const roadmapTaskTitles = new Set();
+  if (roadmap && roadmap.phases) {
+    roadmap.phases.forEach(phase => {
+      (phase.tasks || []).forEach(task => {
+        if (task.title) roadmapTaskTitles.add(task.title.toLowerCase().trim());
+      });
+    });
+  }
+  const roadmapTasks = dbTasks.filter(t => t.title && roadmapTaskTitles.has(t.title.toLowerCase().trim()));
+
+  const completedTasks = roadmapTasks.filter(t => t.status === 'completed').length;
+  const totalTasks = roadmapTasks.length || 1;
   const careerProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   
   const completedProjects = dbProjects.filter(p => p.status === 'completed').length;
@@ -3171,7 +3595,6 @@ async function loadDashboardStats() {
   let activePhaseTasks = [];
   let activePhaseIndex = 0;
   
-  const roadmap = profile?.roadmap_data;
   if (roadmap && roadmap.phases && roadmap.phases.length > 0) {
     let foundActive = false;
     for (let idx = 0; idx < roadmap.phases.length; idx++) {

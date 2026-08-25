@@ -567,8 +567,8 @@
                     AI Roadmap
                 </a>
                 <a href="#" class="nav-item" data-tab="tasks">
-                    <i data-lucide="check-square" class="w-4 h-4"></i>
-                    Tasks
+                    <i data-lucide="brain" class="w-4 h-4"></i>
+                    Quick Test
                 </a>
                 <a href="#" class="nav-item" data-tab="projects">
                     <i data-lucide="folder-kanban" class="w-4 h-4"></i>
@@ -1912,12 +1912,189 @@
             </div>
 
             <!-- ══ TASKS TAB ══ -->
-            <section id="tab-tasks" style="display:none;">
-              <h3 class="card-title" style="margin-bottom:20px;">Your Learning Tasks</h3>
-              <div id="tasks-container" style="max-width:900px;">
-                <!-- Loaded dynamically -->
-                <p style="color:var(--text-secondary);">Complete onboarding to see tasks.</p>
+            <section id="tab-tasks" style="display:none; padding-bottom: 40px;">
+              
+              <!-- A. MAIN DASHBOARD VIEW -->
+              <div id="qt-dashboard-view" style="display: block;">
+                <div class="rm-container">
+                  
+                  <!-- 1. Page Header -->
+                  <div class="rm-header-row" style="margin-bottom: 24px;">
+                    <div>
+                      <h2 style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+                        <span>🧠 Quick Test</span>
+                      </h2>
+                      <p style="font-size: 13px; color: var(--text-muted); margin: 0; max-width: 600px;">
+                        Test your knowledge. Discover your strengths. Close your skill gaps. Personalize your learning path.
+                      </p>
+                    </div>
+                    
+                    <button onclick="startQuickTest()" class="btn-primary" style="padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 15px rgba(0,229,255,0.25);">
+                      <span>Start Quick Test →</span>
+                    </button>
+                  </div>
+
+                  <!-- Grid Layout for Dashboard Info -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    
+                    <!-- Left: Current Assessment Card -->
+                    <div class="cc-card cc-card-highlight" style="display: flex; flex-direction: column; justify-content: space-between;">
+                      <div>
+                        <div class="cc-badge badge-rose" style="margin-bottom: 8px;">YOUR CURRENT ASSESSMENT</div>
+                        <h3 id="qt-current-path" style="font-size: 20px; font-weight: 700; color: #ffffff; margin: 4px 0 12px 0;">Frontend Development</h3>
+                        
+                        <div id="qt-score-box" style="text-align: center; padding: 20px 0;">
+                          <div id="qt-overall-score" style="font-size: 48px; font-weight: 800; color: var(--emerald); margin-bottom: 4px;">78%</div>
+                          <div id="qt-score-level" style="font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 12px;">Good Progress</div>
+                          <div class="cc-progress-container" style="max-width: 260px; margin: 0 auto;">
+                            <div id="qt-overall-bar" class="cc-progress-bar" style="width: 78%;"></div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted);">
+                        <span id="qt-last-tested">Last tested: 2 days ago</span>
+                        <button onclick="startQuickTest()" style="background: none; border: none; color: var(--emerald); font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px;">Retake Test ↻</button>
+                      </div>
+                    </div>
+
+                    <!-- Right: Skill Breakdown -->
+                    <div class="cc-card">
+                      <div class="cc-badge badge-cyan" style="margin-bottom: 12px;">SKILL BREAKDOWN</div>
+                      <h3 style="font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 16px 0;">Knowledge Matrix</h3>
+                      
+                      <div id="qt-skill-breakdown-list" style="display: flex; flex-direction: column; gap: 14px;">
+                        <!-- Populate dynamically: JavaScript, React, CSS, APIs, Git etc -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 2. AI Insight & Recommended Focus Row -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    
+                    <!-- AI Insight Card -->
+                    <div class="cc-card" style="border-color: rgba(112,0,255,0.2) !important;">
+                      <div class="cc-badge badge-purple" style="margin-bottom: 12px;">✨ AI INSIGHT</div>
+                      <p id="qt-ai-insight" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                        You have a strong frontend foundation, but API integration is currently your biggest skill gap. Focus on resolving REST API checkpoints to boost your placement readiness.
+                      </p>
+                    </div>
+
+                    <!-- Recommended Focus Card -->
+                    <div class="cc-card" style="border-color: rgba(244,63,94,0.2) !important; display: flex; flex-direction: column; justify-content: space-between;">
+                      <div>
+                        <div class="cc-badge badge-rose" style="margin-bottom: 12px;">⚠ RECOMMENDED FOCUS</div>
+                        <h4 id="qt-recommendation-title" style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0 0 4px 0;">API Integration</h4>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+                          Score: <span id="qt-recommendation-score" style="color: var(--text-error); font-weight: 600;">48%</span> — Needs Improvement
+                        </div>
+                      </div>
+                      
+                      <button onclick="startRecommendedLearning()" class="btn-primary" style="width: 100%; justify-content: center; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: 600;">
+                        Start Recommended Learning →
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 3. Assessment History -->
+                  <div class="cc-card">
+                    <div class="cc-badge badge-cyan" style="margin-bottom: 12px;">ASSESSMENT HISTORY</div>
+                    <div id="qt-history-list" style="display: flex; flex-direction: column; gap: 10px;">
+                      <!-- History items loaded dynamically -->
+                    </div>
+                  </div>
+
+                </div>
               </div>
+
+              <!-- B. DISTRACTION-FREE ACTIVE TEST PANEL -->
+              <div id="qt-test-view" style="display: none;">
+                <div class="rm-container" style="max-width: 680px; padding: 20px 0;">
+                  
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 14px;">
+                    <div>
+                      <span id="qt-test-path" class="cc-badge badge-purple" style="margin-bottom: 4px;">Frontend Development</span>
+                      <h3 style="font-size: 18px; font-weight: 700; color: #ffffff; margin: 0;">Skill Assessment</h3>
+                    </div>
+                    <div style="text-align: right;">
+                      <span id="qt-question-counter" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--emerald);">4 / 10</span>
+                      <button onclick="exitQuickTest()" style="background: none; border: none; color: var(--text-muted); font-size: 12px; margin-left: 12px; cursor: pointer; text-decoration: underline;">Exit Test</button>
+                    </div>
+                  </div>
+
+                  <!-- Progress Bar -->
+                  <div class="cc-progress-container" style="margin-bottom: 28px;">
+                    <div id="qt-test-progress-bar" class="cc-progress-bar" style="width: 40%;"></div>
+                  </div>
+
+                  <!-- Question Card -->
+                  <div class="cc-card" style="margin-bottom: 24px; padding: 32px;">
+                    <h3 id="qt-question-text" style="font-size: 16px; font-weight: 600; color: #ffffff; line-height: 1.5; margin: 0 0 24px 0; min-height: 50px;">
+                      Which method is commonly used to fetch data from an API in JavaScript?
+                    </h3>
+                    
+                    <div id="qt-options-container" style="display: flex; flex-direction: column; gap: 12px;">
+                      <!-- Radio button options injected dynamically -->
+                    </div>
+                  </div>
+
+                  <!-- Navigation Row -->
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <button id="qt-prev-btn" onclick="prevQuestion()" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+                      ← Previous
+                    </button>
+                    <button id="qt-next-btn" onclick="nextQuestion()" class="btn-primary" style="padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                      Next →
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- C. LOADING / ANALYSIS TRANSITION VIEW -->
+              <div id="qt-analysis-view" style="display: none; text-align: center; padding: 80px 20px;">
+                <div class="rm-container" style="max-width: 480px;">
+                  <div style="font-size: 48px; margin-bottom: 20px; animation: pulse 1.5s infinite;">🧠</div>
+                  <h3 style="font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 8px;">Grading Your Responses</h3>
+                  <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 24px;">
+                    Atlas is calculating your scores, identifying skill gaps, and custom tailoring your roadmap recommendations.
+                  </p>
+                  <div class="cc-progress-container" style="max-width: 320px; margin: 0 auto;">
+                    <div style="height: 100%; background: var(--emerald); border-radius: 2px; width: 60%; animation: slideIn 2s ease-in-out infinite;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- D. ROADMAP UPDATED SUCCESS STATE VIEW -->
+              <div id="qt-success-view" style="display: none; text-align: center; padding: 60px 20px;">
+                <div class="rm-container" style="max-width: 520px;">
+                  <div style="font-size: 54px; margin-bottom: 20px;">🎉</div>
+                  <h2 style="font-size: 24px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">Test Complete!</h2>
+                  <div id="qt-success-score" style="font-size: 48px; font-weight: 800; color: var(--emerald); margin-bottom: 12px;">78%</div>
+                  
+                  <div class="cc-card" style="border-color: rgba(16,185,129,0.2) !important; margin-bottom: 24px; padding: 20px; text-align: left;">
+                    <h3 style="font-size: 14px; font-weight: 700; color: #ffffff; margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
+                      <span>🗺️ ROADMAP AUTOMATICALLY UPDATED</span>
+                    </h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 16px 0;">
+                      Based on your results, Atlas has identified a skill gap in <strong id="qt-success-gap" style="color: var(--emerald);">API Integration</strong>. Your active study roadmap phases have been reordered to prioritize this focus checkpoint.
+                    </p>
+                    <div style="display: flex; gap: 12px;">
+                      <button onclick="window.switchTab('roadmap')" class="btn-primary" style="flex: 1; justify-content: center; padding: 10px; border-radius: 8px; font-size: 12px;">
+                        View Updated Roadmap →
+                      </button>
+                      <button onclick="startRecommendedLearning()" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+                        Start Learning →
+                      </button>
+                    </div>
+                  </div>
+
+                  <button onclick="resetQuickTestView()" style="background: none; border: none; color: var(--text-muted); font-size: 13px; text-decoration: underline; cursor: pointer;">
+                    Return to Quick Test Dashboard
+                  </button>
+                </div>
+              </div>
+
             </section>
 
             <!-- ══ PORTFOLIO TAB ══ -->
