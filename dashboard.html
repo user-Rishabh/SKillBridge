@@ -385,6 +385,159 @@
         from { transform: scale(0.9); opacity: 0; }
         to { transform: scale(1); opacity: 1; }
       }
+
+      /* ─── AI ROADMAP STYLES ─── */
+      .rm-container {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-bottom: 40px;
+      }
+      .rm-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      @media (max-width: 768px) {
+        .rm-header-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+        }
+      }
+      
+      /* Horizontal Journey Timeline */
+      .rm-timeline-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+        margin-top: 12px;
+      }
+      @media (max-width: 992px) {
+        .rm-timeline-grid {
+          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+      }
+      .rm-stage-card {
+        padding: 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1.5px solid var(--border);
+        text-align: center;
+        transition: all 0.25s ease;
+      }
+      .rm-stage-card.completed {
+        border-color: rgba(16, 185, 129, 0.3);
+        background: rgba(16, 185, 129, 0.03);
+      }
+      .rm-stage-card.current {
+        border-color: var(--emerald);
+        background: rgba(0, 229, 255, 0.06);
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
+        transform: translateY(-2px);
+      }
+      .rm-stage-card.locked {
+        opacity: 0.6;
+        border-style: dashed;
+      }
+      .rm-stage-num {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+      }
+      .rm-stage-card.current .rm-stage-num {
+        color: var(--emerald);
+      }
+      .rm-stage-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 6px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+      }
+      .rm-stage-status {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+      .rm-stage-card.completed .rm-stage-status {
+        color: #10B981;
+      }
+      .rm-stage-card.current .rm-stage-status {
+        color: var(--emerald);
+      }
+      
+      /* Accordion Panel */
+      .rm-accordion-item {
+        background: var(--bg-card) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 14px !important;
+        margin-bottom: 12px;
+        overflow: hidden;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .rm-accordion-item.active {
+        border-color: rgba(112, 0, 255, 0.3) !important;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2) !important;
+      }
+      .rm-accordion-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s;
+      }
+      .rm-accordion-header:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .rm-accordion-content {
+        padding: 24px;
+        border-top: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.1);
+        display: none;
+      }
+      .rm-accordion-item.open .rm-accordion-content {
+        display: block;
+      }
+      
+      /* Skill Pills */
+      .rm-skill-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
+      }
+      .rm-skill-tag {
+        font-size: 12px;
+        padding: 6px 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text-secondary);
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .rm-skill-tag.mastered {
+        background: rgba(16, 185, 129, 0.08);
+        border-color: rgba(16, 185, 129, 0.3);
+        color: #34D399;
+      }
+      .rm-skill-tag.active {
+        background: rgba(0, 229, 255, 0.08);
+        border-color: rgba(0, 229, 255, 0.3);
+        color: var(--emerald);
+        font-weight: 600;
+        box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
+      }
     </style>
 </head>
 
@@ -926,96 +1079,142 @@
 
             <!-- ══ ROADMAP TAB ══ -->
             <div id="tab-roadmap" style="display:none;">
-
-              <!-- Goal input (pre-filled from profile) -->
-              <div style="background:white;
-                border-radius:14px;border:1px solid #E2E8F0;
-                padding:20px;margin-bottom:20px;">
-                <div style="display:flex;
-                  justify-content:space-between;
-                  align-items:center;margin-bottom:14px;">
+              <div class="rm-container">
+                
+                <!-- 1. Page Header -->
+                <div class="rm-header-row" style="margin-bottom: 20px;">
                   <div>
-                    <h3 style="font-size:16px;font-weight:600;
-                      margin-bottom:2px;">
-                      🤖 AI Career Roadmap Generator
-                    </h3>
-                    <p style="font-size:13px;color:#64748B;">
-                      Your profile data is pre-loaded. 
-                      Customize and generate.
+                    <h2 style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+                      <span>🤖 Your AI Career Roadmap</span>
+                      <span class="cc-badge badge-cyan" style="font-size: 10px; font-weight: 600; padding: 3px 8px;">✨ AI Personalized</span>
+                    </h2>
+                    <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                      Your personalized path from where you are today to your career goal.
                     </p>
                   </div>
-                </div>
-
-                <!-- Pre-filled goal from profile -->
-                <div style="display:grid;
-                  grid-template-columns:1fr auto;
-                  gap:10px;align-items:center;">
-                  <input id="roadmap-goal-input"
-                    type="text"
-                    placeholder="e.g. Frontend Developer at Google"
-                    style="padding:12px 16px;
-                    border:1px solid #E2E8F0;
-                    border-radius:10px;font-size:14px;
-                    outline:none;width:100%;
-                    transition:border 200ms;"
-                    onfocus="this.style.borderColor='#059669'"
-                    onblur="this.style.borderColor='#E2E8F0'">
-                  <button onclick="generateNewRoadmap()"
-                    id="generate-roadmap-btn"
-                    style="padding:12px 20px;
-                    background:#059669;color:white;
-                    border:none;border-radius:10px;
-                    font-size:14px;font-weight:500;
-                    cursor:pointer;white-space:nowrap;">
-                    Generate Roadmap
+                  
+                  <button onclick="openAdjustRoadmapModal()" class="btn-primary" style="padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 15px rgba(0,229,255,0.25);">
+                    <span>✨ AI Personalize</span>
                   </button>
                 </div>
 
-                <!-- Quick goal chips -->
-                <div style="display:flex;gap:8px;
-                  flex-wrap:wrap;margin-top:12px;">
-                  <button onclick="document.getElementById('roadmap-goal-input').value='Frontend Developer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">Frontend Developer</button>
-                  <button onclick="document.getElementById('roadmap-goal-input').value='Backend Developer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">Backend Developer</button>
-                  <button onclick="document.getElementById('roadmap-goal-input').value='Full Stack Developer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">Full Stack Developer</button>
-                  <button onclick="document.getElementById('roadmap-goal-input').value='Data Scientist'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">Data Scientist</button>
-                  <button onclick="document.getElementById('roadmap-goal-input').value='ML Engineer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">ML Engineer</button>
-                  <button onclick="document.getElementById('roadmap-goal-input').value='DevOps Engineer'" style="padding:5px 12px;background:#F0FDF4;border:1px solid #A7F3D0;color:#059669;border-radius:20px;font-size:12px;cursor:pointer;transition:all 150ms;" onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#F0FDF4'">DevOps Engineer</button>
-                </div>
-              </div>
+                <!-- 2. Hidden Roadmap goal input (remains in DOM to ensure compatibility with generateNewRoadmap and other functions) -->
+                <input id="roadmap-goal-input" type="hidden" value="">
+                <button id="generate-roadmap-btn" style="display: none;"></button>
 
-              <!-- Generation status -->
-              <div id="roadmap-gen-status"
-                style="display:none;text-align:center;
-                padding:40px;background:white;
-                border-radius:14px;
-                border:1px solid #E2E8F0;
-                margin-bottom:20px;">
-                <div style="font-size:32px;margin-bottom:12px;">
-                  🤖
-                </div>
-                <div style="font-size:16px;font-weight:500;
-                  margin-bottom:6px;"
-                  id="gen-status-text">
-                  Generating your roadmap...
-                </div>
-                <div style="font-size:13px;color:#64748B;">
-                  Analyzing job market data for your goal
-                </div>
-                <div style="margin-top:16px;height:4px;
-                  background:#F1F5F9;border-radius:2px;
-                  overflow:hidden;">
-                  <div style="height:100%;background:#059669;
-                    border-radius:2px;
-                    animation:slideIn 2s ease-in-out infinite;">
+                <!-- 3. Generation status (remains for loading state during background adjustments) -->
+                <div id="roadmap-gen-status"
+                  style="display:none;text-align:center;
+                  padding:40px;background:var(--bg-card);
+                  border-radius:14px;
+                  border:1px solid var(--border);
+                  margin-bottom:20px;
+                  backdrop-filter:blur(20px);
+                  position: relative;
+                  z-index: 10;">
+                  <div style="font-size:32px;margin-bottom:12px; animation: pulse 1.5s infinite;">
+                    🤖
+                  </div>
+                  <div style="font-size:16px;font-weight:500;
+                    margin-bottom:6px; color:#ffffff;"
+                    id="gen-status-text">
+                    Adapting your roadmap...
+                  </div>
+                  <div style="font-size:13px;color:var(--text-muted);">
+                    Recalculating checkpoints and tailoring milestones based on your settings.
+                  </div>
+                  <div style="margin-top:16px;height:4px;
+                    background:rgba(255,255,255,0.05);border-radius:2px;
+                    overflow:hidden; max-width: 400px; margin-left: auto; margin-right: auto;">
+                    <div style="height:100%;background:var(--emerald);
+                      border-radius:2px;
+                      animation:slideIn 2s ease-in-out infinite;
+                      width: 50%;">
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Full Roadmap display -->
-              <div id="full-roadmap-display"
-                style="display:none;">
-              </div>
+                <!-- 4. Full Roadmap Dynamic Display Area -->
+                <div id="full-roadmap-display">
+                  <!-- Javascript will populate the path card, timeline, current phase focus and accordion list here -->
+                </div>
 
+              </div>
+            </div>
+
+            <!-- 5. AI Personalization Drawer Modal -->
+            <div id="adjust-roadmap-modal" class="cc-modal-overlay" style="display: none;">
+              <div class="cc-modal-box" style="max-width: 480px; text-align: left;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+                  <h3 style="font-size: 18px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; margin: 0;">
+                    <span>✨ Adjust Your Roadmap</span>
+                  </h3>
+                  <button onclick="closeAdjustRoadmapModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); line-height: 1;">&times;</button>
+                </div>
+                
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;">
+                  Your roadmap automatically adapts as you progress. Tell Atlas if something has changed.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px;">
+                  <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="adjust-opt" value="know_skills" style="margin-top: 3px; accent-color: var(--emerald);">
+                    <div style="font-size: 13px;">
+                      <strong style="color: #ffffff; display: block; margin-bottom: 2px;">I already know some of these skills</strong>
+                      <span style="color: var(--text-muted); font-size: 11px;">Skip basic checkpoints and accelerate to advanced topics.</span>
+                    </div>
+                  </label>
+                  
+                  <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="adjust-opt" value="focus_role" style="margin-top: 3px; accent-color: var(--emerald);">
+                    <div style="font-size: 13px;">
+                      <strong style="color: #ffffff; display: block; margin-bottom: 2px;">I want to focus on a specific role</strong>
+                      <span style="color: var(--text-muted); font-size: 11px;">Align roadmap strictly with specialized job descriptions.</span>
+                    </div>
+                  </label>
+                  
+                  <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="adjust-opt" value="time_study" style="margin-top: 3px; accent-color: var(--emerald);">
+                    <div style="font-size: 13px;">
+                      <strong style="color: #ffffff; display: block; margin-bottom: 2px;">I have more/less time to study</strong>
+                      <span style="color: var(--text-muted); font-size: 11px;">Scale workload density and timeline checkpoints.</span>
+                    </div>
+                  </label>
+                  
+                  <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="adjust-opt" value="prioritize_placements" style="margin-top: 3px; accent-color: var(--emerald);">
+                    <div style="font-size: 13px;">
+                      <strong style="color: #ffffff; display: block; margin-bottom: 2px;">I want to prioritize placements</strong>
+                      <span style="color: var(--text-muted); font-size: 11px;">Increase placement-targeted mock interviews and resume building.</span>
+                    </div>
+                  </label>
+
+                  <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="adjust-opt" value="project_learning" style="margin-top: 3px; accent-color: var(--emerald);">
+                    <div style="font-size: 13px;">
+                      <strong style="color: #ffffff; display: block; margin-bottom: 2px;">I want more project-based learning</strong>
+                      <span style="color: var(--text-muted); font-size: 11px;">Add practical project assignments instead of standard tests.</span>
+                    </div>
+                  </label>
+
+                  <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" name="adjust-opt" value="strengthen_weak" style="margin-top: 3px; accent-color: var(--emerald);">
+                    <div style="font-size: 13px;">
+                      <strong style="color: #ffffff; display: block; margin-bottom: 2px;">I want to strengthen a weak skill</strong>
+                      <span style="color: var(--text-muted); font-size: 11px;">Inject extra practice checkpoints for difficult subjects.</span>
+                    </div>
+                  </label>
+                </div>
+                
+                <div style="display: flex; gap: 12px;">
+                  <button onclick="submitRoadmapAdjustment()" class="btn-primary" style="flex: 1; justify-content: center; padding: 12px; border-radius: 10px;">
+                    Update My Roadmap
+                  </button>
+                  <button onclick="closeAdjustRoadmapModal()" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
 
 

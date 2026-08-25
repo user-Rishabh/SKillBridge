@@ -1928,11 +1928,25 @@ async function renderFullRoadmap(roadmap) {
     </div>
   `;
 
-  // Fetch the latest task states from the db to render exact progress metrics
-  const { data: dbTasks } = await supabase.from('tasks').select('*').eq('user_id', currentUserId);
-  const dbTasksList = dbTasks || [];
+  // 1. Fetch latest task and project data
+  const [tasksRes, projectsRes, profileRes] = await Promise.all([
+    supabase.from('tasks').select('*').eq('user_id', currentUserId),
+    supabase.from('projects').select('status').eq('user_id', currentUserId),
+    supabase.from('profiles').select('goal, level, xp').eq('id', currentUserId).single()
+  ]);
 
-  // Group database tasks by phase so we can compute actual metrics
+  const dbTasksList = tasksRes.data || [];
+  const dbProjectsList = projectsRes.data || [];
+  const profile = profileRes.data;
+
+  const completedTasksCount = dbTasksList.filter(t => t.status === 'completed').length;
+  const totalTasksCount = dbTasksList.length || 1;
+  const overallPct = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
+  const completedProjects = dbProjectsList.filter(p => p.status === 'completed').length;
+
+  const currentLevel = profile?.level || 1;
+
+  // Group tasks by phase name
   const phasesMap = {};
   dbTasksList.forEach(task => {
     const phaseName = task.roadmap_phase || 'General Prep';
@@ -1942,179 +1956,618 @@ async function renderFullRoadmap(roadmap) {
 
   const roadmapPhases = roadmap.phases || [];
   
-  // Calculate completion and unlock status for each phase
-  let allPreviousCompleted = true;
-  let totalAllTasks = 0;
-  let totalCompletedTasks = 0;
+  // Map AI phases to Stage 1, 2, 3
+  const stageTasks = [[], [], []];
+  const stagePhaseNames = ["Foundation", "Core Skills", "Advanced Skills"];
+  const stagePhaseDescriptions = ["", "", ""];
 
-  const renderedPhases = roadmapPhases.map((p, pIdx) => {
-    const phaseName = p.phase || p.name;
-    let phaseTasks = phasesMap[phaseName] || [];
-    
-    // Fallback if DB doesn't have tasks for this phase yet
-    if (phaseTasks.length === 0 && p.tasks) {
-      phaseTasks = p.tasks.map(t => ({
-        title: t.title,
-        difficulty: t.difficulty || 'Medium',
-        status: 'pending'
-      }));
-    }
+  roadmapPhases.forEach((p, idx) => {
+    const pName = p.phase || p.name;
+    const pTasks = phasesMap[pName] || (p.tasks || []).map(t => ({
+      title: t.title,
+      difficulty: t.difficulty || 'Medium',
+      status: 'pending'
+    }));
 
-    const total = phaseTasks.length;
-    const completed = phaseTasks.filter(t => t.status === 'completed').length;
-    const isPhaseCompleted = total > 0 && completed === total;
-    
-    totalAllTasks += total;
-    totalCompletedTasks += completed;
-
-    // Status logic: sequential unlocking of phases
-    let status = 'locked';
-    if (pIdx === 0 || allPreviousCompleted) {
-      status = isPhaseCompleted ? 'completed' : 'active';
+    if (idx === 0) {
+      stageTasks[0] = pTasks;
+      stagePhaseDescriptions[0] = p.description || "Master foundational principles and concepts.";
+    } else if (idx === 1) {
+      stageTasks[1] = pTasks;
+      stagePhaseDescriptions[1] = p.description || "Develop core skills and interface mastery.";
+    } else {
+      // Combine Phase 3 and Phase 4 into Stage 3 (Advanced Skills)
+      stageTasks[2] = stageTasks[2].concat(pTasks);
+      stagePhaseDescriptions[2] = p.description || "Master advanced concepts and specialize.";
     }
-    
-    if (!isPhaseCompleted) {
-      allPreviousCompleted = false;
-    }
-    
-    return {
-      name: phaseName,
-      description: p.description || '',
-      tasks: phaseTasks,
-      total,
-      completed,
-      status
-    };
   });
 
-  const overallPct = totalAllTasks > 0 ? Math.round((totalCompletedTasks / totalAllTasks) * 100) : 0;
+  // Calculate statuses for Phase 1, 2, 3
+  const phase1Total = stageTasks[0].length;
+  const phase1Completed = stageTasks[0].filter(t => t.status === 'completed').length;
+  const phase1Pct = phase1Total > 0 ? Math.round((phase1Completed / phase1Total) * 100) : 0;
+  const isPhase1Done = phase1Total > 0 && phase1Completed === phase1Total;
 
-  // Add custom pulse animation style
-  if (!document.getElementById('pulse-glow-style')) {
-    const styleEl = document.createElement('style');
-    styleEl.id = 'pulse-glow-style';
-    styleEl.innerHTML = `
-      @keyframes pulseGlow {
-        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-      }
-    `;
-    document.head.appendChild(styleEl);
+  const phase2Total = stageTasks[1].length;
+  const phase2Completed = stageTasks[1].filter(t => t.status === 'completed').length;
+  const phase2Pct = phase2Total > 0 ? Math.round((phase2Completed / phase2Total) * 100) : 0;
+  const isPhase2Done = phase2Total > 0 && phase2Completed === phase2Total;
+
+  const phase3Total = stageTasks[2].length || 1;
+  const phase3Completed = stageTasks[2].filter(t => t.status === 'completed').length;
+  const phase3Pct = Math.round((phase3Completed / phase3Total) * 100);
+  const isPhase3Done = phase3Completed === phase3Total && stageTasks[2].length > 0;
+
+  // Determine active phase index
+  let activePhaseIndex = 0;
+  if (isPhase1Done) {
+    activePhaseIndex = 1;
+  }
+  if (isPhase1Done && isPhase2Done) {
+    activePhaseIndex = 2;
+  }
+  if (isPhase1Done && isPhase2Done && isPhase3Done) {
+    activePhaseIndex = 3; // Projects phase
+  }
+  if (isPhase1Done && isPhase2Done && isPhase3Done && completedProjects >= 3) {
+    activePhaseIndex = 4; // Job Ready phase
   }
 
-  display.innerHTML = `
-    <!-- Pathway Header Progress -->
-    <div style="background:linear-gradient(135deg, #064E3B 0%, #022C22 100%); border-radius:24px; padding:32px; color:white; margin-bottom:32px; box-shadow:0 20px 40px rgba(4,120,87,0.15); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;">
-      <div>
-        <span style="background:rgba(255,255,255,0.15); font-size:11px; font-weight:700; text-transform:uppercase; padding:6px 12px; border-radius:20px; letter-spacing:0.05em; display:inline-block; margin-bottom:12px;">Active Career Pathway</span>
-        <h2 style="font-size:28px; font-weight:800; margin:0 0 8px 0; color:white; line-height:1.2;">${roadmap.title}</h2>
-        <p style="font-size:14px; color:#A7F3D0; margin:0;">Master this sequential path to become industry-ready.</p>
-      </div>
-      <div style="display:flex; align-items:center; gap:24px; background:rgba(255,255,255,0.06); padding:20px 24px; border-radius:18px; border:1px solid rgba(255,255,255,0.1); backdrop-filter:blur(10px);">
-        <div style="text-align:center;">
-          <div style="font-size:12px; color:#A7F3D0; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Mastered</div>
-          <div style="font-size:24px; font-weight:800; color:white;">${totalCompletedTasks} / ${totalAllTasks}</div>
+  // Calculate statuses for Phase 4 (Projects)
+  let isProjectsUnlocked = isPhase3Done;
+  let projectsPct = isProjectsUnlocked ? Math.min(100, Math.round((completedProjects / 3) * 100)) : 0;
+  let isProjectsDone = isProjectsUnlocked && completedProjects >= 3;
+
+  // Calculate statuses for Phase 5 (Job Ready)
+  let isJobReadyUnlocked = isProjectsDone;
+  let placementProgressItems = [
+    (typeof placementProgress !== 'undefined') ? placementProgress.resume : false,
+    completedProjects >= 1,
+    (typeof placementProgress !== 'undefined') ? placementProgress.r1 : false,
+    (typeof placementProgress !== 'undefined') ? placementProgress.r2 : false,
+    (typeof placementProgress !== 'undefined') ? placementProgress.r3 : false
+  ];
+  let placementCompletedCount = placementProgressItems.filter(Boolean).length;
+  let jobReadyPct = isJobReadyUnlocked ? Math.round((placementCompletedCount / 5) * 100) : 0;
+
+  // Stages display helper
+  const getStageStatusDetails = (idx) => {
+    if (idx === 0) {
+      return { statusClass: isPhase1Done ? 'completed' : 'current', statusText: isPhase1Done ? '✓ Complete' : '● Current', pctText: `${phase1Pct}%` };
+    }
+    if (idx === 1) {
+      if (!isPhase1Done) return { statusClass: 'locked', statusText: '🔒 Locked', pctText: 'Locked' };
+      return { statusClass: isPhase2Done ? 'completed' : 'current', statusText: isPhase2Done ? '✓ Complete' : '● Current', pctText: `${phase2Pct}%` };
+    }
+    if (idx === 2) {
+      if (!isPhase2Done) return { statusClass: 'locked', statusText: '🔒 Locked', pctText: 'Locked' };
+      return { statusClass: isPhase3Done ? 'completed' : 'current', statusText: isPhase3Done ? '✓ Complete' : '● Current', pctText: `${phase3Pct}%` };
+    }
+    if (idx === 3) {
+      if (!isProjectsUnlocked) return { statusClass: 'locked', statusText: '🔒 Locked', pctText: 'Locked' };
+      return { statusClass: isProjectsDone ? 'completed' : 'current', statusText: isProjectsDone ? '✓ Complete' : '● Current', pctText: `${projectsPct}%` };
+    }
+    if (idx === 4) {
+      if (!isJobReadyUnlocked) return { statusClass: 'locked', statusText: '🔒 Locked', pctText: 'Locked' };
+      const isJobReadyDone = placementCompletedCount === 5;
+      return { statusClass: isJobReadyDone ? 'completed' : 'current', statusText: isJobReadyDone ? '✓ Complete' : '● Current', pctText: `${jobReadyPct}%` };
+    }
+  };
+
+  const s1 = getStageStatusDetails(0);
+  const s2 = getStageStatusDetails(1);
+  const s3 = getStageStatusDetails(2);
+  const s4 = getStageStatusDetails(3);
+  const s5 = getStageStatusDetails(4);
+
+  // Active path card variables
+  const goalTitle = profile?.goal || "Frontend Developer";
+  const activePhaseNameText = activePhaseIndex === 0 ? "Foundation" : activePhaseIndex === 1 ? "Core Skills" : activePhaseIndex === 2 ? "Advanced Skills" : activePhaseIndex === 3 ? "Real-World Projects" : "Job Ready Prep";
+
+  // Current active task for current focus box
+  const activeTask = dbTasksList
+    .sort((a, b) => {
+      if (roadmap?.phases) {
+        const taskOrder = [];
+        roadmap.phases.forEach(p => (p.tasks || []).forEach(t => taskOrder.push(t.title)));
+        return taskOrder.indexOf(a.title) - taskOrder.indexOf(b.title);
+      }
+      return 0;
+    })
+    .find(t => t.status !== 'completed');
+
+  let currentFocusHTML = "";
+  if (activeTask) {
+    const focusXP = activeTask.difficulty === 'Hard' ? 50 : activeTask.difficulty === 'Medium' ? 30 : 15;
+    currentFocusHTML = `
+      <div style="background: rgba(0, 229, 255, 0.04); border: 1.5px solid var(--emerald); border-radius: 12px; padding: 18px; margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--emerald); text-transform: uppercase;">Current Focus</span>
+          <span class="cc-badge badge-cyan">${activeTask.difficulty} · +${focusXP} XP</span>
         </div>
-        <div style="width:1px; height:40px; background:rgba(255,255,255,0.2);"></div>
-        <div style="text-align:center;">
-          <div style="font-size:12px; color:#A7F3D0; text-transform:uppercase; font-weight:600; margin-bottom:4px;">Progress</div>
-          <div style="font-size:24px; font-weight:800; color:#34D399;">${overallPct}%</div>
+        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 4px 0;">${activeTask.title}</h4>
+        <p style="font-size: 12px; color: var(--text-secondary); margin: 6px 0 14px 0; line-height: 1.4;">
+          ${getTaskDescription(activeTask.title)}
+        </p>
+        <button onclick="startQuiz('${activeTask.id}', '${activeTask.title.replace(/'/g, "\\'")}', '${activeTask.roadmap_phase || ''}')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px; box-shadow: 0 0 12px rgba(0,229,255,0.2);">
+          Continue Learning →
+        </button>
+      </div>
+    `;
+  } else {
+    currentFocusHTML = `
+      <div style="background: rgba(16, 185, 129, 0.04); border: 1.5px solid #10B981; border-radius: 12px; padding: 18px; margin-top: 20px; text-align: center;">
+        <div style="font-size: 24px; margin-bottom: 6px;">🎉</div>
+        <h4 style="font-size: 16px; font-weight: 700; color: #34D399; margin: 4px 0;">Roadmap Fully Mastered!</h4>
+        <p style="font-size: 12px; color: var(--text-secondary); margin: 6px 0 0 0; line-height: 1.4;">
+          You have completed all skills and are ready to tackle projects or start mock placement interviews.
+        </p>
+      </div>
+    `;
+  }
+
+  // Active Phase Name and Description
+  const activePhaseObjName = activePhaseIndex === 0 ? "Phase 01 — Foundation" : activePhaseIndex === 1 ? "Phase 02 — Core Skills" : activePhaseIndex === 2 ? "Phase 03 — Advanced Skills" : activePhaseIndex === 3 ? "Phase 04 — Real-World Projects" : "Phase 05 — Job Ready";
+  const activePhaseObjDesc = activePhaseIndex === 0 ? stagePhaseDescriptions[0] : activePhaseIndex === 1 ? stagePhaseDescriptions[1] : activePhaseIndex === 2 ? stagePhaseDescriptions[2] : activePhaseIndex === 3 ? "Apply your skills by building projects that demonstrate real-world ability." : "Turn your skills and projects into a complete placement-ready profile.";
+  const activePhasePctVal = activePhaseIndex === 0 ? phase1Pct : activePhaseIndex === 1 ? phase2Pct : activePhaseIndex === 2 ? phase3Pct : activePhaseIndex === 3 ? projectsPct : jobReadyPct;
+
+  // Mastered skills list in active phase card
+  const activePhaseSkillsMasteredCount = activePhaseIndex === 0 ? phase1Completed : activePhaseIndex === 1 ? phase2Completed : activePhaseIndex === 2 ? phase3Completed : activePhaseIndex === 3 ? completedProjects : placementCompletedCount;
+  const activePhaseSkillsTotalCount = activePhaseIndex === 0 ? phase1Total : activePhaseIndex === 1 ? phase2Total : activePhaseIndex === 2 ? phase3Total : activePhaseIndex === 3 ? 3 : 5;
+
+  let skillsChipsHTML = "";
+  if (activePhaseIndex <= 2) {
+    skillsChipsHTML = stageTasks[activePhaseIndex].map(t => `
+      <span class="rm-skill-tag ${t.status === 'completed' ? 'mastered' : activeTask && activeTask.id === t.id ? 'active' : ''}">
+        ${t.status === 'completed' ? '✓' : '•'} ${t.title}
+      </span>
+    `).join('');
+  } else if (activePhaseIndex === 3) {
+    const projNames = ["Mobile Banking App", "E-commerce UX Case Study", "SaaS Dashboard"];
+    skillsChipsHTML = projNames.map((n, idx) => `
+      <span class="rm-skill-tag ${completedProjects > idx ? 'mastered' : 'active'}">
+        ${completedProjects > idx ? '✓' : '•'} ${n}
+      </span>
+    `).join('');
+  } else {
+    const jobReadyItems = ["Resume Optimization", "Portfolio Showcase", "Aptitude Tests", "Technical Case Studies", "Live Mock Interview"];
+    skillsChipsHTML = jobReadyItems.map((n, idx) => `
+      <span class="rm-skill-tag ${placementProgressItems[idx] ? 'mastered' : 'active'}">
+        ${placementProgressItems[idx] ? '✓' : '•'} ${n}
+      </span>
+    `).join('');
+  }
+
+  // Render Full HTML
+  display.innerHTML = `
+    <!-- 1. ACTIVE CAREER PATH CARD -->
+    <div class="cc-card cc-hero" style="margin-bottom: 24px;">
+      <div>
+        <div class="cc-badge badge-cyan" style="margin-bottom: 8px;">🎯 ACTIVE PATHWAY</div>
+        <h2 style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 4px 0;">${goalTitle}</h2>
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 16px; max-width: 500px;">
+          Personalized roadmap based on: Current skill level • Career goal • Existing skills • Completed tasks • Projects • Learning progress
+        </div>
+        
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span class="cc-badge badge-amber">Level ${currentLevel}</span>
+          <span class="cc-badge badge-purple">${activePhaseNameText}</span>
+          <span class="cc-badge badge-cyan">${completedTasksCount} / ${totalTasksCount} Skills Mastered</span>
+          <span class="cc-badge badge-rose">${completedProjects} Project${completedProjects !== 1 ? 's' : ''} Completed</span>
+        </div>
+      </div>
+      
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">
+          <span>Overall Progress</span>
+          <span>${overallPct}% Complete</span>
+        </div>
+        <div class="cc-progress-container" style="margin-bottom: 20px;">
+          <div class="cc-progress-bar" style="width: ${overallPct}%;"></div>
+        </div>
+        
+        <div style="display: flex; gap: 12px;">
+          <button onclick="window.switchTab('tasks')" class="btn-primary" style="flex: 1; justify-content: center; padding: 12px; border-radius: 10px;">
+            Continue Learning →
+          </button>
+          <button onclick="openAdjustRoadmapModal()" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+            Adjust Goals
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Timeline Grid Map -->
-    <div style="position:relative; display:grid; gap:32px;">
-      <!-- Timeline connecting vertical bar -->
-      <div style="position:absolute; left:46px; top:40px; bottom:40px; width:4px; background:#E2E8F0; border-radius:2px; z-index:1;"></div>
+    <!-- 2. CAREER JOURNEY OVERVIEW -->
+    <div class="cc-card" style="margin-bottom: 24px;">
+      <div class="cc-badge badge-cyan" style="margin-bottom: 12px;">🗺️ YOUR CAREER JOURNEY</div>
+      <h3 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0 0 16px 0;">Journey Milestones</h3>
       
-      ${renderedPhases.map((p, pIdx) => {
-        const isCompleted = p.status === 'completed';
-        const isActive = p.status === 'active';
-        const isLocked = p.status === 'locked';
+      <div class="rm-timeline-grid">
+        <!-- Stage 1 -->
+        <div class="rm-stage-card ${s1.statusClass}">
+          <span class="rm-stage-num">01</span>
+          <h4 class="rm-stage-title" style="margin: 6px 0;">Foundation</h4>
+          <span class="rm-stage-status">${s1.statusText} (${s1.pctText})</span>
+        </div>
         
-        const badgeBg = isCompleted ? '#D1FAE5' : isActive ? '#DBEAFE' : '#F1F5F9';
-        const badgeColor = isCompleted ? '#065F46' : isActive ? '#1E40AF' : '#475569';
-        const badgeText = isCompleted ? '✓ Completed' : isActive ? '🎯 Active & Focused' : '🔒 Locked Phase';
+        <!-- Stage 2 -->
+        <div class="rm-stage-card ${s2.statusClass}">
+          <span class="rm-stage-num">02</span>
+          <h4 class="rm-stage-title" style="margin: 6px 0;">Core Skills</h4>
+          <span class="rm-stage-status">${s2.statusText} (${s2.pctText})</span>
+        </div>
         
-        const nodeBg = isCompleted ? '#10B981' : isActive ? '#3B82F6' : '#94A3B8';
-        const nodeBorderColor = isCompleted ? '#D1FAE5' : isActive ? '#DBEAFE' : '#E2E8F0';
-        const glowStyle = isActive ? 'box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2); animation: pulseGlow 2s infinite;' : '';
+        <!-- Stage 3 -->
+        <div class="rm-stage-card ${s3.statusClass}">
+          <span class="rm-stage-num">03</span>
+          <h4 class="rm-stage-title" style="margin: 6px 0;">Advanced</h4>
+          <span class="rm-stage-status">${s3.statusText} (${s3.pctText})</span>
+        </div>
         
-        const phasePct = p.total > 0 ? Math.round((p.completed / p.total) * 100) : 0;
+        <!-- Stage 4 -->
+        <div class="rm-stage-card ${s4.statusClass}">
+          <span class="rm-stage-num">04</span>
+          <h4 class="rm-stage-title" style="margin: 6px 0;">Projects</h4>
+          <span class="rm-stage-status">${s4.statusText} (${s4.pctText})</span>
+        </div>
         
-        return `
-          <div style="display:grid; grid-template-columns:96px 1fr; gap:16px; position:relative; z-index:2;">
-            <!-- Node Column -->
-            <div style="display:flex; flex-direction:column; align-items:center;">
-              <div style="width:40px; height:40px; border-radius:50%; background:${nodeBg}; border:4px solid ${nodeBorderColor}; color:white; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; transition: all 200ms; ${glowStyle}">
-                ${isCompleted ? '✓' : pIdx + 1}
-              </div>
-              <div style="font-size:11px; font-weight:700; color:#94A3B8; margin-top:8px; text-transform:uppercase;">PHASE 0${pIdx + 1}</div>
-            </div>
-            
-            <!-- Milestone Card Column -->
-            <div style="
-              background: white;
-              border: 1.5px solid ${isActive ? '#3B82F6' : '#E2E8F0'};
-              border-radius: 20px;
-              padding: 24px;
-              box-shadow: ${isActive ? '0 20px 25px -5px rgba(59, 130, 246, 0.05), 0 10px 10px -5px rgba(59, 130, 246, 0.02)' : '0 10px 15px -3px rgba(0,0,0,0.02)'};
-              transition: all 250ms;
-              opacity: ${isLocked ? '0.75' : '1'};
-            ">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-                <div>
-                  <span style="display:inline-flex; align-items:center; gap:4px; background:${badgeBg}; color:${badgeColor}; font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; margin-bottom:10px;">
-                    ${badgeText}
-                  </span>
-                  <h3 style="font-size:20px; font-weight:700; color:#0F172A; margin:0 0 6px 0;">${p.name}</h3>
-                  <p style="font-size:14px; color:#64748B; margin:0;">${p.description}</p>
-                </div>
-                
-                <div style="text-align:right;">
-                  <div style="font-size:20px; font-weight:800; color:${isActive ? '#3B82F6' : '#1E293B'};">${phasePct}%</div>
-                  <div style="font-size:11px; color:#64748B; font-weight:500;">${p.completed}/${p.total} Mastered</div>
-                </div>
-              </div>
-              
-              <div style="height:6px; background:#F1F5F9; border-radius:3px; overflow:hidden; margin-bottom:20px;">
-                <div style="height:100%; width:${phasePct}%; background:${isActive ? '#3B82F6' : '#10B981'}; border-radius:3px; transition: width 500ms ease;"></div>
-              </div>
-              
-              <div style="margin-bottom:24px;">
-                <div style="font-size:11px; font-weight:700; color:#94A3B8; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.03em;">Key Skills inside this phase:</div>
-                <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                  ${p.tasks.map(t => {
-                    const tCompleted = t.status === 'completed';
-                    return `
-                      <span style="font-size:12px; padding:6px 12px; background:${tCompleted ? '#ECFDF5' : '#F8FAFC'}; border:1px solid ${tCompleted ? '#A7F3D0' : '#E2E8F0'}; color:${tCompleted ? '#065F46' : '#475569'}; border-radius:8px; display:inline-flex; align-items:center; gap:5px;">
-                        ${tCompleted ? '✓' : '•'} ${t.title}
-                      </span>
-                    `;
-                  }).join('')}
-                </div>
-              </div>
-              
-              <div style="display:flex; justify-content:flex-end;">
-                ${isLocked ? `
-                  <button disabled style="padding:10px 20px; background:#F1F5F9; color:#94A3B8; border:1px solid #E2E8F0; border-radius:12px; font-size:13px; font-weight:600; cursor:not-allowed; display:flex; align-items:center; gap:6px;">
-                    🔒 Locked
-                  </button>
-                ` : `
-                  <button onclick="window.switchTab('tasks')" style="padding:10px 20px; background:${isActive ? '#3B82F6' : '#10B981'}; color:white; border:none; border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all 200ms;" onmouseover="this.style.filter='brightness(0.9)';" onmouseout="this.style.filter='none';">
-                    ${isCompleted ? 'Review Workspace ➔' : 'Open Active Workspace ➔'}
-                  </button>
-                `}
-              </div>
-            </div>
+        <!-- Stage 5 -->
+        <div class="rm-stage-card ${s5.statusClass}">
+          <span class="rm-stage-num">05</span>
+          <h4 class="rm-stage-title" style="margin: 6px 0;">Job Ready</h4>
+          <span class="rm-stage-status">${s5.statusText} (${s5.pctText})</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. CURRENT PHASE - MAIN FOCUS -->
+    <div class="cc-card cc-card-highlight" style="margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <div>
+          <div class="cc-badge badge-rose" style="margin-bottom: 8px;">🎯 ACTIVE OBJECTIVE</div>
+          <h3 style="font-size: 22px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0;">${activePhaseObjName}</h3>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; max-width: 600px;">
+            ${activePhaseObjDesc}
+          </p>
+        </div>
+        
+        <div style="text-align: right; min-width: 120px;">
+          <div style="font-size: 24px; font-weight: 800; color: var(--emerald);">${activePhasePctVal}%</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">${activePhaseSkillsMasteredCount} / ${activePhaseSkillsTotalCount} Mastered</div>
+        </div>
+      </div>
+      
+      <div class="cc-progress-container" style="margin-bottom: 20px;">
+        <div class="cc-progress-bar" style="width: ${activePhasePctVal}%;"></div>
+      </div>
+      
+      <div style="margin-bottom: 12px;">
+        <h4 style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; margin-top: 0;">
+          Skills you will master:
+        </h4>
+        <div class="rm-skill-grid">
+          ${skillsChipsHTML}
+        </div>
+      </div>
+      
+      ${currentFocusHTML}
+    </div>
+
+    <!-- 4. FULL ROADMAP PHASES -->
+    <div>
+      <h3 style="font-size: 18px; font-weight: 700; color: #ffffff; margin: 28px 0 16px 0; display: flex; align-items: center; gap: 8px;">
+        ⚙️ Complete Roadmap Timeline
+      </h3>
+      
+      <!-- Phase 1 Accordion -->
+      <div id="rm-accordion-0" class="rm-accordion-item ${activePhaseIndex === 0 ? 'open active' : ''}">
+        <div class="rm-accordion-header" onclick="togglePhaseAccordion(0)">
+          <div>
+            <span class="cc-badge ${isPhase1Done ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
+              ${isPhase1Done ? '✓ Phase 01' : '🎯 Phase 01'}
+            </span>
+            <strong style="color: #ffffff; font-size: 14px;">Foundation</strong>
           </div>
-        `;
-      }).join('')}
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-size: 12px; font-weight: 600; color: ${isPhase1Done ? '#34D399' : 'var(--text-muted)'};">${phase1Pct}% Complete</span>
+            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+          </div>
+        </div>
+        <div class="rm-accordion-content">
+          <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
+            ${stagePhaseDescriptions[0]}
+          </p>
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
+          <div class="rm-skill-grid">
+            ${stageTasks[0].map(t => `
+              <span class="rm-skill-tag ${t.status === 'completed' ? 'mastered' : ''}">
+                ${t.status === 'completed' ? '✓' : '•'} ${t.title}
+              </span>
+            `).join('')}
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
+            <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px; background: rgba(255,255,255,0.04) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: none !important;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+              Open Workspace ➔
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 2 Accordion -->
+      <div id="rm-accordion-1" class="rm-accordion-item ${activePhaseIndex === 1 ? 'open active' : ''}">
+        <div class="rm-accordion-header" onclick="togglePhaseAccordion(1)">
+          <div>
+            <span class="cc-badge ${!isPhase1Done ? 'badge-rose' : isPhase2Done ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
+              ${!isPhase1Done ? '🔒 Phase 02' : isPhase2Done ? '✓ Phase 02' : '🎯 Phase 02'}
+            </span>
+            <strong style="color: #ffffff; font-size: 14px;">Core Skills</strong>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-size: 12px; font-weight: 600; color: ${isPhase2Done ? '#34D399' : 'var(--text-muted)'};">${isPhase1Done ? phase2Pct + '%' : 'Locked'}</span>
+            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+          </div>
+        </div>
+        <div class="rm-accordion-content">
+          ${!isPhase1Done ? `
+            <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">
+              Complete Phase 01: Foundation to unlock core roadmap skills.
+            </div>
+          ` : `
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
+              ${stagePhaseDescriptions[1]}
+            </p>
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
+            <div class="rm-skill-grid">
+              ${stageTasks[1].map(t => `
+                <span class="rm-skill-tag ${t.status === 'completed' ? 'mastered' : ''}">
+                  ${t.status === 'completed' ? '✓' : '•'} ${t.title}
+                </span>
+              `).join('')}
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
+              <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">
+                Open Workspace ➔
+              </button>
+            </div>
+          `}
+        </div>
+      </div>
+
+      <!-- Phase 3 Accordion -->
+      <div id="rm-accordion-2" class="rm-accordion-item ${activePhaseIndex === 2 ? 'open active' : ''}">
+        <div class="rm-accordion-header" onclick="togglePhaseAccordion(2)">
+          <div>
+            <span class="cc-badge ${!isPhase2Done ? 'badge-rose' : isPhase3Done ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
+              ${!isPhase2Done ? '🔒 Phase 03' : isPhase3Done ? '✓ Phase 03' : '🎯 Phase 03'}
+            </span>
+            <strong style="color: #ffffff; font-size: 14px;">Advanced Skills</strong>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-size: 12px; font-weight: 600; color: ${isPhase3Done ? '#34D399' : 'var(--text-muted)'};">${isPhase2Done ? phase3Pct + '%' : 'Locked'}</span>
+            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+          </div>
+        </div>
+        <div class="rm-accordion-content">
+          ${!isPhase2Done ? `
+            <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">
+              Complete Phase 02: Core Skills to unlock advanced specialization topics.
+            </div>
+          ` : `
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
+              ${stagePhaseDescriptions[2]}
+            </p>
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
+            <div class="rm-skill-grid">
+              ${stageTasks[2].map(t => `
+                <span class="rm-skill-tag ${t.status === 'completed' ? 'mastered' : ''}">
+                  ${t.status === 'completed' ? '✓' : '•'} ${t.title}
+                </span>
+              `).join('')}
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
+              <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">
+                Open Workspace ➔
+              </button>
+            </div>
+          `}
+        </div>
+      </div>
+
+      <!-- Phase 4 Accordion -->
+      <div id="rm-accordion-3" class="rm-accordion-item ${activePhaseIndex === 3 ? 'open active' : ''}">
+        <div class="rm-accordion-header" onclick="togglePhaseAccordion(3)">
+          <div>
+            <span class="cc-badge ${!isProjectsUnlocked ? 'badge-rose' : isProjectsDone ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
+              ${!isProjectsUnlocked ? '🔒 Phase 04' : isProjectsDone ? '✓ Phase 04' : '🎯 Phase 04'}
+            </span>
+            <strong style="color: #ffffff; font-size: 14px;">Real-World Projects</strong>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-size: 12px; font-weight: 600; color: ${isProjectsDone ? '#34D399' : 'var(--text-muted)'};">${isProjectsUnlocked ? projectsPct + '%' : 'Locked'}</span>
+            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+          </div>
+        </div>
+        <div class="rm-accordion-content">
+          ${!isProjectsUnlocked ? `
+            <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">
+              Complete Phase 03: Advanced Skills to unlock real-world project portfolios.
+            </div>
+          ` : `
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
+              Apply your skills by building projects that demonstrate real-world capability.
+            </p>
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Core Capstone Portfolios:</div>
+            <div class="rm-skill-grid">
+              <span class="rm-skill-tag ${completedProjects >= 1 ? 'mastered' : 'active'}">
+                ${completedProjects >= 1 ? '✓' : '•'} Mobile Banking Application
+              </span>
+              <span class="rm-skill-tag ${completedProjects >= 2 ? 'mastered' : 'active'}">
+                ${completedProjects >= 2 ? '✓' : '•'} E-commerce UX Case Study
+              </span>
+              <span class="rm-skill-tag ${completedProjects >= 3 ? 'mastered' : 'active'}">
+                ${completedProjects >= 3 ? '✓' : '•'} SaaS Dashboard Interface
+              </span>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
+              <button onclick="window.switchTab('projects')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">
+                Manage Project Sandbox ➔
+              </button>
+            </div>
+          `}
+        </div>
+      </div>
+
+      <!-- Phase 5 Accordion -->
+      <div id="rm-accordion-4" class="rm-accordion-item ${activePhaseIndex === 4 ? 'open active' : ''}">
+        <div class="rm-accordion-header" onclick="togglePhaseAccordion(4)">
+          <div>
+            <span class="cc-badge ${!isJobReadyUnlocked ? 'badge-rose' : placementCompletedCount === 5 ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
+              ${!isJobReadyUnlocked ? '🔒 Phase 05' : placementCompletedCount === 5 ? '✓ Phase 05' : '🎯 Phase 05'}
+            </span>
+            <strong style="color: #ffffff; font-size: 14px;">Job Ready</strong>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-size: 12px; font-weight: 600; color: ${placementCompletedCount === 5 ? '#34D399' : 'var(--text-muted)'};">${isJobReadyUnlocked ? jobReadyPct + '%' : 'Locked'}</span>
+            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+          </div>
+        </div>
+        <div class="rm-accordion-content">
+          ${!isJobReadyUnlocked ? `
+            <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">
+              Complete Phase 04: Real-World Projects to unlock mock placement and profile screening.
+            </div>
+          ` : `
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
+              Turn your skills and projects into a complete placement-ready profile.
+            </p>
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checklist:</div>
+            <div class="rm-skill-grid">
+              <span class="rm-skill-tag ${placementProgressItems[0] ? 'mastered' : 'active'}">
+                ${placementProgressItems[0] ? '✓' : '•'} Resume Optimization
+              </span>
+              <span class="rm-skill-tag ${placementProgressItems[1] ? 'mastered' : 'active'}">
+                ${placementProgressItems[1] ? '✓' : '•'} Portfolio Showcase
+              </span>
+              <span class="rm-skill-tag ${placementProgressItems[2] ? 'mastered' : 'active'}">
+                ${placementProgressItems[2] ? '✓' : '•'} Interview Preparation
+              </span>
+              <span class="rm-skill-tag ${placementProgressItems[3] ? 'mastered' : 'active'}">
+                ${placementProgressItems[3] ? '✓' : '•'} Case Study Presentation
+              </span>
+              <span class="rm-skill-tag ${placementProgressItems[4] ? 'mastered' : 'active'}">
+                ${placementProgressItems[4] ? '✓' : '•'} Mock Interview
+              </span>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
+              <button onclick="window.switchTab('placement')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">
+                Enter Placement Board ➔
+              </button>
+            </div>
+          `}
+        </div>
+      </div>
     </div>
   `;
 }
+
+// ── Accordion Toggle function ──
+function togglePhaseAccordion(idx) {
+  const item = document.getElementById(`rm-accordion-${idx}`);
+  if (!item) return;
+  const isOpen = item.classList.contains('open');
+  if (isOpen) {
+    item.classList.remove('open');
+  } else {
+    // Optional: close other accordions first
+    document.querySelectorAll('.rm-accordion-item').forEach(el => el.classList.remove('open'));
+    item.classList.add('open');
+  }
+}
+
+// ── AI Personalization Modal Handlers ──
+function openAdjustRoadmapModal() {
+  const modal = document.getElementById('adjust-roadmap-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeAdjustRoadmapModal() {
+  const modal = document.getElementById('adjust-roadmap-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function submitRoadmapAdjustment() {
+  closeAdjustRoadmapModal();
+  
+  // Show loading
+  const status = document.getElementById('roadmap-gen-status');
+  const display = document.getElementById('full-roadmap-display');
+  if (status) status.style.display = 'block';
+  if (display) display.style.display = 'none';
+
+  // Get selected options
+  const checkboxes = document.querySelectorAll('input[name="adjust-opt"]:checked');
+  const options = Array.from(checkboxes).map(cb => cb.parentNode.textContent.trim().replace(/\s+/g, ' '));
+  
+  if (options.length === 0) {
+    showToast("Please select at least one option to adapt your roadmap", "warning");
+    if (status) status.style.display = 'none';
+    if (display) display.style.display = 'block';
+    return;
+  }
+
+  try {
+    // 1. Get profile goal & previous roadmap
+    const { data: profile } = await supabase.from('profiles').select('goal, roadmap_data').eq('id', currentUserId).single();
+    const goal = profile?.goal || "Frontend Developer";
+    const oldRoadmap = profile?.roadmap_data;
+
+    // 2. Build prompt for AI
+    const prompt = `You are an expert career coach modifying an existing study roadmap.
+Goal: "${goal}"
+Selected adjustments requested by the student:
+${options.map(opt => `- ${opt}`).join('\n')}
+
+Here is the current roadmap data:
+${JSON.stringify(oldRoadmap, null, 2)}
+
+Please revise the tasks, checkpoints, and descriptions in this roadmap to reflect the student's settings. 
+Maintain the JSON format precisely, including:
+- "title" (roadmap title)
+- "phases" (array of 4 objects)
+  - Each phase has: "phase", "description", and "tasks" (array of 4 specific learning tasks).
+  - Each task has: "title", "difficulty" (Easy/Medium/Hard), "status" (default to "pending").
+
+Return ONLY the valid JSON object. Do not include markdown code block markers or introductory/closing text.`;
+
+    // 3. Call AI
+    const result = await callAI(prompt, 2000);
+    const jsonMatch = result?.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Invalid JSON response from AI");
+    }
+    const newRoadmap = JSON.parse(jsonMatch[0]);
+
+    // 4. Save to profiles
+    await supabase.from('profiles').update({ roadmap_data: newRoadmap }).eq('id', currentUserId);
+
+    // 5. Update tasks in sync
+    await saveTasksFromRoadmap(newRoadmap, currentUserId);
+
+    showToast("✨ Roadmap adapted successfully!", "success");
+    await loadRoadmapTab();
+  } catch (err) {
+    console.error("Adjustment Error:", err);
+    showToast("Failed to adapt roadmap. Please try again.", "error");
+    if (status) status.style.display = 'none';
+    if (display) display.style.display = 'block';
+  }
+}
+
+// Bind to window context
+window.togglePhaseAccordion = togglePhaseAccordion;
+window.openAdjustRoadmapModal = openAdjustRoadmapModal;
+window.closeAdjustRoadmapModal = closeAdjustRoadmapModal;
+window.submitRoadmapAdjustment = submitRoadmapAdjustment;
 
 function getRoadmapPrompt(goal) {
   return `Act as a career coach and create a high-fidelity learning roadmap for the role: "${goal}".
@@ -2905,10 +3358,11 @@ async function loadRoadmapTab() {
   } else {
     if (display) {
       display.innerHTML = `
-        <div style="text-align:center; padding:40px; background:white; border-radius:14px; border:1px solid #E2E8F0; margin-bottom:20px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="text-align:center; padding:40px; background:var(--bg-card); border-radius:14px; border:1px solid var(--border); margin-bottom:20px; backdrop-filter:blur(20px);">
           <div style="font-size:32px; margin-bottom:12px;">🗺️</div>
-          <div style="font-size:16px; font-weight:600; color:#0F172A; margin-bottom:6px;">No roadmap generated yet</div>
-          <p style="font-size:13px; color:#64748B; max-width:320px; margin:0 auto 16px;">Enter your career goal above and click "Generate Roadmap" to create your customized AI study path!</p>
+          <div style="font-size:16px; font-weight:600; color:#ffffff; margin-bottom:6px;">No roadmap generated yet</div>
+          <p style="font-size:13px; color:var(--text-muted); max-width:320px; margin:0 auto 16px;">We will load your career goal from your profile and build your customized AI study path!</p>
+          <button onclick="generateNewRoadmap()" class="btn-primary" style="padding:10px 20px; border-radius:10px;">Generate My Path 🤖</button>
         </div>
       `;
       display.style.display = 'block';
