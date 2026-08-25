@@ -156,6 +156,235 @@
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
       }
+
+      /* ─── CAREER COMMAND CENTER STYLES ─── */
+      .cc-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-bottom: 40px;
+      }
+      .cc-card {
+        background: var(--bg-card) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 16px !important;
+        box-shadow: var(--shadow-card) !important;
+        color: var(--text-primary) !important;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+      .cc-card:hover {
+        border-color: rgba(0, 229, 255, 0.3) !important;
+        box-shadow: 0 12px 40px rgba(0, 229, 255, 0.08) !important;
+        transform: translateY(-2px);
+      }
+      .cc-card-highlight {
+        border: 1.5px solid var(--emerald) !important;
+        box-shadow: 0 0 25px rgba(0, 229, 255, 0.15) !important;
+      }
+      .cc-card-highlight:hover {
+        border-color: #00E5FF !important;
+        box-shadow: 0 0 35px rgba(0, 229, 255, 0.25) !important;
+      }
+      .cc-hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 24px;
+        align-items: center;
+      }
+      @media (max-width: 768px) {
+        .cc-hero {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+      }
+      .cc-row-2col {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 28px;
+      }
+      @media (max-width: 992px) {
+        .cc-row-2col {
+          grid-template-columns: 1fr;
+        }
+      }
+      .cc-badge {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.05em;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .badge-cyan {
+        background: rgba(0, 229, 255, 0.1);
+        color: var(--emerald);
+        border: 1px solid rgba(0, 229, 255, 0.2);
+      }
+      .badge-purple {
+        background: rgba(112, 0, 255, 0.15);
+        color: #C084FC;
+        border: 1px solid rgba(112, 0, 255, 0.25);
+      }
+      .badge-amber {
+        background: rgba(254, 196, 46, 0.1);
+        color: var(--amber);
+        border: 1px solid rgba(254, 196, 46, 0.2);
+      }
+      .badge-rose {
+        background: rgba(255, 180, 171, 0.1);
+        color: var(--rose);
+        border: 1px solid rgba(255, 180, 171, 0.2);
+      }
+      /* Custom Premium Progress Bar */
+      .cc-progress-container {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        height: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        position: relative;
+      }
+      .cc-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--fuchsia) 0%, var(--emerald) 100%);
+        border-radius: 8px;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+      }
+      /* Circular Progress Styles */
+      .radial-progress-container {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .radial-svg {
+        transform: rotate(-90deg);
+        width: 100%;
+        height: 100%;
+      }
+      .radial-bg {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.05);
+        stroke-width: 12px;
+      }
+      .radial-fill {
+        fill: none;
+        stroke: url(#readinessGradient);
+        stroke-width: 12px;
+        stroke-linecap: round;
+        stroke-dasharray: 440;
+        stroke-dashoffset: 440;
+        transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .radial-label {
+        position: absolute;
+        font-size: 28px;
+        font-weight: 800;
+        color: #ffffff;
+        text-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+        font-family: var(--font-sans);
+      }
+      
+      /* Explore Cards Layout */
+      .cc-explore-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+      }
+      .explore-card {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 250px;
+      }
+      .explore-icon {
+        font-size: 28px;
+        margin-bottom: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        width: 52px;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+      .explore-role-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 16px 0;
+      }
+      .role-pill {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text-secondary);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .role-pill:hover {
+        background: rgba(0, 229, 255, 0.1);
+        border-color: var(--emerald);
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+        transform: translateY(-1px);
+      }
+      
+      /* Confirmation Modal Styles */
+      .cc-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 7, 10, 0.8);
+        backdrop-filter: blur(12px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeIn 0.25s ease-out;
+      }
+      .cc-modal-box {
+        background: rgba(13, 17, 23, 0.9);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        max-width: 440px;
+        width: 100%;
+        padding: 28px;
+        text-align: center;
+        position: relative;
+        animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes scaleUp {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
     </style>
 </head>
 
@@ -398,178 +627,302 @@
 
             <!-- ══ DASHBOARD TAB ══ -->
             <section id="tab-dashboard">
-              <div class="dashboard-view">
-                <div class="main-section">
-                  <div style="
-                    background:white;border-radius:16px;
-                    border:1px solid #E2E8F0;
-                    padding:24px;margin-bottom:20px;
-                    grid-column:1/-1;">
-
-                    <!-- Header row -->
-                    <div style="display:flex;justify-content:
-                      space-between;align-items:flex-start;
-                      margin-bottom:20px;">
-                      <div>
-                        <div style="font-size:11px;
-                          font-weight:500;color:#059669;
-                          text-transform:uppercase;
-                          letter-spacing:0.05em;
-                          margin-bottom:4px;">
-                          AI Career Roadmap
-                        </div>
-                        <h3 id="roadmap-title-short" style="
-                          font-size:18px;font-weight:600;
-                          color:#0F172A;margin:0;">
-                          Loading your roadmap...
-                        </h3>
-                        <p id="roadmap-subtitle" style="
-                          font-size:13px;color:#64748B;
-                          margin-top:4px;">
-                        </p>
-                      </div>
-                      <div style="display:flex;gap:8px;">
-                        <button onclick="switchTab('roadmap')" class="btn-premium-action">
-                          <span>View Full Roadmap</span>
-                          <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Phase progress bars -->
-                    <div id="roadmap-phases-short" style="
-                      display:grid;gap:10px;">
-                      <div onclick="switchTab('roadmap')" style="text-align:center;
-                        padding:20px;color:#94A3B8;
-                        font-size:13px;cursor:pointer;
-                        transition:color 0.2s;"
-                        onmouseover="this.style.color='var(--fuchsia)'"
-                        onmouseout="this.style.color='#94A3B8'">
-                        Generate your personalized career roadmap in the AI Roadmap tab!
-                      </div>
-                    </div>
-
-                    <!-- Overall progress bar -->
-                    <div id="overall-progress-section"
-                      style="margin-top:16px;display:none;">
-                      <div style="display:flex;
-                        justify-content:space-between;
-                        font-size:12px;color:#64748B;
-                        margin-bottom:6px;">
-                        <span>Overall Progress</span>
-                        <span id="overall-pct">0%</span>
-                      </div>
-                      <div style="height:6px;background:#F1F5F9;
-                        border-radius:3px;">
-                        <div id="overall-bar" style="
-                          height:100%;background:#059669;
-                          border-radius:3px;width:0%;
-                          transition:width 800ms ease;">
-                        </div>
-                      </div>
+              <div class="cc-grid">
+                
+                <!-- 1. CAREER TRACK HERO CARD -->
+                <div class="cc-card cc-hero">
+                  <div>
+                    <div class="cc-badge badge-cyan" style="margin-bottom: 8px;">🎯 YOUR CAREER TRACK</div>
+                    <h2 id="cc-hero-track" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 4px 0;">Software Development</h2>
+                    <div id="cc-hero-spec" style="font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 16px;">Frontend Development</div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                      <span id="cc-hero-level" class="cc-badge badge-amber">Level 1</span>
+                      <span id="cc-hero-phase" class="cc-badge badge-purple">Phase 1 • Orientation</span>
+                      <span id="cc-hero-skills" class="cc-badge badge-cyan">0 Skills Mastered</span>
+                      <span id="cc-hero-projects" class="cc-badge badge-rose">0 Projects Completed</span>
                     </div>
                   </div>
-
-                  <section class="stats-grid">
-                    <div class="stat-card fade-in" style="animation-delay:.1s"><span class="stat-label">Progress</span><span class="stat-value" id="stat-progress" data-stat="progress">0%</span></div>
-                    <div class="stat-card fade-in" style="animation-delay:.2s"><span class="stat-label">Projects Completed</span><span class="stat-value" id="stat-projects" data-stat="projects">0</span></div>
-                    <div class="stat-card fade-in" style="animation-delay:.3s"><span class="stat-label">Skills Learned</span><span class="stat-value" id="stat-skills" data-stat="skills">0</span></div>
-                    <div class="stat-card fade-in" style="animation-delay:.4s"><span class="stat-label">Placement Readiness</span><span class="stat-value" id="stat-placement" data-stat="readiness">0%</span></div>
-                  </section>
-                  <div style="margin-top:16px;">
-                    <h3 class="card-title" style="margin-bottom:20px;">Active Projects</h3>
-                    <div class="project-grid" id="active-projects-container">
-                      <div style="font-size:14px;color:var(--text-secondary);">No active projects. Generate a roadmap to start!</div>
+                  
+                  <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">
+                      <span id="cc-hero-progress-label">0% Career Progress</span>
+                    </div>
+                    <div class="cc-progress-container">
+                      <div id="cc-hero-progress-bar" class="cc-progress-bar" style="width: 0%;"></div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 20px;">
+                      <button class="btn-primary" onclick="switchTab('roadmap')" style="flex: 1; justify-content: center; padding: 12px 18px; border-radius: 10px;">
+                        Continue Roadmap →
+                      </button>
+                      <button onclick="switchTab('roadmap')" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; flex: 1; text-align: center;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+                        View Full Roadmap
+                      </button>
                     </div>
                   </div>
                 </div>
-                <aside class="right-panel">
-                  <div style="background:white;
-                    border-radius:14px;
-                    border:1px solid #E2E8F0;
-                    padding:16px;margin-bottom:16px;">
+
+                <!-- 2. TODAY'S FOCUS & CAREER READINESS ROW -->
+                <div class="cc-row-2col">
+                  
+                  <!-- TODAY'S FOCUS -->
+                  <div class="cc-card cc-card-highlight" style="display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                      <div class="cc-badge badge-rose">🔥 TODAY'S FOCUS</div>
+                      <div id="cc-focus-xp" class="cc-badge badge-cyan">+30 XP</div>
+                    </div>
                     
-                    <div style="display:flex;
-                      justify-content:space-between;
-                      align-items:center;margin-bottom:12px;">
-                      <div style="font-size:14px;font-weight:600;
-                        color:#0F172A;">
-                        📅 Weekly Activity
-                      </div>
-                      <div id="active-days-count" style="
-                        font-size:12px;color:#059669;
-                        font-weight:500;">
-                        Loading...
-                      </div>
+                    <h3 id="cc-focus-title" style="font-size: 20px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0;">React Router Navigation</h3>
+                    
+                    <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                      <span id="cc-focus-category" class="cc-badge badge-purple">React Framework</span>
+                      <span id="cc-focus-difficulty" class="cc-badge badge-amber">Medium Difficulty</span>
                     </div>
-
-                    <!-- Heatmap and Day labels container -->
-                    <div style="display: flex; gap: 8px; align-items: flex-start; margin-top: 8px;">
-                      <!-- Vertical Day labels -->
-                      <div style="display: flex; flex-direction: column; gap: 3px; padding-top: 1px;">
-                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">S</div>
-                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">M</div>
-                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">T</div>
-                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">W</div>
-                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">T</div>
-                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">F</div>
-                        <div style="width: 10px; height: 12px; font-size: 8px; color: #94A3B8; text-align: center; line-height: 12px; font-weight: 600;">S</div>
-                      </div>
-                      <!-- Heatmap grid -->
-                      <div id="heatmap-grid" style="display: flex; gap: 3px; overflow-x: auto; padding-bottom: 4px; flex: 1;">
-                      </div>
-                    </div>
-
-                    <!-- Legend -->
-                    <div style="display:flex;align-items:center;
-                      gap:6px;margin-top:10px;
-                      justify-content:flex-end;font-size:11px;
-                      color:#94A3B8;">
-                      <span>Less</span>
-                      <div style="width:10px;height:10px;
-                        border-radius:2px;background:#F1F5F9;">
-                      </div>
-                      <div style="width:10px;height:10px;
-                        border-radius:2px;background:#A7F3D0;">
-                      </div>
-                      <div style="width:10px;height:10px;
-                        border-radius:2px;background:#059669;">
-                      </div>
-                      <span>More</span>
+                    
+                    <p id="cc-focus-desc" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 20px 0; flex-grow: 1;">
+                      Master nested routes, navigation, and route parameters in React applications.
+                    </p>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
+                      <span id="cc-focus-progress" style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Progress: 0/1</span>
+                      <button id="cc-focus-btn" class="btn-primary" style="padding: 10px 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,229,255,0.3);">
+                        Start Task →
+                      </button>
                     </div>
                   </div>
 
-                  <div class="panel-card fade-in" style="animation-delay:.3s;">
-                    <h3 class="card-title" style="font-size:14px;margin-bottom:16px;">Skill Progress</h3>
-                    <div id="skill-progress-container">
-                      <div style="font-size:12px;color:var(--text-secondary);">No data yet.</div>
+                  <!-- CAREER READINESS -->
+                  <div class="cc-card" style="display: flex; flex-direction: column;">
+                    <div class="cc-badge badge-purple" style="margin-bottom: 16px; align-self: flex-start;">💼 CAREER READINESS</div>
+                    
+                    <div style="display: flex; align-items: center; gap: 24px; flex-grow: 1;">
+                      <div class="radial-progress-container" style="flex-shrink: 0;">
+                        <svg class="radial-svg" viewBox="0 0 160 160">
+                          <defs>
+                            <linearGradient id="readinessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stop-color="var(--fuchsia, #7000FF)" />
+                              <stop offset="100%" stop-color="var(--emerald, #00E5FF)" />
+                            </linearGradient>
+                          </defs>
+                          <circle class="radial-bg" cx="80" cy="80" r="70" />
+                          <circle id="cc-readiness-fill" class="radial-fill" cx="80" cy="80" r="70" style="stroke-dashoffset: 440;" />
+                        </svg>
+                        <span id="cc-readiness-val" class="radial-label">0%</span>
+                      </div>
+                      
+                      <div style="flex-grow: 1;">
+                        <div style="margin-bottom: 8px;">
+                          <div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; margin-bottom: 3px;">
+                            <span>Skills Mastery</span>
+                            <span id="cc-readiness-skills-val" style="font-weight: 600; color: #ffffff;">0%</span>
+                          </div>
+                          <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;">
+                            <div id="cc-readiness-skills-bar" style="height: 100%; width: 0%; background: var(--emerald); border-radius: 2px;"></div>
+                          </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 8px;">
+                          <div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; margin-bottom: 3px;">
+                            <span>Project Depth</span>
+                            <span id="cc-readiness-projects-val" style="font-weight: 600; color: #ffffff;">0%</span>
+                          </div>
+                          <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;">
+                            <div id="cc-readiness-projects-bar" style="height: 100%; width: 0%; background: var(--emerald); border-radius: 2px;"></div>
+                          </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 8px;">
+                          <div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; margin-bottom: 3px;">
+                            <span>Resume Strength</span>
+                            <span id="cc-readiness-resume-val" style="font-weight: 600; color: #ffffff;">0%</span>
+                          </div>
+                          <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;">
+                            <div id="cc-readiness-resume-bar" style="height: 100%; width: 0%; background: var(--emerald); border-radius: 2px;"></div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div style="font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; margin-bottom: 3px;">
+                            <span>Interview Prep</span>
+                            <span id="cc-readiness-interview-val" style="font-weight: 600; color: #ffffff;">0%</span>
+                          </div>
+                          <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px;">
+                            <div id="cc-readiness-interview-bar" style="height: 100%; width: 0%; background: var(--emerald); border-radius: 2px;"></div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                    
+                    <p id="cc-readiness-message" style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin: 14px 0;">
+                      Set your career goal and roadmap to calculate readiness.
+                    </p>
+                    
+                    <button onclick="switchTab('placement')" class="btn-primary" style="width: 100%; justify-content: center; padding: 10px; border-radius: 10px; background: rgba(0, 229, 255, 0.12) !important; color: var(--emerald) !important; border: 1px solid rgba(0, 229, 255, 0.25) !important; box-shadow: none !important;" onmouseover="this.style.background='rgba(0, 229, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 229, 255, 0.12)'">
+                      Improve Readiness →
+                    </button>
                   </div>
-                  <div style="
-                    background:white;border-radius:14px;
-                    border:1px solid #E2E8F0;
-                    overflow:hidden;margin-bottom:16px;">
-                    <div style="padding:14px 16px;
-                      border-bottom:1px solid #F1F5F9;">
-                      <div style="font-size:14px;font-weight:600;
-                        color:#0F172A;margin-bottom:2px;">
-                        🎯 Today's Focus
-                      </div>
-                      <div style="font-size:12px;color:#64748B;">
-                        Your priority tasks for today
-                      </div>
-                    </div>
-                    <div id="todays-focus" style="padding:14px 16px;">
-                      <div style="font-size:13px;color:#94A3B8;
-                        text-align:center;padding:10px;">
-                        Loading tasks...
-                      </div>
-                    </div>
-                  </div>
+                </div>
 
-                </aside>
+                <!-- 3. NEXT MILESTONE CARD -->
+                <div class="cc-card">
+                  <div class="cc-badge badge-amber" style="margin-bottom: 12px;">🚀 NEXT MILESTONE</div>
+                  
+                  <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+                    <div style="flex-grow: 1; min-width: 250px;">
+                      <h3 id="cc-milestone-title" style="font-size: 18px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0;">Generate Roadmap</h3>
+                      <div id="cc-milestone-requirements" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">0 / 0 requirements completed</div>
+                      <div class="cc-progress-container" style="max-width: 500px;">
+                        <div id="cc-milestone-progress-bar" class="cc-progress-bar" style="width: 0%;"></div>
+                      </div>
+                    </div>
+                    
+                    <div style="text-align: right; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;">
+                      <span id="cc-milestone-reward" class="cc-badge badge-rose" style="font-size: 11px; font-weight: 700; padding: 6px 12px; align-self: flex-end; width: fit-content;">REWARD: +150 XP</span>
+                      <button onclick="switchTab('roadmap')" class="btn-primary" style="padding: 10px 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(112,0,255,0.2);">
+                        View Milestone →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. EXPLORE CAREER TRACKS -->
+                <div style="margin-top: 12px;">
+                  <h3 style="font-size: 20px; font-weight: 700; color: #ffffff; margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px;">
+                    🚀 Explore Career Tracks
+                  </h3>
+                  <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 20px 0;">
+                    Choose a direction. SkillBridge will build the path.
+                  </p>
+                  
+                  <div class="cc-explore-grid">
+                    
+                    <!-- Track 1 -->
+                    <div class="cc-card explore-card">
+                      <div>
+                        <div class="explore-icon">💻</div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 12px 0 6px 0;">Software Development</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Build modern software, web applications, and APIs.</p>
+                      </div>
+                      <div>
+                        <div class="explore-role-pills">
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Frontend Developer')">Frontend</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Backend Developer')">Backend</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Full Stack Developer')">Full Stack</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Mobile App Developer')">Mobile</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Track 2 -->
+                    <div class="cc-card explore-card">
+                      <div>
+                        <div class="explore-icon">🤖</div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 12px 0 6px 0;">AI & Data</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Build intelligent systems, neural networks, and analyze data.</p>
+                      </div>
+                      <div>
+                        <div class="explore-role-pills">
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('AI Engineer')">AI Engineer</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('ML Engineer')">ML Engineer</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Data Scientist')">Data Scientist</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Data Analyst')">Data Analyst</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Track 3 -->
+                    <div class="cc-card explore-card">
+                      <div>
+                        <div class="explore-icon">☁️</div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 12px 0 6px 0;">Cloud & DevOps</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Build, deploy, and operate highly scalable infrastructure.</p>
+                      </div>
+                      <div>
+                        <div class="explore-role-pills">
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('DevOps Engineer')">DevOps</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Cloud Engineer')">Cloud Engineer</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('SRE')">SRE</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Platform Engineer')">Platform</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Track 4 -->
+                    <div class="cc-card explore-card">
+                      <div>
+                        <div class="explore-icon">🛡️</div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 12px 0 6px 0;">Cybersecurity</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Protect digital systems, applications, and networks from threats.</p>
+                      </div>
+                      <div>
+                        <div class="explore-role-pills">
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Security Analyst')">Security Analyst</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('SOC Engineer')">SOC</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('AppSec Specialist')">AppSec</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Cloud Security Architect')">Cloud Sec</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Track 5 -->
+                    <div class="cc-card explore-card">
+                      <div>
+                        <div class="explore-icon">🎨</div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 12px 0 6px 0;">UI/UX & Design</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Design engaging user interfaces and seamless digital experiences.</p>
+                      </div>
+                      <div>
+                        <div class="explore-role-pills">
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('UI Designer')">UI Designer</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('UX Designer')">UX Designer</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Product Designer')">Product Des.</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('UX Researcher')">Researcher</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Track 6 -->
+                    <div class="cc-card explore-card">
+                      <div>
+                        <div class="explore-icon">📊</div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 12px 0 6px 0;">Product & Business</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">Define product strategy, run analytics, and manage timelines.</p>
+                      </div>
+                      <div>
+                        <div class="explore-role-pills">
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Product Manager')">Product Mgr</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Business Analyst')">Business Anal.</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Product Analyst')">Prod Analyst</span>
+                          <span class="role-pill" onclick="confirmCareerTrackSwitch('Project Manager')">Project Mgr</span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
               </div>
             </section>
+
+            <!-- 5. Switch Track Confirmation Modal -->
+            <div id="switch-track-modal" class="cc-modal-overlay" style="display: none;">
+              <div class="cc-modal-box">
+                <div style="font-size: 40px; margin-bottom: 16px; text-shadow: 0 0 10px rgba(0,229,255,0.4);">🎯</div>
+                <h3 style="font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 12px;">Switch Career Track?</h3>
+                <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 24px;">
+                  Are you sure you want to switch your career path to <strong id="switch-role-name" style="color: var(--emerald);">Frontend Developer</strong>? This will reset your active tasks and generate a new personalized AI roadmap.
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                  <button id="confirm-switch-btn" class="btn-primary" style="flex: 1; justify-content: center; padding: 12px 18px; border-radius: 10px;">
+                    Yes, Generate Roadmap
+                  </button>
+                  <button onclick="closeSwitchTrackModal()" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <!-- ══ ROADMAP TAB ══ -->
             <div id="tab-roadmap" style="display:none;">

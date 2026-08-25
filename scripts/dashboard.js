@@ -1593,15 +1593,17 @@ async function startNewSession() {
 }
 
 // ── Today's Focus ────────────────────────────────────────────
+// ── Today's Focus ────────────────────────────────────────────
 async function loadTodaysFocus() {
-  const container = document.getElementById('todays-focus');
-  if (!container) return;
+  const titleEl = document.getElementById('cc-focus-title');
+  const descEl = document.getElementById('cc-focus-desc');
+  const xpEl = document.getElementById('cc-focus-xp');
+  const catEl = document.getElementById('cc-focus-category');
+  const diffEl = document.getElementById('cc-focus-difficulty');
+  const progressEl = document.getElementById('cc-focus-progress');
+  const btnEl = document.getElementById('cc-focus-btn');
 
-  container.innerHTML = `
-    <div style="text-align:center; padding:20px;">
-      <div style="font-size:20px; animation: spin 1s linear infinite; display: inline-block;">⏳</div>
-    </div>
-  `;
+  if (!titleEl) return;
 
   // 1. Fetch all tasks for the user
   const { data: dbTasks } = await supabase.from('tasks')
@@ -1609,7 +1611,14 @@ async function loadTodaysFocus() {
     .eq('user_id', currentUserId);
 
   if (!dbTasks || dbTasks.length === 0) {
-    container.innerHTML = `<div style="font-size:13px; color:#94A3B8; text-align:center; padding:10px;">No active tasks. Please generate your roadmap! 🚀</div>`;
+    titleEl.textContent = "Welcome to SkillBridge! 👋";
+    descEl.textContent = "Please generate your personalized career roadmap in the AI Roadmap tab to start receiving your focus tasks.";
+    xpEl.style.display = 'none';
+    catEl.style.display = 'none';
+    diffEl.style.display = 'none';
+    progressEl.textContent = "Progress: 0/0";
+    btnEl.textContent = "Generate Roadmap ⚡";
+    btnEl.onclick = () => switchTab('roadmap');
     return;
   }
 
@@ -1622,129 +1631,79 @@ async function loadTodaysFocus() {
   const roadmap = profile?.roadmap_data;
   let tasks = [...dbTasks];
 
-  // 3. Sort tasks according to the roadmap sequence
+  // Sort tasks according to sequence
   if (roadmap?.phases) {
     const taskOrder = [];
     roadmap.phases.forEach(p => (p.tasks || []).forEach(t => taskOrder.push(t.title)));
     tasks.sort((a, b) => taskOrder.indexOf(a.title) - taskOrder.indexOf(b.title));
   }
 
-  // 4. Find the first uncompleted task
-  const activeTaskIndex = tasks.findIndex(t => t.status !== 'completed');
-  
-  if (activeTaskIndex === -1) {
-    container.innerHTML = `
-      <div style="text-align:center; padding:12px;">
-        <div style="font-size:24px; margin-bottom:8px;">🎉</div>
-        <div style="font-size:13px; font-weight:700; color:#059669;">All Tasks Mastered!</div>
-        <p style="font-size:11px; color:#64748B; margin:4px 0 0 0;">You've completed your entire career roadmap.</p>
-      </div>
-    `;
+  // Find first uncompleted task
+  const activeTask = tasks.find(t => t.status !== 'completed');
+
+  if (!activeTask) {
+    titleEl.textContent = "Roadmap Completed! 🎉";
+    descEl.textContent = "Outstanding work! You have completed all the tasks in your career roadmap. Go to the Placement section to test your job readiness.";
+    xpEl.style.display = 'none';
+    catEl.style.display = 'none';
+    diffEl.style.display = 'none';
+    progressEl.textContent = "Progress: 100%";
+    btnEl.textContent = "Start Placements 💼";
+    btnEl.onclick = () => switchTab('placement');
     return;
   }
 
-  // 5. Gather up to 3 tasks to display:
-  // - The active task
-  // - The next two upcoming tasks
-  const focusTasks = [];
+  // 3. Render active task details
+  xpEl.style.display = 'inline-flex';
+  catEl.style.display = 'inline-flex';
+  diffEl.style.display = 'inline-flex';
   
-  // Active task is the first uncompleted task
-  const activeTask = tasks[activeTaskIndex];
-  focusTasks.push({ ...activeTask, isFocusActive: true });
+  const xpReward = activeTask.difficulty === 'Hard' ? 50 : activeTask.difficulty === 'Medium' ? 30 : 15;
+  xpEl.textContent = `+${xpReward} XP`;
+  
+  titleEl.textContent = activeTask.title;
+  catEl.textContent = activeTask.roadmap_phase || "Core Topic";
+  diffEl.textContent = `${activeTask.difficulty || 'Medium'} Difficulty`;
+  
+  // Set category badges styles based on difficulty
+  diffEl.className = `cc-badge ${activeTask.difficulty === 'Hard' ? 'badge-rose' : activeTask.difficulty === 'Medium' ? 'badge-amber' : 'badge-cyan'}`;
 
-  // Add the next 2 tasks in the sequence as "Next Up" (locked)
-  for (let i = 1; i <= 2; i++) {
-    const nextTask = tasks[activeTaskIndex + i];
-    if (nextTask) {
-      focusTasks.push({ ...nextTask, isFocusActive: false });
-    }
+  // Description builder helper
+  descEl.textContent = getTaskDescription(activeTask.title);
+  progressEl.textContent = "Progress: 0/1";
+  
+  btnEl.textContent = "Start Task →";
+  btnEl.onclick = (e) => {
+    e.stopPropagation();
+    startQuiz(activeTask.id, activeTask.title, activeTask.roadmap_phase || '');
+  };
+}
+
+// Simple helper to generate professional-sounding descriptions for common topics
+function getTaskDescription(title) {
+  const t = title.toLowerCase();
+  if (t.includes("react") || t.includes("component") || t.includes("hook")) {
+    return `Master component structure, lifecycle, and dynamic state management in modern React applications.`;
   }
-
-  // 6. Render the checklist!
-  container.innerHTML = focusTasks.map(t => {
-    const isFocusActive = t.isFocusActive;
-    
-    if (isFocusActive) {
-      return `
-        <div 
-          style="
-            background: #F0FDF4; 
-            border: 1.5px solid #10B981; 
-            border-radius: 12px; 
-            padding: 14px; 
-            margin-bottom: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.05);
-            cursor: pointer;
-            transition: all 200ms;
-          "
-          onclick="openTaskDetail('${t.id}')"
-          onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 12px rgba(16,185,129,0.1)';"
-          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(16, 185, 129, 0.05)';"
-        >
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-size:10px; font-weight:700; color:#059669; background:#DCFCE7; padding:2px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:0.02em;">
-              🎯 Active Priority
-            </span>
-            <span style="font-size:10px; font-weight:700; color:#059669; text-transform:uppercase;">
-              +${t.difficulty === 'Hard' ? 50 : t.difficulty === 'Medium' ? 30 : 15} XP
-            </span>
-          </div>
-          <div style="font-size:13px; font-weight:600; color:#0F172A; margin-bottom:12px; line-height:1.4;">
-            ${t.title}
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:11px; color:#64748B;">📍 ${t.roadmap_phase}</span>
-            <button 
-              onclick="event.stopPropagation(); startQuiz('${t.id}', '${t.title.replace(/'/g, "\\'")}', '${t.roadmap_phase || ''}')"
-              style="
-                background: #059669; 
-                color: white; 
-                border: none; 
-                padding: 6px 12px; 
-                border-radius: 8px; 
-                font-size: 11px; 
-                font-weight: 700; 
-                cursor: pointer; 
-                display: flex; 
-                align-items: center; 
-                gap: 4px;
-                box-shadow: 0 2px 4px rgba(5,150,105,0.2);
-                transition: all 150ms;
-              "
-              onmouseover="this.style.background='#047857'; this.style.transform='scale(1.03)';"
-              onmouseout="this.style.background='#059669'; this.style.transform='scale(1)';"
-            >
-              Start Quiz ⚡
-            </button>
-          </div>
-        </div>
-      `;
-    } else {
-      return `
-        <div 
-          style="
-            background: #F8FAFC; 
-            border: 1px solid #E2E8F0; 
-            border-radius: 12px; 
-            padding: 12px; 
-            margin-bottom: 8px; 
-            opacity: 0.75;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-          "
-        >
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="color:#94A3B8; font-size:12px;">🔒</span>
-            <span style="font-size:12px; font-weight:500; color:#475569;">${t.title}</span>
-          </div>
-          <span style="font-size:9px; font-weight:700; color:#94A3B8; background:#E2E8F0; padding:2px 6px; border-radius:6px; text-transform:uppercase;">
-            Next Up
-          </span>
-        </div>
-      `;
-    }
-  }).join('');
+  if (t.includes("javascript") || t.includes("es6") || t.includes("js")) {
+    return `Explore advanced syntax, asynchronous patterns, DOM operations, and closures in JavaScript.`;
+  }
+  if (t.includes("html") || t.includes("css") || t.includes("flexbox") || t.includes("layout")) {
+    return `Develop responsive, semantic web page layouts with flexbox, grid, CSS custom properties, and SEO practices.`;
+  }
+  if (t.includes("node") || t.includes("express") || t.includes("backend") || t.includes("api")) {
+    return `Design high-performance REST APIs, configure routes, set up middlewares, and interface with datastores.`;
+  }
+  if (t.includes("sql") || t.includes("database") || t.includes("mongo") || t.includes("postgres")) {
+    return `Learn database design, indices optimization, connection pooling, and complex querying.`;
+  }
+  if (t.includes("git") || t.includes("github") || t.includes("version")) {
+    return `Master source code control, branching models, pull request reviews, and remote collaborative workflows.`;
+  }
+  if (t.includes("design") || t.includes("ui") || t.includes("ux") || t.includes("wireframe") || t.includes("figma")) {
+    return `Analyze user flows, build high-fidelity interactive wireframes, and design consistent UI component libraries.`;
+  }
+  return `Learn, practice, and implement ${title} to build key specialization projects and boost placement readiness.`;
 }
 
 async function completeFocusTask(id) {
@@ -1830,45 +1789,83 @@ async function buildActivityHeatmap(userId) {
 }
 
 // ── Short Roadmap Card ───────────────────────────────────────
+// ── Short Roadmap Card ───────────────────────────────────────
 function loadShortRoadmap(roadmap) {
-  const title = document.getElementById('roadmap-title-short');
-  const phases = document.getElementById('roadmap-phases-short');
-  const progress = document.getElementById('overall-progress-section');
-
-  if (!roadmap || !roadmap.phases) {
-    title.textContent = "No Roadmap Generated";
-    return;
-  }
-
-  title.textContent = roadmap.title || "Career Roadmap";
-  progress.style.display = 'block';
-
-  // Calculate overall progress
-  const totalTasks = roadmap.phases.reduce((sum, p) => sum + (p.tasks?.length || 0), 0);
-  const completedTasks = roadmap.phases.reduce((sum, p) => sum + (p.tasks?.filter(t => t.status === 'completed').length || 0), 0);
-  const pct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  document.getElementById('overall-pct').textContent = pct + '%';
-  document.getElementById('overall-bar').style.width = pct + '%';
-
-  phases.innerHTML = roadmap.phases.slice(0, 3).map(p => {
-    const completed = p.tasks?.filter(t => t.status === 'completed').length || 0;
-    const total = p.tasks?.length || 0;
-    const phasePct = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    return `
-      <div style="background:#F8FAFC; border-radius:10px; padding:12px; border:1px solid #E2E8F0;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-size:13px; font-weight:600; color:#0F172A;">${p.phase}</span>
-          <span style="font-size:11px; color:#64748B;">${completed}/${total} Tasks</span>
-        </div>
-        <div style="height:4px; background:#E2E8F0; border-radius:2px;">
-          <div style="height:100%; width:${phasePct}%; background:#059669; border-radius:2px;"></div>
-        </div>
-      </div>
-    `;
-  }).join('');
+  // Redesigned: short roadmap refresh triggers full stats dashboard update
+  loadDashboardStats();
 }
+
+// ── Career Track Helper ──
+function getCareerTrackFromGoal(goal) {
+  if (!goal) return { track: "Software Development", spec: "Frontend Development" };
+  const g = goal.toLowerCase();
+  if (g.includes("frontend") || g.includes("backend") || g.includes("full stack") || g.includes("fullstack") || g.includes("software") || g.includes("mobile") || g.includes("web dev") || g.includes("developer")) {
+    return { track: "Software Development", spec: goal };
+  }
+  if (g.includes("ai") || g.includes("machine learning") || g.includes("ml") || g.includes("data") || g.includes("science") || g.includes("analyst")) {
+    if (g.includes("business") || g.includes("product")) {
+      return { track: "Product & Business", spec: goal };
+    }
+    return { track: "AI & Data", spec: goal };
+  }
+  if (g.includes("devops") || g.includes("cloud") || g.includes("sre") || g.includes("platform") || g.includes("infrastructure")) {
+    return { track: "Cloud & DevOps", spec: goal };
+  }
+  if (g.includes("cyber") || g.includes("security") || g.includes("soc") || g.includes("appsec") || g.includes("infosec")) {
+    return { track: "Cybersecurity", spec: goal };
+  }
+  if (g.includes("ui") || g.includes("ux") || g.includes("design") || g.includes("product designer") || g.includes("researcher")) {
+    return { track: "UI/UX & Design", spec: goal };
+  }
+  if (g.includes("product manager") || g.includes("pm") || g.includes("business") || g.includes("project manager") || g.includes("analyst")) {
+    return { track: "Product & Business", spec: goal };
+  }
+  return { track: "Software Development", spec: goal };
+}
+
+// ── Interactive Career Track Switches ──
+function confirmCareerTrackSwitch(roleName) {
+  const modal = document.getElementById('switch-track-modal');
+  const roleNameEl = document.getElementById('switch-role-name');
+  const confirmBtn = document.getElementById('confirm-switch-btn');
+  
+  if (roleNameEl) roleNameEl.textContent = roleName;
+  if (confirmBtn) {
+    confirmBtn.onclick = () => {
+      executeCareerTrackSwitch(roleName);
+    };
+  }
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function closeSwitchTrackModal() {
+  const modal = document.getElementById('switch-track-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function executeCareerTrackSwitch(roleName) {
+  closeSwitchTrackModal();
+  showToast(`Switching path to ${roleName}...`, 'info');
+  
+  // Set the input field in the Roadmap tab
+  const goalInput = document.getElementById('roadmap-goal-input');
+  if (goalInput) goalInput.value = roleName;
+  
+  // Switch to the roadmap tab first so user sees generation progress
+  switchTab('roadmap');
+  
+  // Update goal in database
+  await supabase.from('profiles').update({ goal: roleName }).eq('id', currentUserId);
+  
+  // Trigger generation
+  generateNewRoadmap();
+}
+
+window.confirmCareerTrackSwitch = confirmCareerTrackSwitch;
+window.closeSwitchTrackModal = closeSwitchTrackModal;
+window.executeCareerTrackSwitch = executeCareerTrackSwitch;
 
 // ── Full Roadmap Generation ──────────────────────────────────
 async function generateNewRoadmap() {
@@ -1902,7 +1899,7 @@ async function generateNewRoadmap() {
     const roadmap = JSON.parse(jsonMatch[0]);
 
     // Save to Supabase profile
-    await supabase.from('profiles').update({ roadmap_data: roadmap }).eq('id', currentUserId);
+    await supabase.from('profiles').update({ goal: goal, roadmap_data: roadmap }).eq('id', currentUserId);
 
     // Save tasks to standard tasks database table so everything is in sync
     await saveTasksFromRoadmap(roadmap, currentUserId);
@@ -2656,21 +2653,176 @@ function updateProfileUI(p, email) {
 
 async function loadDashboardStats() {
   if (!supabase || !currentUserId) return;
-  const [tasks, projects, certs] = await Promise.all([
-    supabase.from('tasks').select('status').eq('user_id', currentUserId),
+  
+  // 1. Fetch data from Supabase
+  const [profileRes, tasksRes, projectsRes, placementRes] = await Promise.all([
+    supabase.from('profiles').select('goal, level, xp, roadmap_data').eq('id', currentUserId).single(),
+    supabase.from('tasks').select('*').eq('user_id', currentUserId),
     supabase.from('projects').select('status').eq('user_id', currentUserId),
-    supabase.from('certificates').select('id').eq('user_id', currentUserId)
+    supabase.from('placement_attempts').select('*').eq('user_id', currentUserId)
   ]);
-  const completedTasks = tasks.data?.filter(t => t.status === 'completed').length || 0;
-  const totalTasks = tasks.data?.length || 1;
-  const completedProjects = projects.data?.filter(p => p.status === 'completed').length || 0;
-  const certsCount = certs.data?.length || 0;
-  const progress = Math.round((completedTasks / totalTasks) * 100);
-  const readiness = Math.min(95, Math.round(progress * 0.6 + completedProjects * 8 + certsCount * 5));
-  setText('stat-progress', progress + '%');
-  setText('stat-projects', completedProjects);
-  setText('stat-skills', completedTasks);
-  setText('stat-placement', readiness + '%');
+
+  const profile = profileRes.data;
+  const dbTasks = tasksRes.data || [];
+  const dbProjects = projectsRes.data || [];
+  const placementAttempts = placementRes.data || [];
+
+  // 2. Compute dynamic metrics
+  const completedTasks = dbTasks.filter(t => t.status === 'completed').length;
+  const totalTasks = dbTasks.length || 1;
+  const careerProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  
+  const completedProjects = dbProjects.filter(p => p.status === 'completed').length;
+  
+  // XP & Level
+  const currentLevel = profile?.level || 1;
+  
+  // Placement/Interview progress calculations
+  let resumeUploaded = false;
+  let r1Passed = false;
+  let r2Passed = false;
+  let r3Passed = false;
+
+  // Let's also check if there's a global placementProgress in memory
+  if (typeof placementProgress !== 'undefined') {
+    resumeUploaded = placementProgress.resume;
+    r1Passed = placementProgress.r1;
+    r2Passed = placementProgress.r2;
+    r3Passed = placementProgress.r3;
+  }
+  
+  // Fallback to check DB attempts if not loaded in memory
+  if (placementAttempts.length > 0) {
+    placementAttempts.forEach(att => {
+      if (att.round === 1 && att.passed) r1Passed = true;
+      if (att.round === 2 && att.passed) r2Passed = true;
+      if (att.round === 3 && att.passed) r3Passed = true;
+    });
+    if (typeof placementProgress !== 'undefined' && placementProgress.resume) {
+      resumeUploaded = true;
+    }
+  }
+
+  // 3. Update Career Track Hero
+  const goal = profile?.goal || "Frontend Developer";
+  const { track, spec } = getCareerTrackFromGoal(goal);
+  
+  setText('cc-hero-track', track);
+  setText('cc-hero-spec', spec);
+  setText('cc-hero-level', `Level ${currentLevel}`);
+  setText('cc-hero-skills', `${completedTasks} Skills Mastered`);
+  setText('cc-hero-projects', `${completedProjects} Project${completedProjects !== 1 ? 's' : ''} Completed`);
+  
+  // Find current active phase based on tasks
+  let activePhaseName = "Phase 1 • Orientation";
+  let activePhaseTasks = [];
+  let activePhaseIndex = 0;
+  
+  const roadmap = profile?.roadmap_data;
+  if (roadmap && roadmap.phases && roadmap.phases.length > 0) {
+    let foundActive = false;
+    for (let idx = 0; idx < roadmap.phases.length; idx++) {
+      const phase = roadmap.phases[idx];
+      const phaseTasks = dbTasks.filter(t => t.roadmap_phase === (phase.phase || phase.name));
+      const phaseCompletedCount = phaseTasks.filter(t => t.status === 'completed').length;
+      
+      if (phaseTasks.length > 0 && phaseCompletedCount < phaseTasks.length && !foundActive) {
+        activePhaseName = phase.phase || phase.name || `Phase ${idx + 1}`;
+        activePhaseTasks = phaseTasks;
+        activePhaseIndex = idx;
+        foundActive = true;
+      }
+    }
+    if (!foundActive) {
+      const lastPhase = roadmap.phases[roadmap.phases.length - 1];
+      activePhaseName = lastPhase.phase || lastPhase.name || "Completed";
+      activePhaseIndex = roadmap.phases.length - 1;
+      activePhaseTasks = dbTasks.filter(t => t.roadmap_phase === (lastPhase.phase || lastPhase.name));
+    }
+  }
+  
+  setText('cc-hero-phase', activePhaseName);
+  setText('cc-hero-progress-label', `${careerProgress}% Career Progress`);
+  
+  const heroBar = document.getElementById('cc-hero-progress-bar');
+  if (heroBar) heroBar.style.width = `${careerProgress}%`;
+
+  // 4. Calculate Career Readiness Metrics
+  const skillsScore = careerProgress;
+  const projectsScore = Math.min(100, Math.round((completedProjects / 3) * 100));
+  const resumeScore = resumeUploaded ? 90 : 20;
+  
+  let interviewScore = 15; // baseline
+  if (r1Passed) interviewScore += 25;
+  if (r2Passed) interviewScore += 25;
+  if (r3Passed) interviewScore += 35;
+  
+  const readinessScore = Math.round((skillsScore + projectsScore + resumeScore + interviewScore) / 4);
+
+  // Update Career Readiness elements in DOM
+  setText('cc-readiness-val', `${readinessScore}%`);
+  const fillCircle = document.getElementById('cc-readiness-fill');
+  if (fillCircle) {
+    const offset = 440 - (440 * readinessScore) / 100;
+    fillCircle.style.strokeDashoffset = offset;
+  }
+  
+  setText('cc-readiness-skills-val', `${skillsScore}%`);
+  const skillsBar = document.getElementById('cc-readiness-skills-bar');
+  if (skillsBar) skillsBar.style.width = `${skillsScore}%`;
+  
+  setText('cc-readiness-projects-val', `${projectsScore}%`);
+  const projectsBar = document.getElementById('cc-readiness-projects-bar');
+  if (projectsBar) projectsBar.style.width = `${projectsScore}%`;
+  
+  setText('cc-readiness-resume-val', `${resumeScore}%`);
+  const resumeBar = document.getElementById('cc-readiness-resume-bar');
+  if (resumeBar) resumeBar.style.width = `${resumeScore}%`;
+  
+  setText('cc-readiness-interview-val', `${interviewScore}%`);
+  const interviewBar = document.getElementById('cc-readiness-interview-bar');
+  if (interviewBar) interviewBar.style.width = `${interviewScore}%`;
+
+  // Diagnostic message
+  let diagnosticMsg = "You're making good progress. Focus on projects and interview preparation next.";
+  const scores = [
+    { name: 'skills', val: skillsScore, msg: "Focus on completing roadmap tasks to master core skills." },
+    { name: 'projects', val: projectsScore, msg: "Focus on building more projects to boost your practical depth." },
+    { name: 'resume', val: resumeScore, msg: "Focus on uploading and analyzing your resume in the Placement section." },
+    { name: 'interview', val: interviewScore, msg: "Focus on mock interviews and technical preparation next." }
+  ];
+  
+  scores.sort((a, b) => a.val - b.val);
+  if (scores[0].val < 80) {
+    diagnosticMsg = `${scores[0].msg}`;
+  } else {
+    diagnosticMsg = "Outstanding! You are highly prepared for job placements. Take the final interviews!";
+  }
+  setText('cc-readiness-message', diagnosticMsg);
+
+  // 5. Update Next Milestone
+  if (roadmap && roadmap.phases && roadmap.phases.length > 0) {
+    const activePhase = roadmap.phases[activePhaseIndex];
+    const phaseTasks = dbTasks.filter(t => t.roadmap_phase === (activePhase.phase || activePhase.name));
+    const phaseCompleted = phaseTasks.filter(t => t.status === 'completed').length;
+    const phaseTotal = phaseTasks.length || 1;
+    const milestonePct = Math.round((phaseCompleted / phaseTotal) * 100);
+    
+    setText('cc-milestone-title', `Complete ${activePhase.phase || activePhase.name}`);
+    setText('cc-milestone-requirements', `${phaseCompleted} / ${phaseTotal} phase requirements completed`);
+    
+    const milestoneBar = document.getElementById('cc-milestone-progress-bar');
+    if (milestoneBar) milestoneBar.style.width = `${milestonePct}%`;
+    
+    const xpReward = 150 + activePhaseIndex * 50;
+    setText('cc-milestone-reward', `REWARD: +${xpReward} XP`);
+  } else {
+    setText('cc-milestone-title', "Generate Your Career Roadmap");
+    setText('cc-milestone-requirements', "No milestone active yet");
+    const milestoneBar = document.getElementById('cc-milestone-progress-bar');
+    if (milestoneBar) milestoneBar.style.width = "0%";
+    setText('cc-milestone-reward', "REWARD: +150 XP");
+  }
 }
 
 async function renderDashboard() {
