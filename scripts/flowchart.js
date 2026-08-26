@@ -6,7 +6,7 @@ const roadmapTemplates = {
         { id: 3, title: 'React Basics', x: 350, y: 50, status: 'active' },
         { id: 4, title: 'State Management', x: 350, y: 200, status: 'locked' },
         { id: 5, title: 'Next.js & SSR', x: 500, y: 200, status: 'locked' },
-        { id: 6, title: 'Professional Portfolio', x: 500, y: 350, status: 'locked' }
+        { id: 6, title: 'Project Showcase', x: 500, y: 350, status: 'locked' }
     ],
     backend: [
         { id: 1, title: 'Node.js Overview', x: 50, y: 50, status: 'completed' },

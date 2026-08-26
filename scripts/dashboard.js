@@ -2543,7 +2543,7 @@ async function renderFullRoadmap(roadmap) {
       </span>
     `).join('');
   } else {
-    const jobReadyItems = ["Resume Optimization", "Portfolio Showcase", "Aptitude Tests", "Technical Case Studies", "Live Mock Interview"];
+    const jobReadyItems = ["Resume Optimization", "Project Showcase", "Aptitude Tests", "Technical Case Studies", "Live Mock Interview"];
     skillsChipsHTML = jobReadyItems.map((n, idx) => `
       <span class="rm-skill-tag ${placementProgressItems[idx] ? 'mastered' : 'active'}">
         ${placementProgressItems[idx] ? '✓' : '•'} ${n}
@@ -2859,7 +2859,7 @@ async function renderFullRoadmap(roadmap) {
                 ${placementProgressItems[0] ? '✓' : '•'} Resume Optimization
               </span>
               <span class="rm-skill-tag ${placementProgressItems[1] ? 'mastered' : 'active'}">
-                ${placementProgressItems[1] ? '✓' : '•'} Portfolio Showcase
+                ${placementProgressItems[1] ? '✓' : '•'} Project Showcase
               </span>
               <span class="rm-skill-tag ${placementProgressItems[2] ? 'mastered' : 'active'}">
                 ${placementProgressItems[2] ? '✓' : '•'} Interview Preparation
@@ -3407,16 +3407,7 @@ function downloadResumePDF() {
   doc.save('SkillBridge_Resume.pdf');
 }
 
-function downloadPortfolio() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const name = document.getElementById('port-name')?.textContent || 'Student';
-  const goal = document.getElementById('port-goal')?.textContent || 'Developer';
-  doc.setFontSize(22); doc.text(name, 20, 30);
-  doc.setFontSize(16); doc.setTextColor(5, 150, 105); doc.text(goal, 20, 40);
-  doc.setDrawColor(226, 232, 240); doc.line(20, 45, 190, 45);
-  doc.save('SkillBridge_Portfolio.pdf');
-}
+
 
 function getGoalText(goalField) {
   if (!goalField) return '';
@@ -3758,7 +3749,7 @@ function initTabs() {
     if (tabName === 'profile') loadProfile();
     if (tabName === 'placement') initPlacementTab();
     if (tabName === 'mentorship') initMentorChat();
-    if (tabName === 'portfolio') loadPortfolioTab();
+
   }
   window.switchTab = switchTab;
   tabs.forEach(tab => tab.addEventListener('click', (e) => { e.preventDefault(); switchTab(tab.dataset.tab); }));
@@ -5970,268 +5961,5 @@ window.sendQuickQuestion = sendQuickQuestion;
 window.clearMentorChat = clearMentorChat;
 window.initMentorChat = initMentorChat;
 
-// ══ PORTFOLIO SYSTEM ══
-async function loadPortfolioTab() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
 
-  // Fetch all user data in parallel
-  const [profileRes, tasksRes, projectsRes, certsRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-    supabase.from('tasks').select('*').eq('user_id', session.user.id).eq('status', 'completed'),
-    supabase.from('projects').select('*').eq('user_id', session.user.id).eq('status', 'completed'),
-    supabase.from('certificates').select('*').eq('user_id', session.user.id)
-  ]);
-
-  const profile = profileRes.data;
-  const tasks = tasksRes.data || [];
-  const projects = projectsRes.data || [];
-  const certs = certsRes.data || [];
-
-  // Extract unique skills from completed tasks
-  const skills = [...new Set(tasks.map(t => t.roadmap_phase).filter(Boolean))];
-
-  // Calculate overall score
-  const xp = profile?.xp || 0;
-  const level = profile?.level || 1;
-  const readiness = Math.min(95, Math.round((tasks.length * 2) + (projects.length * 15) + (certs.length * 10)));
-
-  renderPortfolioTab(profile, tasks, projects, certs, skills, readiness, xp, level);
-}
-
-function renderPortfolioTab(profile, tasks, projects, certs, skills, readiness, xp, level) {
-  const container = document.getElementById('tab-portfolio');
-  if (!container) return;
-
-  const name = profile?.full_name || 'Student';
-  const goal = getGoalText(profile?.goal) || 'Software Developer';
-  const { college, branch } = getProfileCollege(profile);
-  const collegeWithBranch = (college || '') + (branch ? ' · ' + branch : '');
-
-  container.innerHTML = `
-    <!-- Controls row -->
-    <div style="display:flex; justify-content:space-between; align-items:center;margin-bottom:20px;">
-      <div>
-        <h2 style="font-size:20px;font-weight:600; margin-bottom:4px;">🎨 Portfolio Builder</h2>
-        <p style="font-size:13px;color:#64748B;">Auto-generated from your real progress</p>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <select id="portfolio-theme" onchange="changePortfolioTheme(this.value)"
-          style="padding:8px 12px; border:1px solid #E2E8F0; border-radius:8px;font-size:13px; outline:none;cursor:pointer;">
-          <option value="modern">Modern</option>
-          <option value="minimal">Minimal</option>
-          <option value="dark">Dark</option>
-          <option value="creative">Creative</option>
-        </select>
-        <button onclick="downloadPortfolioPDF()"
-          style="padding:8px 18px; background:#059669;color:white; border:none;border-radius:8px; font-size:13px;font-weight:500; cursor:pointer;display:flex; align-items:center;gap:6px;">
-          ⬇️ Download PDF
-        </button>
-      </div>
-    </div>
-
-    <!-- Portfolio preview -->
-    <div id="portfolio-preview-card" style="background:white;border-radius:16px; border:1px solid #E2E8F0; overflow:hidden;margin-bottom:20px;">
-      <!-- Portfolio header -->
-      <div id="portfolio-header" style="background:linear-gradient(135deg,#0F172A,#059669); padding:32px;color:white; text-align:center;">
-        <div style="width:72px;height:72px; border-radius:50%; background:rgba(255,255,255,0.15); border:3px solid rgba(255,255,255,0.3); display:flex;align-items:center; justify-content:center; font-size:28px;font-weight:700; color:white;margin:0 auto 12px;">
-          ${name.charAt(0).toUpperCase()}
-        </div>
-        <h2 style="font-size:22px;font-weight:700; margin-bottom:4px;">${name}</h2>
-        <p style="font-size:15px; color:rgba(255,255,255,0.8); margin-bottom:6px;">${goal}</p>
-        ${collegeWithBranch ? `<p style="font-size:13px; color:rgba(255,255,255,0.6);">📍 ${collegeWithBranch}</p>` : ''}
-        <div style="display:flex;gap:20px; justify-content:center;margin-top:16px; flex-wrap:wrap;">
-          <div style="text-align:center;">
-            <div style="font-size:22px; font-weight:700;">${level}</div>
-            <div style="font-size:11px; opacity:0.7;">Level</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:22px; font-weight:700;">${xp}</div>
-            <div style="font-size:11px; opacity:0.7;">XP</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:22px; font-weight:700;">${readiness}%</div>
-            <div style="font-size:11px; opacity:0.7;">Job Ready</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:22px; font-weight:700;">${projects.length}</div>
-            <div style="font-size:11px; opacity:0.7;">Projects</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="padding:24px;">
-        <div style="margin-bottom:24px;">
-          <h3 style="font-size:15px;font-weight:600; margin-bottom:12px; display:flex;align-items:center; gap:8px;">⚡ Skills & Progress</h3>
-          ${skills.length > 0 ? `<div style="display:flex;gap:8px; flex-wrap:wrap;">${skills.map(s => `<span style="background:#F0FDF4; border:1px solid #A7F3D0; color:#059669;padding:5px 12px; border-radius:20px;font-size:13px; font-weight:500;">✓ ${s}</span>`).join('')}</div>` : `<p style="font-size:13px;color:#94A3B8;">Complete tasks to add skills here</p>`}
-        </div>
-        ${projects.length > 0 ? `
-          <div style="margin-bottom:24px;">
-            <h3 style="font-size:15px; font-weight:600;margin-bottom:12px;">🛠️ Completed Projects</h3>
-            <div style="display:grid;gap:10px;">
-              ${projects.map(p => `
-                <div style="padding:14px; background:#F8FAFC; border-radius:10px; border:1px solid #E2E8F0;">
-                  <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div>
-                      <div style="font-size:14px; font-weight:500; margin-bottom:4px;">${p.title}</div>
-                      <div style="display:flex; gap:6px;flex-wrap:wrap;">
-                        ${(p.tags || []).map(t => `<span style="font-size:11px; background:#E2E8F0; color:#475569; padding:2px 8px; border-radius:6px;">${t}</span>`).join('')}
-                      </div>
-                    </div>
-                    ${p.github_url ? `<a href="${p.github_url}" target="_blank" style="font-size:12px; color:#059669; text-decoration:none; white-space:nowrap;">GitHub →</a>` : ''}
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-        ${certs.length > 0 ? `
-          <div style="margin-bottom:24px;">
-            <h3 style="font-size:15px; font-weight:600;margin-bottom:12px;">🏆 Certificates</h3>
-            <div style="display:grid;gap:8px;">
-              ${certs.map(c => `
-                <div style="display:flex; align-items:center;gap:10px; padding:10px 14px; background:#FFFBEB; border:1px solid #FDE68A; border-radius:8px;">
-                  <span style="font-size:20px;">🏅</span>
-                  <div style="flex:1;">
-                    <div style="font-size:13px; font-weight:500;">${c.phase_name}</div>
-                    <div style="font-size:11px; color:#94A3B8;">Issued: ${new Date(c.issued_date).toLocaleDateString('en-IN')}</div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        ` : ''}
-      </div>
-    </div>
-
-    <!-- Summary card -->
-    <div style="background:white; border-radius:14px; border:1px solid #E2E8F0;padding:20px;">
-      <h3 style="font-size:15px;font-weight:600; margin-bottom:14px;">📊 Portfolio Summary</h3>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px;">
-        ${[{ label: 'Tasks Done', val: tasks.length, icon: '✅' }, { label: 'Projects Built', val: projects.length, icon: '🛠️' }, { label: 'Certificates', val: certs.length, icon: '🏆' }, { label: 'Skills Learned', val: skills.length, icon: '⚡' }, { label: 'XP Earned', val: xp, icon: '🔥' }, { label: 'Job Readiness', val: readiness + '%', icon: '🎯' }].map(s => `
-          <div style="text-align:center; padding:12px;background:#F8FAFC; border-radius:10px;">
-            <div style="font-size:20px; margin-bottom:4px;">${s.icon}</div>
-            <div style="font-size:18px; font-weight:700;color:#0F172A;">${s.val}</div>
-            <div style="font-size:11px; color:#94A3B8;">${s.label}</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-async function downloadPortfolioPDF() {
-  const { jsPDF } = window.jspdf;
-  if (!jsPDF) {
-    showToast('Loading PDF library...');
-    return;
-  }
-
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) return;
-
-  const [profileRes, tasksRes, projectsRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-    supabase.from('tasks').select('*').eq('user_id', session.user.id).eq('status', 'completed'),
-    supabase.from('projects').select('*').eq('user_id', session.user.id).eq('status', 'completed')
-  ]);
-
-  const p = profileRes.data;
-  const tasks = tasksRes.data || [];
-  const projects = projectsRes.data || [];
-
-  const doc = new jsPDF();
-  let y = 20;
-
-  doc.setFillColor(15, 23, 42);
-  doc.rect(0, 0, 210, 40, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text(p?.full_name || 'Student', 20, 18);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  const goalText = getGoalText(p?.goal) || 'Software Developer';
-  const { college, branch } = getProfileCollege(p);
-  const collegeWithBranch = (college || '') + (branch ? ' · ' + branch : '');
-
-  doc.text(goalText, 20, 28);
-  doc.setFontSize(10);
-  doc.text(collegeWithBranch, 20, 36);
-
-  y = 55;
-  doc.setTextColor(5, 150, 105);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PROFILE STATS', 20, y);
-  y += 8;
-  doc.setTextColor(71, 85, 105);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text(`Level: ${p?.level || 1}  |  XP: ${p?.xp || 0}  |  Tasks: ${tasks.length}  |  Projects: ${projects.length}`, 20, y);
-  y += 12;
-
-  doc.setTextColor(5, 150, 105);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('SKILLS LEARNED', 20, y);
-  y += 8;
-  doc.setTextColor(71, 85, 105);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  const phases = [...new Set(tasks.map(t => t.roadmap_phase).filter(Boolean))];
-  doc.text(phases.join(' · ') || 'In progress', 20, y);
-  y += 14;
-
-  if (projects.length > 0) {
-    doc.setTextColor(5, 150, 105);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('COMPLETED PROJECTS', 20, y);
-    y += 8;
-    projects.forEach(proj => {
-      doc.setTextColor(15, 23, 42);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.text('• ' + proj.title, 20, y);
-      y += 6;
-      doc.setTextColor(71, 85, 105);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text('  Tech: ' + (proj.tags || []).join(', '), 20, y);
-      y += 8;
-    });
-    y += 4;
-  }
-
-  doc.setFillColor(5, 150, 105);
-  doc.rect(0, 280, 210, 17, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.text('Generated by SkillBridge AI · ' + new Date().toLocaleDateString('en-IN'), 20, 291);
-
-  doc.save(`${p?.full_name || 'Portfolio'}_SkillBridge.pdf`);
-  showToast('📄 Portfolio PDF downloaded!');
-}
-
-function changePortfolioTheme(theme) {
-  const header = document.getElementById('portfolio-header');
-  if (!header) return;
-
-  if (theme === 'dark') {
-    header.style.background = 'linear-gradient(135deg, #020617, #1E293B)';
-  } else if (theme === 'minimal') {
-    header.style.background = '#F8FAFC';
-    header.style.color = '#0F172A';
-  } else if (theme === 'creative') {
-    header.style.background = 'linear-gradient(135deg, #4F46E5, #06B6D4)';
-  } else {
-    header.style.background = 'linear-gradient(135deg, #0F172A, #059669)';
-    header.style.color = 'white';
-  }
-}
-
-window.loadPortfolioTab = loadPortfolioTab;
-window.downloadPortfolioPDF = downloadPortfolioPDF;
-window.changePortfolioTheme = changePortfolioTheme;
 

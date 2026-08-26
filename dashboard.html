@@ -586,10 +586,7 @@
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                     Resume
                 </a>
-                <a href="#" class="nav-item" data-tab="portfolio">
-                    <i data-lucide="award" class="w-4 h-4"></i>
-                    Portfolio
-                </a>
+
                 <a href="#" class="nav-item" data-tab="placement">
                     <i data-lucide="briefcase" class="w-4 h-4"></i>
                     Placement
@@ -2097,60 +2094,7 @@
 
             </section>
 
-            <!-- ══ PORTFOLIO TAB ══ -->
-            <div id="tab-portfolio" style="display:none;">
-              <!-- Controls row -->
-              <div style="display:flex;
-                justify-content:space-between;
-                align-items:center;margin-bottom:20px;">
-                <div>
-                  <h2 style="font-size:20px;font-weight:600;
-                    margin-bottom:4px;">
-                    🎨 Portfolio Builder
-                  </h2>
-                  <p style="font-size:13px;color:#64748B;">
-                    Auto-generated from your real progress
-                  </p>
-                </div>
-                <div style="display:flex;gap:10px;">
-                  <select id="portfolio-theme"
-                    onchange="changePortfolioTheme(this.value)"
-                    style="padding:8px 12px;
-                    border:1px solid #E2E8F0;
-                    border-radius:8px;font-size:13px;
-                    outline:none;cursor:pointer;">
-                    <option value="modern">Modern</option>
-                    <option value="minimal">Minimal</option>
-                    <option value="dark">Dark</option>
-                    <option value="creative">Creative</option>
-                  </select>
-                  <button onclick="downloadPortfolioPDF()"
-                    style="padding:8px 18px;
-                    background:#059669;color:white;
-                    border:none;border-radius:8px;
-                    font-size:13px;font-weight:500;
-                    cursor:pointer;display:flex;
-                    align-items:center;gap:6px;">
-                    ⬇️ Download PDF
-                  </button>
-                </div>
-              </div>
 
-              <!-- Portfolio preview -->
-              <div id="portfolio-preview-card" style="
-                background:white;border-radius:16px;
-                border:1px solid #E2E8F0;
-                overflow:hidden;margin-bottom:20px;">
-                <!-- Content injected by JS -->
-              </div>
-
-              <!-- Summary card -->
-              <div id="portfolio-summary-card" style="background:white;
-                border-radius:14px;
-                border:1px solid #E2E8F0;padding:20px;">
-                <!-- Content injected by JS -->
-              </div>
-            </div>
 
             <!-- ══ RESUME TAB (REACTIVE STYLE) ══ -->
             <section id="tab-resume" style="display:none;">
