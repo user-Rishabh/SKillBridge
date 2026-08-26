@@ -13,7 +13,8 @@ const envConfig = {
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
   OPENROUTER_KEY: process.env.OPENROUTER_KEY || '',
   GEMINI_KEY: process.env.GEMINI_KEY || '',
-  YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY || ''
+  YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY || '',
+  GROQ_API_KEY: process.env.GROQ_API_KEY || ''
 };
 
 // Fallback to local .env if it exists
@@ -56,7 +57,8 @@ window.ENV_CONFIG = {
   SUPABASE_ANON_KEY: '${envConfig.SUPABASE_ANON_KEY || ''}',
   OPENROUTER_KEY: '${envConfig.OPENROUTER_KEY || ''}',
   GEMINI_KEY: '${envConfig.GEMINI_KEY || ''}',
-  YOUTUBE_API_KEY: '${envConfig.YOUTUBE_API_KEY || ''}'
+  YOUTUBE_API_KEY: '${envConfig.YOUTUBE_API_KEY || ''}',
+  GROQ_API_KEY: '${envConfig.GROQ_API_KEY || ''}'
 };
 `;
 

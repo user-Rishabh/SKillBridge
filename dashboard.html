@@ -1493,7 +1493,7 @@
                       <span style="background:rgba(5,150,105,0.2);border:1px solid rgba(5,150,105,0.3);color:#34D399;padding:3px 10px;border-radius:20px;font-size:11px;">Interviews</span>
                     </div>
 
-                    <div style="font-size:12px;
+                    <div id="mentor-power-badge" style="font-size:12px;
                       color:rgba(255,255,255,0.5);">
                       Powered by Llama 3.1 · Free
                     </div>
@@ -2244,9 +2244,31 @@
       💼 Placement Preparation
     </h2>
     <p style="font-size:13px;color:#64748B;">
-      Real placement sequence. Complete each 
-      round to unlock the next one.
+      Simulate a real placement process and identify what you need to improve before interviews.
     </p>
+  </div>
+
+  <!-- Placement Stats Dashboard -->
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:24px;">
+    <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px; border-radius:12px; display:flex; flex-direction:column; justify-content:center;">
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Placement Readiness</div>
+      <div id="placement-readiness-stat" style="font-size:22px; font-weight:800; color:var(--emerald);">Not Assessed</div>
+    </div>
+    <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px; border-radius:12px; display:flex; flex-direction:column; justify-content:center;">
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Rounds Completed</div>
+      <div id="placement-rounds-stat" style="font-size:22px; font-weight:800; color:#ffffff;">0 / 3</div>
+    </div>
+    <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px; border-radius:12px; display:flex; flex-direction:column; justify-content:center;">
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Current Stage</div>
+      <div id="placement-stage-stat" style="font-size:18px; font-weight:700; color:var(--fuchsia);">Round 1</div>
+    </div>
+    <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px; border-radius:12px; display:flex; flex-direction:column; justify-content:center;">
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Best / Last Attempt</div>
+      <div style="font-size:12px; font-weight:600; color:#ffffff; line-height:1.4;">
+        Best: <span id="placement-best-score">N/A</span><br>
+        Date: <span id="placement-last-date">Never</span>
+      </div>
+    </div>
   </div>
 
   <!-- Round progress tracker -->
@@ -2444,10 +2466,10 @@
         </div>
         <h3 style="font-size:16px;font-weight:600;
           margin-bottom:2px;">
-          📝 Aptitude + Coding Test
+          📝 Aptitude + Technical MCQs
         </h3>
         <p style="font-size:13px;color:#64748B;">
-          10 MCQs + 1 coding problem · 30 minutes
+          10 MCQs (5 Aptitude + 5 Track-specific) · 30 minutes
         </p>
       </div>
       <div id="r1-score-badge" style="
@@ -2523,7 +2545,7 @@
   </div>
 
   <!-- ═══════════ ROUND 2 ═══════════════ -->
-  <div id="section-round2" class="placement-card" style="display:none;">
+  <div id="section-round2" class="placement-card" style="display:none; opacity:0.5; pointer-events:none;">
 
     <div style="display:flex;
       justify-content:space-between;
@@ -2542,32 +2564,85 @@
         </div>
         <h3 style="font-size:16px;font-weight:600;
           margin-bottom:2px;">
-          💻 Technical Interview
+          💻 Coding + DSA Challenge
         </h3>
         <p style="font-size:13px;color:#64748B;">
-          AI interviewer · 8 questions · 20 minutes
+          Write code and pass test cases for the assigned DSA problem.
         </p>
+      </div>
+
+    <!-- Start button for Round 2 -->
+    <button id="start-r2-btn"
+      onclick="startRound2Coding()"
+      style="width:100%;padding:12px;
+      background:#1D4ED8;color:white;
+      border:none;border-radius:10px;
+      font-size:14px;font-weight:500;
+      cursor:pointer;transition:all 200ms;"
+      onmouseover="this.style.background='#1E40AF'"
+      onmouseout="this.style.background='#1D4ED8'">
+      Start Coding Challenge →
+    </button>
+
+    <!-- Coding Challenge Area -->
+    <div id="r2-coding-area" style="display:none; margin-top:20px; display:grid; grid-template-columns:1fr; gap:16px;">
+      <!-- Language Selection & Problem Picker -->
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; background:var(--bg-surface); padding:10px 14px; border-radius:10px; border:1px solid var(--border);">
+        <div>
+          <label style="font-size:12px; color:var(--text-muted); margin-right:8px; font-weight:600;">Problem:</label>
+          <select id="r2-problem-select" onchange="changeCodingProblem(this.value)" style="background:var(--bg-base); color:#ffffff; border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:13px; outline:none; cursor:pointer;">
+            <option value="two_sum">Two Sum (Easy)</option>
+            <option value="reverse_string">Reverse String (Easy)</option>
+            <option value="fizz_buzz">Fizz Buzz (Easy)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--text-muted); margin-right:8px; font-weight:600;">Language:</label>
+          <select id="r2-lang-select" onchange="changeCodingLanguage(this.value)" style="background:var(--bg-base); color:#ffffff; border:1px solid var(--border); border-radius:6px; padding:6px 10px; font-size:13px; outline:none; cursor:pointer;">
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="cpp">C++</option>
+            <option value="java">Java</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Left/Right layout: Description and Code Editor -->
+      <div style="display:grid; grid-template-columns:1fr; gap:16px;">
+        <!-- Problem Description -->
+        <div style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border); max-height:280px; overflow-y:auto;">
+          <h4 id="r2-problem-title" style="margin-top:0; font-size:15px; font-weight:700; color:#ffffff;">Two Sum</h4>
+          <p id="r2-problem-desc" style="font-size:13px; color:var(--text-secondary); line-height:1.5;">Problem description here...</p>
+          <strong style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Examples:</strong>
+          <pre id="r2-problem-examples" style="background:var(--bg-base); border:1px solid var(--border); padding:8px 12px; border-radius:8px; font-family:monospace; font-size:12px; color:var(--text-secondary); white-space:pre-wrap; margin-bottom:12px;"></pre>
+          <strong style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">Constraints:</strong>
+          <pre id="r2-problem-constraints" style="background:var(--bg-base); border:1px solid var(--border); padding:8px 12px; border-radius:8px; font-family:monospace; font-size:12px; color:var(--text-secondary); white-space:pre-wrap; margin:0;"></pre>
+        </div>
+
+        <!-- Editor Box -->
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <textarea id="r2-code-editor" style="width:100%; height:260px; background:var(--bg-surface); border:1.5px solid var(--border); border-radius:12px; padding:16px; font-size:13px; color:#ffffff; font-family:monospace; resize:vertical; outline:none; line-height:1.5;" placeholder="Write your solution here..." onfocus="this.style.borderColor='var(--fuchsia)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+          
+          <!-- Code controls -->
+          <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button onclick="runCodingTestCases()" style="padding:10px 20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:#ffffff; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">▶ Run Test Cases</button>
+            <button onclick="submitCodingChallenge()" style="padding:10px 24px; background:var(--grad-brand); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; box-shadow:var(--shadow-fuchsia);">🚀 Submit Solution</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Execution Output Box -->
+      <div id="r2-console-panel" style="display:none; background:var(--bg-base); border:1px solid var(--border); border-radius:12px; padding:16px; font-family:monospace; font-size:12px;">
+        <div style="font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <span>Console Output</span>
+          <span id="r2-console-status" style="color:var(--emerald);">Running...</span>
+        </div>
+        <div id="r2-console-output" style="color:#ffffff; white-space:pre-wrap; max-height:140px; overflow-y:auto; line-height:1.5;"></div>
       </div>
     </div>
 
-    <button id="start-r2-btn"
-      onclick="startRound2Interview()"
-      style="width:100%;padding:14px;
-      background:var(--grad-brand);color:white;
-      border:none;border-radius:10px;
-      font-size:15px;font-weight:600;
-      cursor:pointer;box-shadow:var(--shadow-fuchsia);
-      transition:all 200ms;">
-      Start Technical Interview →
-    </button>
-
-    <div id="r2-chat-area"
-      style="display:none;margin-top:20px;">
-    </div>
-
-    <div id="r2-result"
-      style="display:none;margin-top:16px;">
-    </div>
+    <!-- Final Result Area -->
+    <div id="r2-result" style="display:none; margin-top:16px;"></div>
   </div>
 
   <!-- ═══════════ ROUND 3 ═══════════════ -->

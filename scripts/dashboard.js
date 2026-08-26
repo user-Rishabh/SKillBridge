@@ -23,6 +23,7 @@ const SUPABASE_ANON_KEY = ENV_CONFIG.SUPABASE_ANON_KEY || '';
 const OPENROUTER_KEY = ENV_CONFIG.OPENROUTER_KEY || '';
 const GEMINI_KEY = ENV_CONFIG.GEMINI_KEY || '';
 const YOUTUBE_API_KEY = ENV_CONFIG.YOUTUBE_API_KEY || '';
+const GROQ_API_KEY = ENV_CONFIG.GROQ_API_KEY || '';
 
 let currentUserId;
 let currentUserName;
@@ -3017,6 +3018,39 @@ function downloadRoadmapPDF() {
 
 
 async function callAI(prompt, maxTokens = 800) {
+  if (GROQ_API_KEY) {
+    try {
+      console.log('[callAI] Attempting prompt with Groq...');
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-specdec',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: maxTokens,
+          temperature: 0.7
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          console.log('[callAI] Success with Groq');
+          return content;
+        }
+      } else {
+        const errBody = await res.json().catch(() => ({}));
+        console.warn('[callAI] Groq returned status:', res.status, errBody);
+      }
+    } catch (e) {
+      console.error('[callAI] Groq call failed:', e);
+    }
+  }
+
   const models = [
     'meta-llama/llama-3.3-70b-instruct:free',
     'openai/gpt-oss-120b:free',
@@ -3969,6 +4003,256 @@ let placementProgress = {
   r3Score: 0
 };
 
+// ── Placement Question Bank & Coding Problems ─────────────────
+const PLACEMENT_QUESTIONS = {
+  aptitude: [
+    {
+      id: "apt_1",
+      question: "A train running at the speed of 60 km/hr crosses a pole in 9 seconds. What is the length of the train?",
+      options: ["120 metres", "150 metres", "324 metres", "180 metres"],
+      correct: 1,
+      explanation: "Speed = 60 * 5/18 = 50/3 m/s. Length = Speed * Time = 50/3 * 9 = 150 metres."
+    },
+    {
+      id: "apt_2",
+      question: "Find the missing number in the sequence: 3, 5, 9, 17, 33, ?",
+      options: ["49", "60", "65", "51"],
+      correct: 2,
+      explanation: "The difference between consecutive terms doubles each time: +2, +4, +8, +16, and the next is +32. 33 + 32 = 65."
+    },
+    {
+      id: "apt_3",
+      question: "Choose the word that is most nearly opposite in meaning to 'OBSTINATE'.",
+      options: ["Stubborn", "Flexible", "Rigid", "Dogmatic"],
+      correct: 1,
+      explanation: "'Obstinate' means stubborn or refusing to change; its opposite is flexible or yielding."
+    },
+    {
+      id: "apt_4",
+      question: "If a family budget is Rs. 50,000, and 25% is spent on rent, 20% on food, 15% on education, and the rest is saved, how much money is saved?",
+      options: ["Rs. 20,000", "Rs. 15,000", "Rs. 25,000", "Rs. 10,000"],
+      correct: 0,
+      explanation: "Percentage spent = 25% + 20% + 15% = 60%. Saved = 100% - 60% = 40%. 40% of 50,000 = Rs. 20,000."
+    },
+    {
+      id: "apt_5",
+      question: "If BLUE is coded as 2-12-21-5, how is RED coded?",
+      options: ["18-5-4", "19-6-5", "18-4-5", "17-5-4"],
+      correct: 0,
+      explanation: "Each letter is represented by its alphabetical index: B=2, L=12, U=21, E=5. For RED: R=18, E=5, D=4."
+    }
+  ],
+  software: [
+    {
+      id: "sw_1",
+      question: "Which of the following is NOT a JavaScript primitive data type?",
+      options: ["String", "Number", "Array", "Symbol"],
+      correct: 2,
+      explanation: "JavaScript primitives include String, Number, Boolean, Undefined, Null, BigInt, and Symbol. Arrays are Objects."
+    },
+    {
+      id: "sw_2",
+      question: "What is encapsulation in Object-Oriented Programming?",
+      options: [
+        "Creating a subclass from a parent class",
+        "Restricting direct access to some of an object's components",
+        "The ability to process objects differently based on their data type",
+        "Defining multiple methods with the same name but different parameters"
+      ],
+      correct: 1,
+      explanation: "Encapsulation binds data and code together, restricting direct outer access through visibility modifiers (e.g. private)."
+    },
+    {
+      id: "sw_3",
+      question: "Which SQL command is used to add a new column to an existing table?",
+      options: ["UPDATE TABLE", "INSERT COLUMN", "ALTER TABLE", "ADD COLUMN"],
+      correct: 2,
+      explanation: "The ALTER TABLE command is used to add, delete, or modify columns in an existing table structure."
+    },
+    {
+      id: "sw_4",
+      question: "What is the purpose of 'git stash'?",
+      options: [
+        "Delete local untracked files",
+        "Push changes to a remote repository",
+        "Temporarily shelves changes to work on a clean directory",
+        "Merge another branch into the current one"
+      ],
+      correct: 2,
+      explanation: "git stash saves your local modifications away and reverts the working directory to match the HEAD commit."
+    },
+    {
+      id: "sw_5",
+      question: "Which layer of the OSI model is responsible for routing data packets across networks?",
+      options: ["Physical Layer", "Transport Layer", "Network Layer", "Application Layer"],
+      correct: 2,
+      explanation: "The Network Layer manages logical addressing (IP) and determines paths/routing for packets."
+    },
+    {
+      id: "sw_6",
+      question: "Which HTTP status code represents a successful resource creation (e.g. from a POST request)?",
+      options: ["200 OK", "201 Created", "204 No Content", "400 Bad Request"],
+      correct: 1,
+      explanation: "The HTTP 201 Created status code indicates that the request has been fulfilled and has resulted in one or more new resources being created."
+    }
+  ],
+  data: [
+    {
+      id: "ai_1",
+      question: "In Python, which list method adds an element to the end of a list?",
+      options: ["add()", "insert()", "append()", "push()"],
+      correct: 2,
+      explanation: "The list.append(x) method adds an item to the absolute end of the list in Python."
+    },
+    {
+      id: "ai_2",
+      question: "Which machine learning algorithm is commonly used for classification based on feature proximity voting?",
+      options: ["Linear Regression", "K-Means", "KNN (K-Nearest Neighbors)", "Random Forest"],
+      correct: 2,
+      explanation: "KNN classifies objects based on the closest training examples in the feature space by majority vote."
+    },
+    {
+      id: "ai_3",
+      question: "What is the median of the following dataset: [3, 9, 4, 7, 5]?",
+      options: ["4", "5", "7", "5.6"],
+      correct: 1,
+      explanation: "Sorted dataset: [3, 4, 5, 7, 9]. The middle term is 5."
+    },
+    {
+      id: "ai_4",
+      question: "Which SQL function is used to return the number of rows that match a specified criterion?",
+      options: ["SUM()", "COUNT()", "TOTAL()", "AVG()"],
+      correct: 1,
+      explanation: "The COUNT() function returns the number of rows that match a specified criteria in a SELECT statement."
+    },
+    {
+      id: "ai_5",
+      question: "A fair six-sided die is rolled. What is the probability of rolling an even number?",
+      options: ["1/3", "1/6", "1/2", "2/3"],
+      correct: 2,
+      explanation: "Even outcomes: {2, 4, 6} (3 total). Total outcomes: 6. Probability = 3/6 = 1/2."
+    },
+    {
+      id: "ai_6",
+      question: "What is the average time complexity of searching for an element in a balanced binary search tree (BST)?",
+      options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+      correct: 1,
+      explanation: "For a balanced BST, each comparison discards half of the tree, resulting in an O(log n) average search time."
+    }
+  ],
+  design: [
+    {
+      id: "ds_1",
+      question: "Which UX research method is best suited for gathering qualitative, open-ended insights into user behavior?",
+      options: ["A/B Testing", "Usability Testing Interviews", "Google Analytics", "Survey Questionnaires"],
+      correct: 1,
+      explanation: "Usability testing interviews gather qualitative details about what users experience, struggle with, and think in real-time."
+    },
+    {
+      id: "ds_2",
+      question: "What design principle dictates that elements close to each other are perceived as related?",
+      options: ["Contrast", "Proximity", "Visual Hierarchy", "Alignment"],
+      correct: 1,
+      explanation: "The Gestalt Law of Proximity states that objects close to each other tend to be grouped together conceptually."
+    },
+    {
+      id: "ds_3",
+      question: "Which typeface style is generally preferred for printed body text (e.g. books) to increase readability?",
+      options: ["Sans-serif", "Serif", "Decorative", "Script"],
+      correct: 1,
+      explanation: "Serifs (small details on the ends of strokes) help guide the eye along lines of text in printed mediums."
+    },
+    {
+      id: "ds_4",
+      question: "In Figma, how do you create an instance of a component?",
+      options: [
+        "Use the duplicate command (Ctrl+D) on a Component",
+        "Drag the component from the Assets panel",
+        "Group the component with another element",
+        "Create a Frame around the component"
+      ],
+      correct: 1,
+      explanation: "Dragging a component from the Assets panel or duplicating a component publishes an Instance that stays synced."
+    },
+    {
+      id: "ds_5",
+      question: "Which colors are directly opposite each other on the color wheel?",
+      options: ["Analogous", "Complementary", "Monochromatic", "Triadic"],
+      correct: 1,
+      explanation: "Complementary colors are opposite (e.g. red and green), creating high visual contrast when placed next to each other."
+    },
+    {
+      id: "ds_6",
+      question: "Under WCAG 2.1 guidelines, what is the minimum required color contrast ratio for normal body text (Level AA)?",
+      options: ["3:1", "4.5:1", "7:1", "2:1"],
+      correct: 1,
+      explanation: "WCAG AA requires a contrast ratio of at least 4.5:1 for normal text (under 18pt or 14pt bold) to ensure readability."
+    }
+  ]
+};
+
+const CODING_PROBLEMS = [
+  {
+    id: "two_sum",
+    title: "Two Sum",
+    difficulty: "Easy",
+    description: "Given an array of integers `nums` and an integer `target`, return indices of the two numbers such that they add up to `target`.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.",
+    examples: "Input: nums = [2,7,11,15], target = 9\nOutput: [0,1]\nExplanation: nums[0] + nums[1] == 9, so we return [0, 1].",
+    constraints: "- 2 <= nums.length <= 10^4\n- -10^9 <= nums[i] <= 10^9\n- -10^9 <= target <= 10^9",
+    topics: ["Array", "Hash Table"],
+    testCases: [
+      { input: "[2, 7, 11, 15], 9", output: "[0,1]" },
+      { input: "[3, 2, 4], 6", output: "[1,2]" },
+      { input: "[3, 3], 6", output: "[0,1]" }
+    ],
+    starterCodes: {
+      javascript: `function twoSum(nums, target) {\n    // Write your code here\n    \n}`,
+      python: `def two_sum(nums, target):\n    # Write your code here\n    pass`,
+      cpp: `#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        \n    }\n};`,
+      java: `import java.util.*;\n\nclass Solution {\n    public int[] twoSum(int[] nums, int target) {\n        \n    }\n}`
+    }
+  },
+  {
+    id: "reverse_string",
+    title: "Reverse String",
+    difficulty: "Easy",
+    description: "Write a function that reverses an array of characters in-place with O(1) extra memory.",
+    examples: "Input: s = [\"h\",\"e\",\"l\",\"l\",\"o\"]\nOutput: [\"o\",\"l\",\"l\",\"e\",\"h\"]",
+    constraints: "1 <= s.length <= 10^5",
+    topics: ["Two Pointers", "String"],
+    testCases: [
+      { input: '["h","e","l","l","o"]', output: '["o","l","l","e","h"]' },
+      { input: '["H","a","n","n","a","h"]', output: '["h","a","n","n","a","H"]' }
+    ],
+    starterCodes: {
+      javascript: `function reverseString(s) {\n    // Write your code here\n    \n}`,
+      python: `def reverse_string(s):\n    # Write your code here\n    pass`,
+      cpp: `#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    void reverseString(vector<char>& s) {\n        \n    }\n};`,
+      java: `class Solution {\n    public void reverseString(char[] s) {\n        \n    }\n}`
+    }
+  },
+  {
+    id: "fizz_buzz",
+    title: "Fizz Buzz",
+    difficulty: "Easy",
+    description: "Given an integer `n`, return a string array answer (1-indexed) where:\n- answer[i] == \"FizzBuzz\" if i is divisible by 3 and 5.\n- answer[i] == \"Fizz\" if i is divisible by 3.\n- answer[i] == \"Buzz\" if i is divisible by 5.\n- answer[i] == i (as a string) if none of the above conditions are true.",
+    examples: "Input: n = 3\nOutput: [\"1\",\"2\",\"Fizz\"]",
+    constraints: "1 <= n <= 10^4",
+    topics: ["Math", "Simulation"],
+    testCases: [
+      { input: "3", output: '["1","2","Fizz"]' },
+      { input: "5", output: '["1","2","Fizz","4","Buzz"]' },
+      { input: "15", output: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]' }
+    ],
+    starterCodes: {
+      javascript: `function fizzBuzz(n) {\n    // Write your code here\n    \n}`,
+      python: `def fizz_buzz(n):\n    # Write your code here\n    pass`,
+      cpp: `#include <vector>\n#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<string> fizzBuzz(int n) {\n        \n    }\n};`,
+      java: `import java.util.*;\n\nclass Solution {\n    public List<String> fizzBuzz(int n) {\n        \n    }\n}`
+    }
+  }
+];
+
 // ── Init placement tab ───────────────────
 async function initPlacementTab() {
   const { data: attempts } = await supabase
@@ -3976,14 +4260,103 @@ async function initPlacementTab() {
     .select('*')
     .eq('user_id', currentUserId);
 
-  if (attempts) {
+  // Reset progress state
+  placementProgress.r1 = false;
+  placementProgress.r2 = false;
+  placementProgress.r3 = false;
+  placementProgress.r1Score = 0;
+  placementProgress.r2Score = 0;
+  placementProgress.r3Score = 0;
+
+  if (attempts && attempts.length > 0) {
+    placementProgress.resume = true; // Auto-unlock resume stage if they have attempts
     attempts.forEach(att => {
-      if (att.round === 1 && att.passed) placementProgress.r1 = true, placementProgress.r1Score = att.score;
-      if (att.round === 2 && att.passed) placementProgress.r2 = true, placementProgress.r2Score = att.score;
-      if (att.round === 3 && att.passed) placementProgress.r3 = true, placementProgress.r3Score = att.score;
+      if (att.round === 1) {
+        if (att.passed) placementProgress.r1 = true;
+        if (att.score > placementProgress.r1Score) placementProgress.r1Score = att.score;
+      }
+      if (att.round === 2) {
+        if (att.passed) placementProgress.r2 = true;
+        if (att.score > placementProgress.r2Score) placementProgress.r2Score = att.score;
+      }
+      if (att.round === 3) {
+        if (att.passed) placementProgress.r3 = true;
+        if (att.score > placementProgress.r3Score) placementProgress.r3Score = att.score;
+      }
     });
   }
+
+  updatePlacementDashboardStats(attempts);
   updatePlacementProgress();
+}
+
+function updatePlacementDashboardStats(attempts) {
+  if (!attempts || attempts.length === 0) {
+    document.getElementById('placement-readiness-stat').textContent = 'Not Assessed';
+    document.getElementById('placement-readiness-stat').style.color = 'var(--text-muted)';
+    document.getElementById('placement-rounds-stat').textContent = '0 / 3';
+    document.getElementById('placement-stage-stat').textContent = 'Round 1';
+    document.getElementById('placement-best-score').textContent = 'N/A';
+    document.getElementById('placement-last-date').textContent = 'Never';
+    return;
+  }
+
+  const completedRounds = new Set();
+  let bestScore = 0;
+  let lastAttemptDate = null;
+  let lastAttemptMs = 0;
+
+  attempts.forEach(att => {
+    completedRounds.add(att.round);
+    if (att.score > bestScore) {
+      bestScore = att.score;
+    }
+    const dateMs = Date.parse(att.created_at || att.started_at);
+    if (dateMs && dateMs > lastAttemptMs) {
+      lastAttemptMs = dateMs;
+      lastAttemptDate = new Date(dateMs).toLocaleDateString('en-IN');
+    }
+  });
+
+  const bestScores = { 1: null, 2: null, 3: null };
+  attempts.forEach(att => {
+    if (bestScores[att.round] === null || att.score > bestScores[att.round]) {
+      bestScores[att.round] = att.score;
+    }
+  });
+
+  const scoresToAverage = Object.values(bestScores).filter(s => s !== null);
+  if (scoresToAverage.length > 0) {
+    const avg = Math.round(scoresToAverage.reduce((a, b) => a + b, 0) / scoresToAverage.length);
+    document.getElementById('placement-readiness-stat').textContent = `${avg}%`;
+    document.getElementById('placement-readiness-stat').style.color = 'var(--emerald)';
+  } else {
+    document.getElementById('placement-readiness-stat').textContent = 'Not Assessed';
+    document.getElementById('placement-readiness-stat').style.color = 'var(--text-muted)';
+  }
+
+  const passedRounds = new Set();
+  attempts.forEach(att => {
+    if (att.passed) passedRounds.add(att.round);
+  });
+  document.getElementById('placement-rounds-stat').textContent = `${passedRounds.size} / 3`;
+
+  let currentStage = 'Round 1';
+  if (!placementProgress.resume) {
+    currentStage = 'Resume Upload';
+  } else if (!passedRounds.has(1)) {
+    currentStage = 'Round 1';
+  } else if (!passedRounds.has(2)) {
+    currentStage = 'Round 2';
+  } else if (!passedRounds.has(3)) {
+    currentStage = 'Round 3';
+  } else {
+    currentStage = 'Placement Ready!';
+  }
+  document.getElementById('placement-stage-stat').textContent = currentStage;
+
+  document.getElementById('placement-best-score').textContent = `${bestScore}%`;
+  document.getElementById('placement-last-date').textContent = lastAttemptDate || 'Never';
 }
 
 // ── Resume Helpers ───────────────────────
@@ -4094,11 +4467,10 @@ async function processAndAnalyzeResume() {
   `;
   
   placementProgress.resume = true;
-  placementProgress.r1 = true; // Unlock round 1 automatically
   updatePlacementProgress();
 }
 
-// ── Round 1: Aptitude + Coding ──────────
+// ── Round 1: Aptitude + Technical MCQs ──────────
 function setCompanyType(idx, btn) {
   const types = ['Product (FAANG)', 'Service (TCS/Infosys)', 'Startup'];
   selectedCompanyType = types[idx];
@@ -4113,38 +4485,65 @@ function setCompanyType(idx, btn) {
 }
 
 let currentR1Test = null;
+let r1TimerInterval;
+let r1TimeLeft = 30 * 60; // 30 minutes
 
 async function startRound1Test() {
   const area = document.getElementById('r1-test-area');
-  area.innerHTML = '<div style="padding:40px;text-align:center;"><div style="font-size:24px; margin-bottom:12px; animation: pulse 1.5s infinite;">🧠</div><div style="color:var(--emerald); font-weight:600;">Generating realistic technical test for ' + selectedCompanyType + '...</div><div style="font-size:12px; color:var(--text-muted); margin-top:8px;">This might take a moment.</div></div>';
+  area.innerHTML = '<div style="padding:40px;text-align:center;"><div style="font-size:24px; margin-bottom:12px; animation: pulse 1.5s infinite;">🧠</div><div style="color:var(--emerald); font-weight:600;">Selecting personalized questions for your career path...</div><div style="font-size:12px; color:var(--text-muted); margin-top:8px;">This will only take a second.</div></div>';
   area.style.display = 'block';
   document.getElementById('start-r1-btn').style.display = 'none';
 
-  const prompt = `Generate a technical test for a ${selectedCompanyType} software engineering role. 
-  Include exactly 10 Technical MCQs (mix of data structures, web tech, logic) and 1 Coding Question.
-  Return ONLY valid JSON format: {"mcqs": [{"q": "...", "a": ["opt1", "opt2", "opt3", "opt4"], "correct": 0}], "coding": {"q": "..."}}
-  Ensure "correct" is the integer index (0-3) of the correct answer.`;
-
-  const result = await callAI(prompt);
-  try {
-    const test = JSON.parse(result.match(/\{[\s\S]*\}/)[0]);
-    currentR1Test = test;
-    renderRound1(test);
-  } catch (e) {
-    area.innerHTML = '<div style="color:var(--rose); padding:20px;">Failed to generate test. Please try again.</div>';
-    document.getElementById('start-r1-btn').style.display = 'block';
+  // 1. Fetch profile to get career track and weaknesses
+  const { data: profile } = await supabase.from('profiles').select('goal, session_history').eq('id', currentUserId).single();
+  const goal = profile?.goal || '';
+  const { track } = getCareerTrackFromGoal(goal);
+  
+  // Map track to category key
+  let category = 'software';
+  if (track === "UI/UX & Design") {
+    category = 'design';
+  } else if (track === "AI & Data") {
+    category = 'data';
   }
-}
 
-let r1TimerInterval;
-let r1TimeLeft = 30 * 60; // 30 minutes
+  const allAptitude = PLACEMENT_QUESTIONS.aptitude;
+  
+  // Select 5 Aptitude questions (shuffle and take all 5)
+  const selectedApt = [...allAptitude].sort(() => 0.5 - Math.random()).slice(0, 5);
+
+  // Identify weak skill from Quick Test history
+  let weakSkill = '';
+  if (profile?.session_history) {
+    const assessments = profile.session_history.filter(h => h.type === 'assessment');
+    if (assessments.length > 0) {
+      weakSkill = assessments[0].weakSkill || '';
+    }
+  }
+
+  // Filter technical questions and prioritize weak skill
+  const techPool = PLACEMENT_QUESTIONS[category] || PLACEMENT_QUESTIONS.software;
+  
+  const selectedTech = [...techPool].sort((a, b) => {
+    const aMatch = weakSkill && (a.explanation.toLowerCase().includes(weakSkill.toLowerCase()) || a.question.toLowerCase().includes(weakSkill.toLowerCase()));
+    const bMatch = weakSkill && (b.explanation.toLowerCase().includes(weakSkill.toLowerCase()) || b.question.toLowerCase().includes(weakSkill.toLowerCase()));
+    if (aMatch && !bMatch) return -1;
+    if (!aMatch && bMatch) return 1;
+    return 0.5 - Math.random();
+  }).slice(0, 5);
+
+  const testQuestions = [...selectedApt, ...selectedTech];
+  currentR1Test = { mcqs: testQuestions };
+
+  renderRound1(currentR1Test);
+}
 
 function renderRound1(test) {
   const area = document.getElementById('r1-test-area');
   let html = `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:var(--bg-surface); padding:12px 18px; border-radius:12px; border:1px solid var(--border); box-shadow:var(--shadow-card);">
       <div style="font-weight:600; font-size:14px; color:var(--emerald);">🕒 Time Remaining: <span id="r1-timer" style="font-weight:700; font-size:16px;">30:00</span></div>
-      <div style="font-size:12px; color:var(--text-muted);">Do not refresh this page.</div>
+      <div style="font-size:12px; color:var(--text-muted);">Aptitude (Q1-5) + Technical (Q6-10)</div>
     </div>
     <div style="padding:10px;">
   `;
@@ -4152,8 +4551,8 @@ function renderRound1(test) {
   test.mcqs.forEach((m, i) => {
     html += `
       <div style="margin-bottom:24px; background:var(--bg-card); padding:16px; border-radius:12px; border:1px solid var(--border);">
-        <div style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text-primary);">Q${i + 1}: ${m.q}</div>
-        ${m.a.map((opt, oi) => `
+        <div style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text-primary);">Q${i + 1}: ${m.question}</div>
+        ${m.options.map((opt, oi) => `
           <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px; cursor:pointer; padding:8px 12px; background:var(--bg-surface); border-radius:8px; border:1px solid var(--border); transition:all 200ms;"
             onmouseover="this.style.borderColor='var(--fuchsia)'" onmouseout="this.style.borderColor='var(--border)'">
             <input type="radio" name="mcq-${i}" value="${oi}"> <span>${opt}</span>
@@ -4164,13 +4563,6 @@ function renderRound1(test) {
   });
 
   html += `
-    <div style="margin-bottom:24px; background:var(--bg-card); padding:16px; border-radius:12px; border:1px solid var(--border);">
-      <div style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text-primary);">💻 Coding Challenge</div>
-      <div style="background:var(--bg-base); color:var(--text-secondary); padding:16px; border-radius:8px; font-family:monospace; font-size:13px; margin-bottom:16px; border:1px solid var(--border); line-height:1.5;">
-        ${test.coding.q}
-      </div>
-      <textarea id="coding-ans" style="width:100%;height:160px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;color:var(--text-primary);font-family:monospace;resize:vertical;" placeholder="Write your logic or code here..."></textarea>
-    </div>
     <button onclick="submitRound1()" id="submit-r1-btn" style="width:100%;padding:14px;background:var(--grad-brand);color:white;border:none;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;box-shadow:var(--shadow-fuchsia);transition:all 200ms;">Submit Answers</button>
   </div>`;
   area.innerHTML = html;
@@ -4185,7 +4577,7 @@ function renderRound1(test) {
     const tEl = document.getElementById('r1-timer');
     if (tEl) {
       tEl.textContent = `${m}:${s}`;
-      if (r1TimeLeft < 300) tEl.style.color = 'var(--rose)'; // Red when < 5 mins
+      if (r1TimeLeft < 300) tEl.style.color = 'var(--rose)';
     }
     if (r1TimeLeft <= 0) {
        clearInterval(r1TimerInterval);
@@ -4203,46 +4595,74 @@ async function submitRound1() {
     btn.disabled = true;
   }
 
-  showToast('AI is evaluating your answers...', 'info');
+  showToast('Evaluating your answers...', 'info');
 
-  // Grade MCQs deterministically
-  let mcqScore = 0;
+  let correctCount = 0;
+  let aptitudeCorrect = 0;
+  let technicalCorrect = 0;
+  const answers = [];
+  const strongAreas = [];
+  const weakAreas = [];
+  let explanationsHTML = '';
+
   if (currentR1Test && currentR1Test.mcqs) {
     currentR1Test.mcqs.forEach((m, i) => {
       const selected = document.querySelector(`input[name="mcq-${i}"]:checked`);
-      if (selected && parseInt(selected.value) === m.correct) {
-        mcqScore++;
+      const userAnsIdx = selected ? parseInt(selected.value) : -1;
+      const isCorrect = userAnsIdx === m.correct;
+      const isAptitude = i < 5;
+
+      answers.push({
+        questionId: m.id,
+        userAnswer: userAnsIdx,
+        correct: isCorrect
+      });
+
+      if (isCorrect) {
+        correctCount++;
+        if (isAptitude) aptitudeCorrect++;
+        else technicalCorrect++;
+        const areaName = isAptitude ? 'Aptitude Reasoning' : 'Core Technology';
+        if (!strongAreas.includes(areaName)) strongAreas.push(areaName);
+      } else {
+        const areaName = isAptitude ? 'Aptitude Reasoning' : 'Core Technology';
+        if (!weakAreas.includes(areaName)) weakAreas.push(areaName);
+        
+        explanationsHTML += `
+          <div style="margin-bottom: 14px; padding: 12px; background: rgba(244,63,94,0.05); border-left: 3px solid var(--rose); border-radius: 6px; font-size:12px;">
+            <strong>Q${i + 1}: ${m.question}</strong><br>
+            <span style="color: var(--text-error);">Your answer: ${userAnsIdx !== -1 ? m.options[userAnsIdx] : 'No Answer'}</span><br>
+            <span style="color: var(--emerald);">Correct answer: ${m.options[m.correct]}</span><br>
+            <p style="margin: 6px 0 0 0; color: var(--text-secondary); font-style: italic;">${m.explanation}</p>
+          </div>
+        `;
       }
     });
   }
 
-  // Grade coding challenge with AI
-  const codeAns = document.getElementById('coding-ans')?.value || '';
-  let codeScore = 0;
-  let strengths = 'Syntax structure';
-  let weakAreas = 'Algorithmic Optimization';
-
-  if (codeAns.trim().length > 10 && currentR1Test) {
-    const prompt = `Evaluate this code answer for the question: "${currentR1Test.coding.q}". 
-    Candidate's Code: "${codeAns}". 
-    Score it out of 50. Return ONLY valid JSON: {"score": <number 0-50>, "strength": "<1-3 words>", "weakness": "<1-3 words>"}`;
-    try {
-      const res = await callAI(prompt);
-      const parsed = JSON.parse(res.match(/\{[\s\S]*\}/)[0]);
-      codeScore = parsed.score || 0;
-      strengths = parsed.strength || strengths;
-      weakAreas = parsed.weakness || weakAreas;
-    } catch(e) {
-      console.log('AI coding eval fallback');
-      codeScore = 25; 
-    }
-  }
-
-  // Max 50 for MCQs (10 * 5) + Max 50 for Code
-  const finalScore = (mcqScore * 5) + codeScore;
+  const finalScore = correctCount * 10;
   const passed = finalScore >= 70;
 
-  await savePlacementAttempt(1, finalScore, passed);
+  const r1Details = {
+    companyType: selectedCompanyType,
+    aptitudeScore: aptitudeCorrect * 20,
+    technicalScore: technicalCorrect * 20,
+    answers: answers
+  };
+
+  await supabase.from('placement_attempts').insert({
+    user_id: currentUserId,
+    round: 1,
+    score: finalScore,
+    passed: passed,
+    details: r1Details
+  });
+
+  // Reload statistics dynamically
+  const { data: refreshedAttempts } = await supabase.from('placement_attempts').select('*').eq('user_id', currentUserId);
+  if (refreshedAttempts) {
+    updatePlacementDashboardStats(refreshedAttempts);
+  }
 
   document.getElementById('r1-test-area').style.display = 'none';
   const res = document.getElementById('r1-result');
@@ -4252,23 +4672,37 @@ async function submitRound1() {
     <div style="padding:24px;background:var(--bg-card);border-radius:16px;border:1px solid ${passed ? 'var(--emerald)' : 'var(--rose)'};box-shadow:var(--shadow-card);">
       <div style="text-align:center;margin-bottom:20px;">
         <div style="font-size:42px;margin-bottom:12px;text-shadow:0 0 20px ${passed ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)'};">${passed ? '🎉' : '❌'}</div>
-        <div style="font-size:22px;font-weight:800;color:${passed ? 'var(--emerald)' : 'var(--rose)'};">Score: ${finalScore}/100</div>
-        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">(MCQs: ${mcqScore*5}/50 | Coding: ${codeScore}/50)</div>
+        <div style="font-size:22px;font-weight:800;color:${passed ? 'var(--emerald)' : 'var(--rose)'};">Score: ${finalScore}%</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">(${correctCount} / 10 Correct | Aptitude: ${r1Details.aptitudeScore}% | Technical: ${r1Details.technicalScore}%)</div>
         <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;">
-          ${passed ? 'Outstanding! You have strong fundamentals and unlocked Round 2.' : 'Almost there. Keep practicing your logic and try again!'}
+          ${passed ? 'Outstanding! You cleared Round 1 and unlocked Round 2.' : 'Needs Improvement. You need at least 70% to unlock Round 2. Check the review below and try again!'}
         </p>
       </div>
       
-      <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);">
-        <h4 style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">AI Analysis</h4>
-        <div style="font-size:13px;color:var(--text-primary);line-height:1.6;">
-          <strong>Strengths:</strong> ${strengths}.<br>
-          <strong style="color:var(--amber);">Areas to Improve:</strong> ${weakAreas}.<br>
-          <strong>Recommendation:</strong> ${passed ? 'Ready for technical interview.' : 'Review core concepts and practice more timed challenges.'}
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+        <div style="background:rgba(16,185,129,0.03); border:1px solid rgba(16,185,129,0.2); padding:14px; border-radius:10px;">
+          <strong style="color:var(--emerald); font-size:12px; text-transform:uppercase; display:block; margin-bottom:6px;">✓ Strengths</strong>
+          <div style="font-size:13px; color:var(--text-secondary);">${strongAreas.join(', ') || 'None identified'}</div>
+        </div>
+        <div style="background:rgba(217,119,6,0.03); border:1px solid rgba(217,119,6,0.2); padding:14px; border-radius:10px;">
+          <strong style="color:var(--amber); font-size:12px; text-transform:uppercase; display:block; margin-bottom:6px;">⚠ Areas to Improve</strong>
+          <div style="font-size:13px; color:var(--text-secondary);">${weakAreas.join(', ') || 'None identified'}</div>
         </div>
       </div>
+
+      ${explanationsHTML ? `
+        <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);max-height:240px;overflow-y:auto;margin-bottom:20px;">
+          <h4 style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;margin-top:0;">Question Review</h4>
+          ${explanationsHTML}
+        </div>
+      ` : ''}
       
-      ${passed ? `<button onclick="scrollToRound('step-r2')" style="width:100%;margin-top:20px;padding:12px;background:var(--emerald);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Proceed to Round 2 →</button>` : ''}
+      <div style="display:flex; gap:12px;">
+        ${passed 
+          ? `<button onclick="scrollToRound('step-r2')" style="flex:1;padding:12px;background:var(--emerald);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Proceed to Round 2 →</button>`
+          : `<button onclick="retryRound1()" style="flex:1;padding:12px;background:var(--rose);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Retry Round 1</button>`
+        }
+      </div>
     </div>
   `;
 
@@ -4279,392 +4713,333 @@ async function submitRound1() {
   }
 }
 
-// ── Round 2: Technical Interview ─────────
-let r2TimerInterval;
-let r2TimeLeft = 20 * 60; // 20 mins
-let r2ChatHistory = [];
-
-// Speech Synthesis (AI Speaks)
-function speakText(text) {
-  if (!('speechSynthesis' in window)) {
-    console.warn("Speech Synthesis not supported in this browser.");
-    return;
-  }
-
-  // Cancel any active speech first
-  window.speechSynthesis.cancel();
-
-  const startVisuals = () => {
-    const waveEl = document.getElementById('r2-audio-waves');
-    const statusText = document.getElementById('r2-status-text');
-    const statusDot = document.getElementById('r2-status-dot');
-    if (waveEl) waveEl.style.display = 'flex';
-    if (statusText) statusText.textContent = 'AI is speaking...';
-    if (statusDot) statusDot.style.color = '#EC4899'; // Pink fuchsia dot
-  };
-
-  const stopVisuals = () => {
-    const waveEl = document.getElementById('r2-audio-waves');
-    const statusText = document.getElementById('r2-status-text');
-    const statusDot = document.getElementById('r2-status-dot');
-    if (waveEl) waveEl.style.display = 'none';
-    if (statusText) statusText.textContent = 'Live Interview';
-    if (statusDot) statusDot.style.color = 'var(--amber)';
-  };
-
-  const speak = () => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-    
-    // Find a premium/clear English voice
-    const englishVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||
-                         voices.find(v => v.lang.startsWith('en') && v.name.includes('Natural')) ||
-                         voices.find(v => v.lang.startsWith('en')) ||
-                         voices[0];
-    if (englishVoice) {
-      utterance.voice = englishVoice;
-    }
-    utterance.rate = 0.95; // Slightly slower for readability
-    utterance.pitch = 1.0;
-
-    utterance.onstart = () => {
-      startVisuals();
-    };
-
-    utterance.onend = () => {
-      stopVisuals();
-    };
-
-    utterance.onerror = () => {
-      stopVisuals();
-    };
-
-    window.speechSynthesis.speak(utterance);
-  };
-
-  // If voices are not loaded yet, wait for them
-  if (window.speechSynthesis.getVoices().length === 0) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      speak();
-      window.speechSynthesis.onvoiceschanged = null; // Clear listener
-    };
-  } else {
-    speak();
-  }
+function retryRound1() {
+  document.getElementById('r1-result').style.display = 'none';
+  document.getElementById('start-r1-btn').style.display = 'block';
+  document.getElementById('r1-test-area').style.display = 'none';
 }
 
-// Speech Recognition (User Speaks)
-let r2Recognition = null;
-let r2IsListening = false;
+window.retryRound1 = retryRound1;
 
-function toggleR2SpeechRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    showToast("Speech Recognition is not supported in this browser. Please use Chrome or Edge.", "error");
-    return;
-  }
+// ── Round 2: Coding & DSA Challenge ──────
+let currentR2Problem = null;
+let currentR2Lang = 'javascript';
 
-  const micBtn = document.getElementById('r2-mic-btn');
-  const micIcon = document.getElementById('r2-mic-icon');
-  const inputEl = document.getElementById('r2-input');
-
-  if (r2IsListening) {
-    if (r2Recognition) r2Recognition.stop();
-    return;
-  }
-
-  if (!r2Recognition) {
-    r2Recognition = new SpeechRecognition();
-    r2Recognition.continuous = false;
-    r2Recognition.interimResults = false;
-    r2Recognition.lang = 'en-US';
-
-    r2Recognition.onstart = () => {
-      r2IsListening = true;
-      if (micBtn) {
-        micBtn.style.background = 'rgba(239, 68, 68, 0.15)';
-        micBtn.style.borderColor = '#EF4444';
-        micBtn.style.color = '#EF4444';
-        micBtn.style.animation = 'pulseGlowRed 1.5s infinite';
-      }
-      if (micIcon) micIcon.style.transform = 'scale(1.15)';
-      if (inputEl) inputEl.placeholder = 'Listening... Speak clearly now...';
-      showToast("Microphone is active. Start speaking!", "info");
-    };
-
-    r2Recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      if (inputEl) {
-        inputEl.value = transcript;
-        inputEl.placeholder = 'Type or use mic to answer...';
-      }
-    };
-
-    r2Recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error !== 'no-speech') {
-        showToast(`Speech recognition error: ${event.error}`, "error");
-      }
-      stopListeningUI();
-    };
-
-    r2Recognition.onend = () => {
-      stopListeningUI();
-    };
-  }
-
-  try {
-    // If AI is currently speaking, cancel it before user starts speaking
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-    r2Recognition.start();
-  } catch (e) {
-    console.error('Recognition start error:', e);
-  }
-
-  function stopListeningUI() {
-    r2IsListening = false;
-    if (micBtn) {
-      micBtn.style.background = 'rgba(255, 255, 255, 0.05)';
-      micBtn.style.borderColor = 'var(--border)';
-      micBtn.style.color = 'var(--text-muted)';
-      micBtn.style.animation = 'none';
-    }
-    if (micIcon) micIcon.style.transform = 'scale(1)';
-    if (inputEl && inputEl.placeholder === 'Listening... Speak clearly now...') {
-      inputEl.placeholder = 'Type or use mic to answer...';
-    }
-  }
-}
-
-// Inject custom styles for mic button and pulse animation if not exists
-if (!document.getElementById('r2-voice-styles')) {
-  const styleEl = document.createElement('style');
-  styleEl.id = 'r2-voice-styles';
-  styleEl.innerHTML = `
-    @keyframes pulseGlowRed {
-      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-    }
-    @keyframes r2Wave {
-      0% { height: 4px; }
-      100% { height: 14px; }
-    }
-    .r2-audio-bar {
-      display: inline-block;
-      width: 2px;
-      background: #EC4899;
-      border-radius: 1px;
-    }
-  `;
-  document.head.appendChild(styleEl);
-}
-
-// Expose functions globally for HTML event handlers
-window.toggleR2SpeechRecognition = toggleR2SpeechRecognition;
-
-async function startRound2Interview() {
-  const area = document.getElementById('r2-chat-area');
-  area.style.display = 'block';
+function startRound2Coding() {
   document.getElementById('start-r2-btn').style.display = 'none';
-
-  r2ChatHistory = [
-    { role: 'ai', text: `Hello! I am your Technical AI Interviewer for the ${selectedCompanyType} role. I've reviewed your resume. Are you ready to begin?` }
-  ];
-
-  area.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; background:var(--bg-surface); padding:10px 16px; border-radius:10px; border:1px solid var(--border);">
-      <div style="display:flex; align-items:center; gap:6px;">
-        <span style="color:var(--amber); transition: color 0.3s;" id="r2-status-dot">●</span>
-        <span id="r2-status-text" style="font-size:12px; color:var(--text-secondary); font-weight: 500;">Live Interview</span>
-        <div id="r2-audio-waves" style="display:none; align-items:center; gap:2px; margin-left:6px;">
-          <span class="r2-audio-bar" style="height:6px; animation: r2Wave 0.6s ease-in-out infinite alternate;"></span>
-          <span class="r2-audio-bar" style="height:10px; animation: r2Wave 0.6s ease-in-out infinite alternate 0.15s;"></span>
-          <span class="r2-audio-bar" style="height:4px; animation: r2Wave 0.6s ease-in-out infinite alternate 0.3s;"></span>
-        </div>
-      </div>
-      <div style="font-weight:700; font-size:14px; color:var(--emerald);" id="r2-timer">20:00</div>
-    </div>
-    <div id="r2-messages" style="height:340px; overflow-y:auto; border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; display:flex; flex-direction:column; gap:12px; background:var(--bg-base); box-shadow:inset 0 4px 20px rgba(0,0,0,0.2);">
-      <div style="background:var(--bg-card); border:1px solid var(--border); padding:12px 16px; border-radius:12px; border-top-left-radius:2px; font-size:13px; align-self:flex-start; max-width:85%; color:var(--text-primary); line-height:1.5;">
-        <strong style="color:var(--fuchsia); display:block; margin-bottom:4px; font-size:11px; text-transform:uppercase;">Interviewer</strong>
-        Hello! I am your Technical AI Interviewer for the ${selectedCompanyType} role. I've reviewed your resume. Are you ready to begin?
-      </div>
-    </div>
-    <div style="display:flex; gap:10px; align-items:center; width:100%;">
-      <input type="text" id="r2-input" style="flex:1; padding:14px; border:1px solid var(--border); border-radius:10px; background:var(--bg-surface); color:var(--text-primary); outline:none; transition:all 200ms;" placeholder="Type or use mic to answer..." onfocus="this.style.borderColor='var(--fuchsia)'" onblur="this.style.borderColor='var(--border)'" onkeypress="if(event.key==='Enter') sendR2Message()">
-      <button id="r2-mic-btn" onclick="toggleR2SpeechRecognition()" style="flex-shrink:0; background:rgba(255, 255, 255, 0.05); border:1px solid var(--border); color:var(--text-muted); cursor:pointer; border-radius:10px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; transition:all 200ms;" title="Speak your response">
-        <svg id="r2-mic-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-      </button>
-      <button onclick="sendR2Message()" style="flex-shrink:0; padding:0 24px; background:var(--grad-brand); color:white; border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; box-shadow:var(--shadow-fuchsia); height:48px;">Send</button>
-    </div>
-  `;
+  document.getElementById('r2-coding-area').style.display = 'grid';
   
-  clearInterval(r2TimerInterval);
-  r2TimeLeft = 20 * 60;
-  r2TimerInterval = setInterval(() => {
-    r2TimeLeft--;
-    const m = Math.floor(r2TimeLeft / 60).toString().padStart(2, '0');
-    const s = (r2TimeLeft % 60).toString().padStart(2, '0');
-    const tEl = document.getElementById('r2-timer');
-    if (tEl) tEl.textContent = `${m}:${s}`;
-    if (r2TimeLeft <= 0) {
-      clearInterval(r2TimerInterval);
-      showToast('Time is up! Concluding interview...', 'warning');
-      finishRound2();
-    }
-  }, 1000);
-
-  // Warm up voices and speak intro question
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.getVoices();
+  // Set default problem
+  const probSelect = document.getElementById('r2-problem-select');
+  if (probSelect) {
+    changeCodingProblem(probSelect.value);
   }
-  setTimeout(() => {
-    speakText(`Hello! I am your Technical AI Interviewer for the ${selectedCompanyType} role. I've reviewed your resume. Are you ready to begin?`);
-  }, 100);
 }
 
-async function sendR2Message() {
-  const input = document.getElementById('r2-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  input.value = '';
-
-  // Cancel any active SpeechSynthesis speaking
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-  }
-  // Stop mic listening if active
-  if (r2IsListening && r2Recognition) {
-    r2Recognition.stop();
-  }
-
-  r2ChatHistory.push({ role: 'user', text: msg });
-  addChatMessage('user', msg);
-
-  // If user has provided 4 answers (total 8 messages including the intro), conclude and evaluate.
-  if (r2ChatHistory.length >= 8) {
-    clearInterval(r2TimerInterval);
-    showTyping('r2-messages');
-    await finishRound2();
-    return;
-  }
-
-  showTyping('r2-messages');
-  const response = await getAIInterviewResponse(msg);
-  hideTyping('r2-messages');
+function changeCodingProblem(probId) {
+  const problem = CODING_PROBLEMS.find(p => p.id === probId);
+  if (!problem) return;
   
-  r2ChatHistory.push({ role: 'ai', text: response });
-  addChatMessage('ai', response);
-
-  // Speak the interviewer's new response
-  speakText(response);
-}
-
-function addChatMessage(role, text) {
-  const container = document.getElementById('r2-messages');
-  const div = document.createElement('div');
+  currentR2Problem = problem;
   
-  if (role === 'user') {
-    div.style.cssText = `padding:12px 16px; border-radius:12px; border-bottom-right-radius:2px; font-size:13px; max-width:85%; background:var(--emerald); color:white; align-self:flex-end; line-height:1.5; box-shadow:0 4px 12px rgba(16,185,129,0.2);`;
-    div.textContent = text;
-  } else {
-    div.style.cssText = `padding:12px 16px; border-radius:12px; border-top-left-radius:2px; font-size:13px; max-width:85%; background:var(--bg-card); border:1px solid var(--border); color:var(--text-primary); align-self:flex-start; line-height:1.5;`;
-    div.innerHTML = `<strong style="color:var(--fuchsia); display:block; margin-bottom:4px; font-size:11px; text-transform:uppercase;">Interviewer</strong>${text}`;
-  }
+  document.getElementById('r2-problem-title').textContent = problem.title + ' (' + problem.difficulty + ')';
+  document.getElementById('r2-problem-desc').textContent = problem.description;
+  document.getElementById('r2-problem-examples').textContent = problem.examples;
+  document.getElementById('r2-problem-constraints').textContent = problem.constraints;
   
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
+  // Reset console output
+  document.getElementById('r2-console-panel').style.display = 'none';
+  document.getElementById('r2-console-output').textContent = '';
+  
+  // Load starter code
+  changeCodingLanguage(currentR2Lang);
 }
 
-function showTyping(containerId) { 
-  const container = document.getElementById(containerId); 
-  if(!container) return;
-  const typing = document.createElement('div'); 
-  typing.id = 'typing-indicator-' + containerId; 
-  typing.style.cssText = 'padding:12px 16px; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; border-top-left-radius:2px; width:fit-content; display:flex; gap:4px; align-self:flex-start;'; 
-  typing.innerHTML = '<span class="dot" style="background:var(--fuchsia);"></span><span class="dot" style="background:var(--fuchsia);"></span><span class="dot" style="background:var(--fuchsia);"></span>'; 
-  container.appendChild(typing); 
-  container.scrollTop = container.scrollHeight; 
-}
-function hideTyping(containerId) { 
-  document.getElementById('typing-indicator-' + containerId)?.remove(); 
+function changeCodingLanguage(lang) {
+  currentR2Lang = lang;
+  if (!currentR2Problem) return;
+  
+  const starter = currentR2Problem.starterCodes[lang] || '';
+  document.getElementById('r2-code-editor').value = starter;
 }
 
-async function getAIInterviewResponse(userMsg) {
-  const prompt = `You are a technical interviewer for ${selectedCompanyType}. The candidate said: "${userMsg}". 
-  Reply as an interviewer. Ask the next technical question based on their resume: ${placementResumeText.substring(0, 500)}`;
-  return await callAI(prompt);
-}
-
-async function finishRound2() {
-  // Cancel active speech synthesis & recognition when finishing
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-  }
-  if (typeof r2IsListening !== 'undefined' && r2IsListening && r2Recognition) {
-    r2Recognition.stop();
-  }
-
-  // Update UI to show evaluation state
-  const inputRow = document.getElementById('r2-input')?.parentElement;
-  if(inputRow) inputRow.innerHTML = '<div style="color:var(--emerald); padding:14px; font-weight:600; text-align:center; width:100%; border:1px solid var(--border); border-radius:10px; background:var(--bg-surface); animation:pulse 1.5s infinite;">Concluding interview & evaluating responses...</div>';
-
-  // Evaluate transcript
-  const transcript = r2ChatHistory.map(m => `${m.role.toUpperCase()}: ${m.text}`).join('\n');
-  const prompt = `Evaluate this technical interview transcript for a ${selectedCompanyType} software engineering role. 
-  Transcript:
-  ${transcript}
-  Score the candidate out of 100 based strictly on the accuracy, depth, and logic of their answers.
-  If the candidate gave short, generic, non-technical, or nonsensical answers (or just said "hi/yes"), score them very low (0-30).
-  Return ONLY valid JSON: {"score": <number 0-100>, "feedback": "<2-3 sentences of highly constructive feedback detailing exact weaknesses or strengths>"}
-  Do not return markdown or backticks, just the JSON string.`;
-
-  let finalScore = 0;
-  let aiFeedback = "Interview completed, but the evaluator encountered an issue parsing the feedback.";
+// Local JS code executor
+function runJavaScriptLocally(code, problem) {
+  let passedCount = 0;
+  let outputLog = "";
+  
   try {
-    const res = await callAI(prompt);
-    const parsed = JSON.parse(res.match(/\{[\s\S]*\}/)[0]);
-    finalScore = parsed.score || 0;
-    aiFeedback = parsed.feedback || aiFeedback;
-  } catch(e) {
-    console.log('R2 Evaluation error fallback');
-    finalScore = 40; // Fallback to failing score
+    let wrapperBody = "";
+    if (problem.id === "two_sum") {
+      wrapperBody = `${code}\nreturn twoSum(nums, target);`;
+    } else if (problem.id === "reverse_string") {
+      wrapperBody = `${code}\nreverseString(s);\nreturn s;`;
+    } else if (problem.id === "fizz_buzz") {
+      wrapperBody = `${code}\nreturn fizzBuzz(n);`;
+    }
+    
+    problem.testCases.forEach((tc, idx) => {
+      let testFn;
+      if (problem.id === "two_sum") {
+        testFn = new Function("nums", "target", wrapperBody);
+      } else if (problem.id === "reverse_string") {
+        testFn = new Function("s", wrapperBody);
+      } else if (problem.id === "fizz_buzz") {
+        testFn = new Function("n", wrapperBody);
+      }
+      
+      const inputArgs = eval(`[${tc.input}]`);
+      
+      let startTime = performance.now();
+      const userResult = testFn(...inputArgs);
+      let duration = (performance.now() - startTime).toFixed(2);
+      
+      const expectedJSON = JSON.stringify(eval(tc.output));
+      const userJSON = JSON.stringify(userResult);
+      
+      if (expectedJSON === userJSON) {
+        passedCount++;
+        outputLog += `✅ Test Case ${idx + 1}: Passed (${duration}ms)\n   Input: ${tc.input}\n   Output: ${userJSON}\n\n`;
+      } else {
+        outputLog += `❌ Test Case ${idx + 1}: Failed (${duration}ms)\n   Input: ${tc.input}\n   Expected: ${expectedJSON}\n   Got: ${userJSON}\n\n`;
+      }
+    });
+  } catch (e) {
+    outputLog = `🚨 Execution/Syntax Error:\n${e.stack || e.message}`;
+  }
+  
+  return {
+    testCasesPassed: passedCount,
+    totalTestCases: problem.testCases.length,
+    executionOutput: outputLog
+  };
+}
+
+async function runCodingTestCases() {
+  const consolePanel = document.getElementById('r2-console-panel');
+  const consoleStatus = document.getElementById('r2-console-status');
+  const consoleOutput = document.getElementById('r2-console-output');
+  
+  consolePanel.style.display = 'block';
+  consoleStatus.textContent = 'Running...';
+  consoleStatus.style.color = 'var(--amber)';
+  consoleOutput.textContent = 'Executing test cases...';
+  
+  const code = document.getElementById('r2-code-editor').value;
+  
+  if (currentR2Lang === 'javascript') {
+    const res = runJavaScriptLocally(code, currentR2Problem);
+    consoleStatus.textContent = res.testCasesPassed === res.totalTestCases ? 'SUCCESS' : 'FAILED';
+    consoleStatus.style.color = res.testCasesPassed === res.totalTestCases ? 'var(--emerald)' : 'var(--rose)';
+    consoleOutput.textContent = res.executionOutput;
+  } else {
+    const prompt = `You are a sandboxed code compiler.
+Challenge: ${currentR2Problem.title}
+Language: ${currentR2Lang}
+Code to execute:
+${code}
+Test cases to check:
+${currentR2Problem.testCases.map((tc, idx) => `Case ${idx+1}: Input: ${tc.input}, Expected Output: ${tc.output}`).join('\n')}
+
+Simulate execution of this code against the test cases exactly. Make sure to check for logical bugs, syntax/compilation issues, or runtime exceptions.
+Return ONLY valid JSON format:
+{
+  "testCasesPassed": <number>,
+  "totalTestCases": ${currentR2Problem.testCases.length},
+  "executionOutput": "<detailed trace of each test case and any print outputs/errors>"
+}`;
+    
+    try {
+      const res = await callAI(prompt);
+      const parsed = JSON.parse(res.match(/\{[\s\S]*\}/)[0]);
+      consoleStatus.textContent = parsed.testCasesPassed === parsed.totalTestCases ? 'SUCCESS' : 'FAILED';
+      consoleStatus.style.color = parsed.testCasesPassed === parsed.totalTestCases ? 'var(--emerald)' : 'var(--rose)';
+      consoleOutput.textContent = parsed.executionOutput;
+    } catch(e) {
+      consoleStatus.textContent = 'ERROR';
+      consoleStatus.style.color = 'var(--rose)';
+      consoleOutput.textContent = 'Compilation simulation failed. Please check your syntax and try again.';
+    }
+  }
+}
+
+async function submitCodingChallenge() {
+  const code = document.getElementById('r2-code-editor').value;
+  const consolePanel = document.getElementById('r2-console-panel');
+  const consoleStatus = document.getElementById('r2-console-status');
+  const consoleOutput = document.getElementById('r2-console-output');
+  
+  consolePanel.style.display = 'block';
+  consoleStatus.textContent = 'Evaluating Submission...';
+  consoleStatus.style.color = 'var(--amber)';
+  consoleOutput.textContent = 'Submitting code, executing all tests, and generating qualitative review...';
+  
+  let testCasesPassed = 0;
+  let totalTestCases = currentR2Problem.testCases.length;
+  let traceOutput = "";
+  
+  if (currentR2Lang === 'javascript') {
+    const localRes = runJavaScriptLocally(code, currentR2Problem);
+    testCasesPassed = localRes.testCasesPassed;
+    traceOutput = localRes.executionOutput;
+  } else {
+    const promptRun = `You are a sandboxed code compiler.
+Challenge: ${currentR2Problem.title}
+Language: ${currentR2Lang}
+Code to execute:
+${code}
+Test cases to check:
+${currentR2Problem.testCases.map((tc, idx) => `Case ${idx+1}: Input: ${tc.input}, Expected Output: ${tc.output}`).join('\n')}
+
+Simulate execution of this code against the test cases exactly. Make sure to check for logical bugs, syntax/compilation issues, or runtime exceptions.
+Return ONLY valid JSON format:
+{
+  "testCasesPassed": <number>,
+  "totalTestCases": ${currentR2Problem.testCases.length},
+  "executionOutput": "<detailed trace of each test case and any print outputs/errors>"
+}`;
+    
+    try {
+      const resRun = await callAI(promptRun);
+      const parsedRun = JSON.parse(resRun.match(/\{[\s\S]*\}/)[0]);
+      testCasesPassed = parsedRun.testCasesPassed || 0;
+      traceOutput = parsedRun.executionOutput || "";
+    } catch(e) {
+      testCasesPassed = 0;
+      traceOutput = "Compilation/Execution simulation error.";
+    }
   }
 
-  const passed = finalScore >= 70;
+  const score = Math.round((testCasesPassed / totalTestCases) * 100);
+  const passed = score >= 70;
+  
+  consoleStatus.textContent = passed ? 'PASSED' : 'FAILED';
+  consoleStatus.style.color = passed ? 'var(--emerald)' : 'var(--rose)';
+  consoleOutput.textContent = traceOutput;
 
-  document.getElementById('r2-chat-area').style.display = 'none';
+  const promptReview = `You are a Senior Software Engineer conducting a code review.
+Problem: ${currentR2Problem.title}
+Language: ${currentR2Lang}
+Submitted Code:
+${code}
+
+Conduct a technical code review. Evaluate:
+1. Code Quality & Formatting
+2. Readability
+3. Algorithmic Approach
+4. Complexity (Time & Space complexity)
+5. Strengths
+6. Potential Optimizations or Weaknesses
+
+Return ONLY valid JSON:
+{
+  "codeQuality": "Poor|Fair|Good|Excellent",
+  "readability": "Poor|Fair|Good|Excellent",
+  "complexityExplanation": "<Time and Space complexity, e.g. O(N) time and O(N) space>",
+  "strengths": "<brief 1 sentence strength>",
+  "weaknesses": "<brief 1 sentence weakness>",
+  "aiFeedback": "<constructive details on how they can optimize or refactor their code>"
+}`;
+
+  let review = {
+    codeQuality: "Good",
+    readability: "Good",
+    complexityExplanation: "Depends on implementation.",
+    strengths: "Core logic implemented.",
+    weaknesses: "Can be optimized.",
+    aiFeedback: "Good attempt! Make sure to verify edge cases and try to reduce space complexity if possible."
+  };
+
+  try {
+    const resReview = await callAI(promptReview);
+    const parsedReview = JSON.parse(resReview.match(/\{[\s\S]*\}/)[0]);
+    review = { ...review, ...parsedReview };
+  } catch(e) {
+    console.log("Qualitative review fallback");
+  }
+
+  const r2Details = {
+    companyType: selectedCompanyType,
+    problemId: currentR2Problem.id,
+    language: currentR2Lang,
+    code: code,
+    testCasesPassed: testCasesPassed,
+    totalTestCases: totalTestCases,
+    strengths: review.strengths,
+    weaknesses: review.weaknesses,
+    aiFeedback: review.aiFeedback
+  };
+
+  await supabase.from('placement_attempts').insert({
+    user_id: currentUserId,
+    round: 2,
+    score: score,
+    passed: passed,
+    details: r2Details
+  });
+
+  const { data: refreshedAttempts } = await supabase.from('placement_attempts').select('*').eq('user_id', currentUserId);
+  if (refreshedAttempts) {
+    updatePlacementDashboardStats(refreshedAttempts);
+  }
+
+  document.getElementById('r2-coding-area').style.display = 'none';
   const resArea = document.getElementById('r2-result');
   resArea.style.display = 'block';
-  
+
   resArea.innerHTML = `
     <div style="padding:24px;background:var(--bg-card);border-radius:16px;border:1px solid ${passed ? 'var(--emerald)' : 'var(--rose)'};box-shadow:var(--shadow-card);">
       <div style="text-align:center;margin-bottom:20px;">
-        <div style="font-size:42px;margin-bottom:12px;text-shadow:0 0 20px ${passed ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)'};">${passed ? '🚀' : '❌'}</div>
-        <div style="font-size:22px;font-weight:800;color:${passed ? 'var(--emerald)' : 'var(--rose)'};">Score: ${finalScore}/100</div>
+        <div style="font-size:42px;margin-bottom:12px;text-shadow:0 0 20px ${passed ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)'};">${passed ? '🎉' : '❌'}</div>
+        <div style="font-size:22px;font-weight:800;color:${passed ? 'var(--emerald)' : 'var(--rose)'};">Test Cases: ${testCasesPassed} / ${totalTestCases} Passed</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">Score: ${score}%</div>
         <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;">
-          ${passed ? 'Your technical foundation and communication are strong. Final Video Round Unlocked.' : 'You must provide detailed technical answers to clear this round.'}
+          ${passed ? 'Superb! You cleared Round 2 and unlocked Round 3 Interview.' : 'Keep practicing. You need at least 70% passed test cases to clear Round 2.'}
         </p>
       </div>
-      <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);">
-        <h4 style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">Interviewer Feedback</h4>
+
+      <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px; display:grid; grid-template-columns:1fr; gap:12px;">
+        <h4 style="font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:0 0 4px 0;">Code Review & Feedback</h4>
+        <div style="font-size:13px;color:var(--text-primary);line-height:1.6; display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:12px;">
+          <div><strong style="color:var(--text-muted);">Code Quality:</strong> <span style="color:var(--emerald); font-weight:700;">${review.codeQuality}</span></div>
+          <div><strong style="color:var(--text-muted);">Readability:</strong> <span style="color:var(--emerald); font-weight:700;">${review.readability}</span></div>
+          <div><strong style="color:var(--text-muted);">Complexity:</strong> <span style="color:var(--fuchsia); font-weight:700;">${review.complexityExplanation}</span></div>
+        </div>
         <div style="font-size:13px;color:var(--text-primary);line-height:1.6;">
-          ${aiFeedback}
+          <strong>Strengths:</strong> ${review.strengths}<br>
+          <strong style="color:var(--amber);">Weaknesses:</strong> ${review.weaknesses}<br>
+          <p style="margin:8px 0 0 0; color:var(--text-secondary); font-style:italic;">${review.aiFeedback}</p>
         </div>
       </div>
-      ${passed ? `<button onclick="scrollToRound('step-r3')" style="width:100%;margin-top:20px;padding:14px;background:var(--grad-brand);color:white;border:none;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;box-shadow:var(--shadow-fuchsia);transition:all 200ms;">Proceed to Final Video Round →</button>` : ''}
+
+      <div style="display:flex; gap:12px;">
+        ${passed 
+          ? `<button onclick="scrollToRound('step-r3')" style="flex:1;padding:12px;background:var(--emerald);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Proceed to Round 3 Interview →</button>`
+          : `<button onclick="retryRound2()" style="flex:1;padding:12px;background:var(--rose);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Retry Round 2</button>`
+        }
+      </div>
     </div>
   `;
 
-  await savePlacementAttempt(2, finalScore, passed);
-  if(passed) {
+  if (passed) {
     placementProgress.r2 = true;
+    placementProgress.r2Score = score;
     updatePlacementProgress();
   }
 }
+
+function retryRound2() {
+  document.getElementById('r2-result').style.display = 'none';
+  document.getElementById('start-r2-btn').style.display = 'block';
+  document.getElementById('r2-coding-area').style.display = 'none';
+}
+
+window.startRound2Coding = startRound2Coding;
+window.changeCodingProblem = changeCodingProblem;
+window.changeCodingLanguage = changeCodingLanguage;
+window.runCodingTestCases = runCodingTestCases;
+window.submitCodingChallenge = submitCodingChallenge;
+window.retryRound2 = retryRound2;
 
 // ── Round 3: Conversational AI Video Interview ───────────
 let r3ChatHistory = [];
@@ -4723,8 +5098,40 @@ function r3AddMsg(role, text) {
   c.scrollTop = c.scrollHeight;
 }
 
+let r3PersonalizedContext = null;
+
 async function startVideoInterview() {
   try {
+    // 1. Fetch profile details (goal, roadmap)
+    const { data: profile } = await supabase.from('profiles').select('goal, roadmap_data').eq('id', currentUserId).single();
+    
+    // 2. Fetch projects
+    const { data: userProjects } = await supabase.from('projects').select('title, description, status').eq('user_id', currentUserId);
+    
+    // 3. Resolve career track
+    const goal = profile?.goal || '';
+    const { track } = getCareerTrackFromGoal(goal);
+
+    // List active roadmap tasks/phases
+    let roadmapTasks = [];
+    if (profile?.roadmap_data?.phases) {
+      roadmapTasks = profile.roadmap_data.phases.slice(0, 2).map(p => p.title);
+    }
+
+    // List project titles
+    let projectList = [];
+    if (userProjects) {
+      projectList = userProjects.map(p => `${p.title} (${p.status})`);
+    }
+
+    r3PersonalizedContext = {
+      track,
+      goal,
+      roadmapTasks,
+      projects: projectList,
+      resume: (placementResumeText || '').substring(0, 500)
+    };
+
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     const video = document.getElementById('interview-video');
     video.srcObject = stream;
@@ -4756,9 +5163,10 @@ async function startVideoInterview() {
     r3ChatHistory = []; r3QuestionCount = 0; r3InterviewActive = true;
     if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
 
-    await r3Speak('Welcome to your final video interview. I will ask you a few questions based on your background. Please speak your answers clearly. Let us begin.');
+    await r3Speak('Welcome to your final AI Technical and HR Interview. I have reviewed your profile and projects. Let us begin.');
     if (r3InterviewActive) await r3NextQuestion();
   } catch (err) {
+    console.error("Round 3 Init Error:", err);
     showToast('Camera or Microphone permission denied. Allow access and try again.', 'error');
   }
 }
@@ -4769,12 +5177,31 @@ async function r3NextQuestion() {
   if (r3QuestionCount > R3_MAX_QUESTIONS) { await r3Finish(); return; }
 
   r3SetStatus('thinking');
-  const resumeCtx = (placementResumeText || '').substring(0, 500);
+  const ctx = r3PersonalizedContext || { track: 'Software Development', goal: 'Software Engineer', roadmapTasks: [], projects: [], resume: '' };
   const histStr = r3ChatHistory.map(m => `${m.role === 'ai' ? 'Interviewer' : 'Candidate'}: ${m.text}`).join('\n');
 
   const prompt = r3QuestionCount === 1
-    ? `You are a professional technical interviewer. Candidate resume: "${resumeCtx}". Ask your first interview question — behavioral or technical, based on their resume. ONE question only, 2 sentences max, no numbering, no preamble.`
-    : `You are a professional technical interviewer. Resume: "${resumeCtx}"\n\nConversation:\n${histStr}\n\nAsk the next question (${r3QuestionCount}/${R3_MAX_QUESTIONS}). Follow up naturally on their answer OR move to a new relevant topic. ONE question only, 1-2 sentences, no preamble or numbering.`;
+    ? `You are an expert technical and HR interviewer for the role ${selectedCompanyType}.
+Candidate details:
+- Target Role/Track: ${ctx.track} (Goal: ${ctx.goal})
+- Resume details: "${ctx.resume}"
+- Projects: ${ctx.projects.join(', ') || 'No project showcase entries yet'}
+- Active Roadmap topics: ${ctx.roadmapTasks.join(', ') || 'None'}
+
+Ask the first question. It should be a welcoming question combined with a question about their resume, track, or projects.
+Make it exactly 1 question, max 2 sentences, do not include preamble, options, or numbers.`
+    : `You are an expert technical and HR interviewer for the role ${selectedCompanyType}.
+Candidate details:
+- Track: ${ctx.track}
+- Resume details: "${ctx.resume}"
+- Projects: ${ctx.projects.join(', ')}
+- Active Roadmap: ${ctx.roadmapTasks.join(', ')}
+
+Conversation history:
+${histStr}
+
+Ask the next question (${r3QuestionCount}/${R3_MAX_QUESTIONS}). You can ask a technical follow-up based on their previous answers, or switch to an HR/behavioral question (e.g. conflict resolution, strengths, why they want this role).
+Make it exactly 1 question, max 2 sentences, do not include preamble, options, or numbers.`;
 
   const question = await callAI(prompt) || 'Can you describe a challenging project you have worked on and what you learned from it?';
 
@@ -4853,7 +5280,26 @@ async function r3Finish() {
   await r3Speak('The interview is now complete. Please give me a moment to evaluate your performance.');
 
   const histStr = r3ChatHistory.map(m => `${m.role==='ai'?'Interviewer':'Candidate'}: ${m.text}`).join('\n\n');
-  const evalPrompt = `Expert interviewer evaluating this transcript:\n${histStr}\n\nReturn JSON only: {"score":number,"hire":"Strong Hire|Hire|No Hire","communication":"Excellent|Good|Average|Poor","technical":"Excellent|Good|Average|Poor","strengths":["...","..."],"improvements":["...","..."],"summary":"2-3 sentence assessment"}`;
+  const evalPrompt = `Expert interviewer conducting a final evaluation of this candidate transcript:
+${histStr}
+
+Evaluate and grade across these dimensions:
+1. Technical Accuracy (1-100)
+2. Communication Skills (1-100)
+3. Depth of Answers (1-100)
+4. Problem-solving capability (1-100)
+
+Calculate an overall average score (0-100). If answers are generic, brief, or dodge technical details, score below 70.
+Return ONLY valid JSON format:
+{
+  "score": <overall score number>,
+  "hire": "Strong Hire|Hire|No Hire",
+  "communication": "Excellent|Good|Average|Poor",
+  "technical": "Excellent|Good|Average|Poor",
+  "strengths": ["...", "..."],
+  "improvements": ["...", "..."],
+  "summary": "<2-3 sentence assessment summarizing performance across technical accuracy, communication, depth, and problem-solving>"
+}`;
   const raw = await callAI(evalPrompt, 500);
 
   let sc=78, hire='Hire', comm='Good', tech='Good', summary='The candidate demonstrated solid communication skills and relevant experience.';
@@ -4906,7 +5352,14 @@ async function r3Finish() {
     </div>`;
 
   placementProgress.r3 = true;
-  await savePlacementAttempt(3, sc, sc >= 60);
+  await savePlacementAttempt(3, sc, sc >= 70);
+
+  // Reload statistics dynamically
+  const { data: refreshedAttempts } = await supabase.from('placement_attempts').select('*').eq('user_id', currentUserId);
+  if (refreshedAttempts) {
+    updatePlacementDashboardStats(refreshedAttempts);
+  }
+
   updatePlacementProgress();
   await r3Speak(`Your interview score is ${sc} out of 100. Decision: ${hire}. Well done for completing the interview!`);
 }
@@ -4964,11 +5417,19 @@ function updatePlacementProgress() {
     document.getElementById('section-round2').style.opacity = '1';
     document.getElementById('section-round2').style.pointerEvents = 'auto';
     document.getElementById('r2-lock-text').textContent = '✅ Round 1 Passed';
+  } else {
+    document.getElementById('section-round2').style.opacity = '0.5';
+    document.getElementById('section-round2').style.pointerEvents = 'none';
+    document.getElementById('r2-lock-text').textContent = '🔒 Pass Round 1 to unlock';
   }
   if (r2) {
     document.getElementById('section-round3').style.opacity = '1';
     document.getElementById('section-round3').style.pointerEvents = 'auto';
     document.getElementById('r3-lock-text').textContent = '✅ Round 2 Passed';
+  } else {
+    document.getElementById('section-round3').style.opacity = '0.5';
+    document.getElementById('section-round3').style.pointerEvents = 'none';
+    document.getElementById('r3-lock-text').textContent = '🔒 Pass Round 2 to unlock';
   }
 }
 
@@ -4978,6 +5439,7 @@ function scrollToRound(id) {
       id === 'step-r2' ? 'section-round2' : 'section-round3';
       
   // Lock logic
+  if (id === 'step-r1' && !placementProgress.resume) return showToast('Please upload your resume first!', 'warning');
   if (id === 'step-r2' && !placementProgress.r1) return showToast('Complete Round 1 first!', 'warning');
   if (id === 'step-r3' && !placementProgress.r2) return showToast('Complete Round 2 first!', 'warning');
 
@@ -5714,7 +6176,13 @@ let mentorMsgCount = 0;
 let topicsCovered = new Set();
 
 async function initMentorChat() {
-  if (mentorHistory.length > 0) return; // Already initialized
+  if (window.mentorChatInitialized) return;
+  window.mentorChatInitialized = true;
+
+  const badge = document.getElementById('mentor-power-badge');
+  if (badge) {
+    badge.textContent = GROQ_API_KEY ? 'Powered by Llama 3.3 (Groq)' : 'Powered by Llama 3.1 · Free';
+  }
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return;
@@ -5846,8 +6314,47 @@ async function sendMentorMessage() {
   let success = false;
   let reply = '';
 
-  // Try OpenRouter first if key is present
-  if (OPENROUTER_KEY) {
+  // Try Groq first if key is present
+  if (GROQ_API_KEY) {
+    try {
+      const messages = [
+        { role: 'system', content: window.mentorSystemPrompt },
+        ...mentorHistory.slice(-6)
+      ];
+
+      console.log('[sendMentorMessage] Attempting prompt with Groq...');
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-specdec',
+          messages,
+          max_tokens: 400,
+          temperature: 0.7
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        reply = data.choices?.[0]?.message?.content || '';
+        if (reply) {
+          success = true;
+          console.log('[sendMentorMessage] Success with Groq');
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.warn("[sendMentorMessage] Groq API returned status:", res.status, errData);
+      }
+    } catch (err) {
+      console.error("[sendMentorMessage] Groq chat error:", err);
+    }
+  }
+
+  // Try OpenRouter if Groq is missing or failed
+  if (!success && OPENROUTER_KEY) {
     try {
       const messages = [
         { role: 'system', content: window.mentorSystemPrompt },
