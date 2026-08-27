@@ -2646,120 +2646,186 @@
   </div>
 
   <!-- ═══════════ ROUND 3 ═══════════════ -->
-  <div id="section-round3" class="placement-card" style="display:none;">
+  <div id="section-round3" class="placement-card" style="display:none; padding: 24px;">
 
-    <div style="display:flex;
-      justify-content:space-between;
-      align-items:center;margin-bottom:16px;">
-      <div>
-        <div style="display:flex;gap:8px;
-          margin-bottom:6px;">
-          <span style="background:#FEE2E2;
-            color:#DC2626;padding:2px 10px;
-            border-radius:20px;font-size:11px;
-            font-weight:500;">ROUND 3 — FINAL</span>
-          <span id="r3-lock-text"
-            style="font-size:11px;color:#94A3B8;">
-            🔒 Pass Round 2 to unlock
-          </span>
+    <!-- 3.1 SETUP SCREEN (PRE-INTERVIEW) -->
+    <div id="r3-setup-screen" style="display: block;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+        <div>
+          <span style="background:rgba(239, 68, 68, 0.1); color:#EF4444; border: 1px solid rgba(239, 68, 68, 0.2); padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; text-transform: uppercase;">Round 3 — Final</span>
+          <h2 style="font-size:22px; font-weight:700; color:#ffffff; margin: 8px 0 2px 0;">🎥 AI Interview</h2>
+          <p style="font-size:13px; color:var(--text-secondary); margin: 0;">Your interview will be personalized using your resume and SkillBridge profile.</p>
         </div>
-        <h3 style="font-size:16px;font-weight:600;
-          margin-bottom:2px;">
-          🎥 AI Video Interview
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+        <!-- Setup Checklist -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px;">
+          <h4 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em;">Interview Readiness Checklist</h4>
+          
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <span style="font-size: 13px; color: var(--text-secondary);">📄 Resume Optimization</span>
+            <span id="setup-status-resume" style="font-size: 13px; font-weight: 600; color: var(--rose);">Checking...</span>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <span style="font-size: 13px; color: var(--text-secondary);">📷 Camera Device</span>
+            <span id="setup-status-camera" style="font-size: 13px; font-weight: 600; color: var(--rose);">Not Connected</span>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <span style="font-size: 13px; color: var(--text-secondary);">🎙 Microphone Device</span>
+            <span id="setup-status-microphone" style="font-size: 13px; font-weight: 600; color: var(--rose);">Not Connected</span>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 13px; color: var(--text-secondary);">⏱ Duration & Questions</span>
+            <span style="font-size: 13px; font-weight: 600; color: var(--emerald);">~15–20 mins (Adaptive questions)</span>
+          </div>
+        </div>
+
+        <!-- Privacy & Consent Info -->
+        <div style="background: var(--bg-surface); border: 1px solid var(--border); padding: 20px; border-radius: 12px; font-size: 13px; line-height: 1.5; color: var(--text-secondary);">
+          <h4 style="margin: 0 0 10px 0; font-size: 14px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">🛡️ Privacy & Consent</h4>
+          <p style="margin: 0 0 10px 0;">To deliver a realistic mock interview, SkillBridge requires temporary webcam and microphone access.</p>
+          <ul style="padding-left: 20px; margin: 0 0 12px 0; display: flex; flex-direction: column; gap: 6px;">
+            <li>Camera stream is analyzed <strong>locally in the browser</strong> for presence signals.</li>
+            <li>No video or audio recordings are stored, saved, or uploaded to any server.</li>
+            <li>Voice is converted to text client-side for conversational evaluation.</li>
+          </ul>
+          <div style="background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.15); padding: 10px; border-radius: 8px; font-size: 12px; color: var(--emerald);">
+            ✓ By starting the interview, you consent to local camera/microphone presence signal extraction.
+          </div>
+        </div>
+      </div>
+
+      <!-- Start and Test Controls -->
+      <div style="display: flex; gap: 16px;">
+        <button id="btn-test-media" onclick="testCameraAndMic()" style="flex: 1; padding: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">Test Camera & Mic</button>
+        <button id="btn-start-interview" onclick="startVideoInterview()" disabled style="flex: 1; padding: 14px; background: rgba(255,255,255,0.02); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; font-weight: 600; font-size: 14px; cursor: not-allowed; transition: all 200ms;">Start Interview →</button>
+      </div>
+
+      <!-- Connection Error Alert -->
+      <div id="media-error-alert" style="display: none; background: rgba(244,63,94,0.1); border: 1px solid rgba(244,63,94,0.25); color: var(--rose); padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 13px; text-align: center;">
+        <span id="media-error-message">Camera/microphone permission is required for the interview experience.</span>
+        <button onclick="testCameraAndMic()" style="background: none; border: none; color: var(--emerald); font-weight: 700; text-decoration: underline; margin-left: 8px; cursor: pointer;">Try Again</button>
+      </div>
+    </div>
+
+    <!-- 3.2 INTERVIEW PANEL (SPLIT LAYOUT) -->
+    <div id="r3-interview-panel" style="display: none;">
+      <!-- Title row -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;">
+        <h3 style="font-size: 16px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 8px; margin: 0;">
+          <span style="color: var(--rose);">🎥</span> AI INTERVIEW
         </h3>
-        <p style="font-size:13px;color:#64748B;">
-          Camera + Mic · Resume-based · 15 min
-        </p>
-      </div>
-    </div>
-
-    <!-- Camera preview -->
-    <div style="background:#0F172A;
-      border-radius:12px;
-      aspect-ratio:16/9;
-      overflow:hidden;position:relative;
-      margin-bottom:14px;">
-      <video id="interview-video" autoplay muted
-        style="width:100%;height:100%;
-        object-fit:cover;display:none;">
-      </video>
-      <div id="camera-off-msg" style="
-        position:absolute;inset:0;
-        display:flex;flex-direction:column;
-        align-items:center;justify-content:center;
-        color:white;">
-        <div style="font-size:36px;
-          margin-bottom:8px;">📷</div>
-        <div style="font-size:14px;opacity:0.7;">
-          Camera preview
+        <div style="font-size: 13px; font-weight: 600; color: var(--text-muted);">
+          Question <span id="r3-q-num" style="color: var(--emerald);">1</span> / <span id="r3-q-total">8</span>
         </div>
       </div>
-      <!-- Live indicator -->
-      <div id="live-indicator" style="
-        display:none;position:absolute;
-        top:10px;right:10px;
-        background:rgba(220,38,38,0.9);
-        color:white;padding:3px 10px;
-        border-radius:20px;font-size:11px;
-        font-weight:500;">
-        ● LIVE
+
+      <!-- Split Layout Grid -->
+      <div style="display: grid; grid-template-columns: 280px 1fr; gap: 20px;">
+        <!-- Left Panel: Webcam Stream & Visual Integrity Tracker -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Camera stream view -->
+          <div style="background:#05070a; border: 1px solid var(--border); border-radius:12px; aspect-ratio:4/3; overflow:hidden; position:relative;">
+            <video id="interview-video" autoplay muted style="width:100%; height:100%; object-fit:cover; transform: scaleX(-1);"></video>
+            
+            <div id="camera-off-msg" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; background: #0f172a;">
+              <div style="font-size:36px; margin-bottom:8px;">📷</div>
+              <div style="font-size:12px; opacity:0.7;">Camera off</div>
+            </div>
+
+            <!-- Live badge -->
+            <div id="live-indicator" style="display:none; position:absolute; top:10px; right:10px; background:rgba(220,38,38,0.9); color:white; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing: 0.05em; display: flex; align-items: center; gap: 4px;">
+              <span style="display: inline-block; width: 6px; height: 6px; background: #ffffff; border-radius: 50%; animation: pulse 1s infinite;"></span> LIVE
+            </div>
+
+            <!-- Overlay for visual tracking feedback (Centroid / slouched indicator) -->
+            <div id="setup-overlay-calibration" style="position: absolute; bottom: 8px; left: 8px; background: rgba(0, 0, 0, 0.6); font-family: monospace; font-size: 9px; padding: 4px 6px; border-radius: 4px; color: var(--emerald);">
+              Calibrating visual presence...
+            </div>
+          </div>
+
+          <!-- Devices control -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button onclick="toggleCameraTrack()" id="r3-cam-btn" style="padding:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; font-size:12px; color: #ffffff; cursor:pointer; font-weight:600;">📷 Camera: ON</button>
+            <button onclick="toggleMicTrack()" id="r3-mic-btn" style="padding:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:8px; font-size:12px; color: #ffffff; cursor:pointer; font-weight:600;">🎤 Mic: ON</button>
+          </div>
+
+          <!-- Interview Integrity Event Monitor -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; flex-grow: 1; display: flex; flex-direction: column;">
+            <h5 style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Interview Integrity Signals</h5>
+            <div id="integrity-events-log" style="font-family: monospace; font-size: 11px; color: var(--text-secondary); height: 110px; overflow-y: auto; line-height: 1.5; padding: 4px; background: rgba(0,0,0,0.1); border-radius: 6px;">
+              <div style="color: var(--text-muted); font-style: italic;">No alerts detected.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel: Atlas AI & Transcript & Response Areas -->
+        <div style="display: flex; flex-direction: column; gap: 12px; min-height: 420px;">
+          <!-- Atlas Avatar card -->
+          <div style="background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: flex-start; gap: 14px;">
+            <div style="font-size: 32px; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.25); border-radius: 50%; width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">🤖</div>
+            <div style="flex-grow: 1;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #ffffff;">Atlas AI</h4>
+                <span style="background: rgba(0, 229, 255, 0.1); color: var(--emerald); font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 10px; text-transform: uppercase;">Interviewer</span>
+              </div>
+              <p id="ai-q-display-text" style="margin: 6px 0 0 0; font-size: 14px; color: #ffffff; line-height: 1.6; font-style: italic; font-weight: 500;">
+                Initializing the interview context...
+              </p>
+            </div>
+          </div>
+
+          <!-- Transcript Log (chat history) -->
+          <div id="r3-transcript-log" style="height: 180px; overflow-y: auto; border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: rgba(5,7,10,0.8); display: flex; flex-direction: column; gap: 10px; box-shadow: inset 0 4px 16px rgba(0,0,0,0.4);">
+            <div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 50px;">Waiting to start conversation...</div>
+          </div>
+
+          <!-- Answer Input Area (Speech to text, fallback typing) -->
+          <div style="display: flex; flex-direction: column; gap: 8px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span id="r3-status-bar" style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                <span style="color: var(--amber);">●</span> Preparing next question...
+              </span>
+              <button onclick="switchInputMode()" id="input-mode-toggle" style="background: none; border: none; color: var(--emerald); font-size: 12px; font-weight: 600; text-decoration: underline; cursor: pointer;">Keyboard Fallback</button>
+            </div>
+
+            <!-- Speech-to-text waveform/preview -->
+            <div id="voice-input-container" style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; align-items: center; gap: 12px; background: rgba(16, 185, 129, 0.05); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 14px;">
+                <div id="mic-pulse-indicator" style="width: 10px; height: 10px; background: var(--rose); border-radius: 50%; display: none; animation: pulse 1s infinite;"></div>
+                <div id="speech-live-text" style="font-size: 13px; color: var(--text-secondary); flex-grow: 1; min-height: 18px; font-style: italic;">
+                  Click 'Unmute Mic' or type using Keyboard Fallback if Speech Recognition fails.
+                </div>
+              </div>
+            </div>
+
+            <!-- Keyboard Fallback (text area) -->
+            <div id="keyboard-input-container" style="display: none; flex-direction: column; gap: 8px;">
+              <textarea id="r3-keyboard-text" style="width: 100%; height: 60px; background: var(--bg-base); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; color: #ffffff; outline: none; resize: none; font-family: sans-serif; line-height: 1.4;" placeholder="Type your answer here..." onfocus="this.style.borderColor='var(--fuchsia)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+              <div style="display: flex; justify-content: flex-end;">
+                <button onclick="submitTypedAnswer()" style="padding: 6px 16px; background: var(--grad-brand); border: none; color: #ffffff; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; box-shadow: var(--shadow-fuchsia);">Submit Answer</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom bar: End Interview -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+            <button onclick="endVideoInterview()" style="padding: 10px 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #EF4444; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.2)';" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)';">⏹ End Interview</button>
+          </div>
+        </div>
       </div>
-      <!-- AI question display -->
-      <div id="ai-q-display" style="
-        display:none;position:absolute;
-        bottom:10px;left:10px;right:10px;
-        background:rgba(0,0,0,0.7);
-        color:white;padding:10px 14px;
-        border-radius:8px;font-size:13px;">
-      </div>
     </div>
 
-    <!-- Permission warning -->
-    <div style="background:var(--bg-surface);
-      border:1px solid var(--border);
-      border-radius:8px;padding:10px 14px;
-      margin-bottom:14px;font-size:13px;
-      color:var(--amber);">
-      ⚠️ Requires camera + microphone access.
-      Use Chrome or Edge for best experience.
-    </div>
+    <!-- Hidden canvas for visual frame processing -->
+    <canvas id="hidden-cv-canvas" width="32" height="24" style="display: none;"></canvas>
 
-    <button id="start-r3-btn"
-      onclick="startVideoInterview()"
-      style="width:100%;padding:14px;
-      background:var(--grad-brand);color:white;
-      border:none;border-radius:10px;
-      font-size:15px;font-weight:600;
-      cursor:pointer;box-shadow:var(--shadow-fuchsia);
-      transition:all 200ms;">
-      Start Video Interview 🎥 →
-    </button>
+    <!-- 3.3 FINAL RESULT AREA -->
+    <div id="r3-result" style="display:none; margin-top:16px;"></div>
 
-    <!-- Interview controls -->
-    <div id="r3-controls"
-      style="display:none;margin-top:12px;
-      display:grid;grid-template-columns:1fr 1fr;
-      gap:10px;">
-      <button onclick="toggleMic()"
-        id="mic-toggle-btn"
-        style="padding:10px;background:#F1F5F9;
-        border:1px solid #E2E8F0;
-        border-radius:8px;font-size:13px;
-        cursor:pointer;">
-        🎤 Mic: ON
-      </button>
-      <button onclick="endVideoInterview()"
-        style="padding:10px;background:#FEE2E2;
-        color:#DC2626;border:1px solid #FECACA;
-        border-radius:8px;font-size:13px;
-        cursor:pointer;">
-        ⏹ End Interview
-      </button>
-    </div>
-
-    <div id="r3-result"
-      style="display:none;margin-top:16px;">
-    </div>
   </div>
 
 </div><!-- end tab-placement -->

@@ -4288,6 +4288,29 @@ async function initPlacementTab() {
 
   updatePlacementDashboardStats(attempts);
   updatePlacementProgress();
+
+  // Check resume status
+  if (typeof checkResumeStatusOnSetup === 'function') {
+    checkResumeStatusOnSetup();
+  }
+
+  // Restore active session if any
+  const activeSessionStr = localStorage.getItem('r3_active_session');
+  if (activeSessionStr) {
+    try {
+      const saved = JSON.parse(activeSessionStr);
+      if (Date.now() - saved.timestamp < 3600000 && saved.r3QuestionCount <= 8) {
+        if (typeof showResumeInterviewModal === 'function') {
+          showResumeInterviewModal(saved);
+        }
+      } else {
+        localStorage.removeItem('r3_active_session');
+        localStorage.removeItem('r3_session_id');
+      }
+    } catch(e) {
+      localStorage.removeItem('r3_active_session');
+    }
+  }
 }
 
 function updatePlacementDashboardStats(attempts) {
@@ -4423,13 +4446,13 @@ async function processAndAnalyzeResume() {
     </div>
   `;
 
-  // Simulate AI Analysis
+  // AI Analysis
   const prompt = `Analyze this resume. Return a JSON with { "score": Number(0-100), "strengths": ["...", "...", "..."], "improvements": ["...", "..."] }. Resume: ${placementResumeText.substring(0, 1000)}`;
   const result = await callAI(prompt);
   
-  let score = Math.floor(Math.random() * 20) + 75;
-  let strengths = ["Good education background", "Relevant technical skills", "Clear formatting"];
-  let improvements = ["Add more quantifiable metrics", "Include links to portfolio/GitHub"];
+  let score = null;
+  let strengths = [];
+  let improvements = [];
   
   try {
     if(result) {
@@ -4440,23 +4463,27 @@ async function processAndAnalyzeResume() {
     }
   } catch(e) { console.log('Parsing fallback'); }
 
+  const scoreDisplay = score !== null ? `${score}/100` : 'Evaluation unavailable';
+  const strengthsHTML = strengths.length > 0 ? strengths.map(s => `<li style="margin-bottom:6px;">${s}</li>`).join('') : '<li style="margin-bottom:6px;">Good general education background</li><li style="margin-bottom:6px;">Relevant core skills</li>';
+  const improvementsHTML = improvements.length > 0 ? improvements.map(i => `<li style="margin-bottom:6px;">${i}</li>`).join('') : '<li style="margin-bottom:6px;">Include specific metrics on project impacts</li><li style="margin-bottom:6px;">Provide link to GitHub portfolio</li>';
+
   resArea.innerHTML = `
     <div style="background:var(--bg-surface); border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow-card); overflow:hidden;">
       <div style="padding:20px; background:var(--bg-card); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
         <div style="font-weight:700; font-size:16px; color:var(--text-primary);">📊 Resume Analysis Complete</div>
-        <div style="font-size:24px; font-weight:800; color:var(--fuchsia); text-shadow:0 0 15px var(--fuchsia-glow);">${score}/100</div>
+        <div style="font-size:20px; font-weight:800; color:var(--fuchsia); text-shadow:0 0 15px var(--fuchsia-glow);">${scoreDisplay}</div>
       </div>
       <div style="padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:20px;">
         <div>
           <div style="font-size:12px; font-weight:700; color:var(--emerald); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.05em;">Top Strengths</div>
           <ul style="padding-left:16px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
-            ${strengths.map(s => `<li style="margin-bottom:6px;">${s}</li>`).join('')}
+            ${strengthsHTML}
           </ul>
         </div>
         <div>
           <div style="font-size:12px; font-weight:700; color:var(--amber); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.05em;">Suggested Improvements</div>
           <ul style="padding-left:16px; font-size:13px; color:var(--text-secondary); line-height:1.6;">
-            ${improvements.map(i => `<li style="margin-bottom:6px;">${i}</li>`).join('')}
+            ${improvementsHTML}
           </ul>
         </div>
       </div>
@@ -5042,12 +5069,33 @@ window.submitCodingChallenge = submitCodingChallenge;
 window.retryRound2 = retryRound2;
 
 // ── Round 3: Conversational AI Video Interview ───────────
+let r3ActiveStream = null;
+let r3VideoTrack = null;
+let r3AudioTrack = null;
+let r3State = 'PREPARING'; // PREPARING, READY, ASKING, LISTENING, PROCESSING, EVALUATING, FINAL_EVALUATION
 let r3ChatHistory = [];
+let r3Evaluations = [];
 let r3QuestionCount = 0;
-const R3_MAX_QUESTIONS = 5;
+const R3_MAX_QUESTIONS = 8;
 let r3Recognition = null;
 let r3IsListening = false;
 let r3InterviewActive = false;
+let r3InputMode = 'voice'; // voice | text
+
+// Camera analysis vars
+let r3CanvasInterval = null;
+let r3PresenceEvents = [];
+let r3IntegritySummary = [];
+let r3PresenceStats = {
+  framesChecked: 0,
+  framesPresent: 0,
+  engagementScore: 0,
+  postureScore: 0,
+  totalMotion: 0,
+  totalGazeDeviation: 0
+};
+let r3BaseCentroidY = null;
+let r3LastFrameData = null;
 
 // Promise-based TTS so we can await it finishing before we start listening
 function r3Speak(text) {
@@ -5061,9 +5109,9 @@ function r3Speak(text) {
                     voices.find(v => v.lang.startsWith('en')) || voices[0];
       if (voice) utt.voice = voice;
       utt.rate = 0.92; utt.pitch = 1.0;
-      utt.onstart  = () => r3SetStatus('speaking');
-      utt.onend    = () => { r3SetStatus('idle'); resolve(); };
-      utt.onerror  = () => { r3SetStatus('idle'); resolve(); };
+      utt.onstart  = () => r3SetState('ASKING');
+      utt.onend    = () => { resolve(); };
+      utt.onerror  = () => { resolve(); };
       window.speechSynthesis.speak(utt);
     };
     if (window.speechSynthesis.getVoices().length === 0) {
@@ -5072,160 +5120,374 @@ function r3Speak(text) {
   });
 }
 
-function r3SetStatus(state) {
-  const el = document.getElementById('r3-status-bar');
-  if (!el) return;
+function r3SetState(state) {
+  r3State = state;
+  const statusEl = document.getElementById('r3-status-bar');
+  if (!statusEl) return;
+
   const map = {
-    idle:     ['var(--amber)', '●',  'Interview Live'],
-    speaking: ['#EC4899',     '🔊', 'AI is speaking...'],
-    listening:['#10B981',     '🎤', 'Your turn — speak now'],
-    thinking: ['#818CF8',     '⏳', 'AI is thinking...'],
+    PREPARING: ['var(--amber)', '●', 'Preparing Interview...'],
+    READY: ['var(--emerald)', '●', 'Ready to Start'],
+    ASKING: ['#EC4899', '🔊', 'Atlas AI is speaking...'],
+    LISTENING: ['#10B981', '🎤', 'Listening — speak now'],
+    PROCESSING: ['#818CF8', '⏳', 'Analyzing your answer...'],
+    EVALUATING: ['#818CF8', '⏳', 'Preparing next question...'],
+    FINAL_EVALUATION: ['#00E5FF', '🏆', 'Evaluating overall interview...']
   };
-  const [color, icon, label] = map[state] || map.idle;
-  el.innerHTML = `<span style="color:${color};margin-right:6px;">${icon}</span><span style="font-size:13px;color:var(--text-secondary);font-weight:500;">${label}</span>`;
+
+  const [color, icon, label] = map[state] || map.READY;
+  statusEl.innerHTML = `<span style="color:${color};margin-right:6px;">${icon}</span><span style="font-size:13px;color:var(--text-secondary);font-weight:500;">${label}</span>`;
+  
+  const voiceContainer = document.getElementById('voice-input-container');
+  const keyboardContainer = document.getElementById('keyboard-input-container');
+  const micPulse = document.getElementById('mic-pulse-indicator');
+  const liveSpeechText = document.getElementById('speech-live-text');
+
+  if (state === 'LISTENING') {
+    if (r3InputMode === 'voice') {
+      if (voiceContainer) voiceContainer.style.display = 'flex';
+      if (keyboardContainer) keyboardContainer.style.display = 'none';
+      if (micPulse) micPulse.style.display = 'inline-block';
+      if (liveSpeechText) liveSpeechText.textContent = 'Speak your answer clearly...';
+    } else {
+      if (voiceContainer) voiceContainer.style.display = 'none';
+      if (keyboardContainer) keyboardContainer.style.display = 'flex';
+      if (micPulse) micPulse.style.display = 'none';
+    }
+  } else {
+    if (micPulse) micPulse.style.display = 'none';
+    if (state !== 'PROCESSING' && state !== 'EVALUATING' && state !== 'FINAL_EVALUATION') {
+      if (voiceContainer) voiceContainer.style.display = 'flex';
+      if (keyboardContainer) keyboardContainer.style.display = 'none';
+      if (liveSpeechText) liveSpeechText.textContent = 'Atlas AI is currently active...';
+    }
+  }
 }
 
 function r3AddMsg(role, text) {
-  const c = document.getElementById('r3-transcript');
+  const c = document.getElementById('r3-transcript-log');
   if (!c) return;
-  if (c.firstElementChild?.classList.contains('r3-ph')) c.innerHTML = '';
+  if (c.firstElementChild?.textContent.includes('Waiting to start') || c.firstElementChild?.textContent.includes('conversation will appear')) c.innerHTML = '';
   const isAI = role === 'ai';
   const d = document.createElement('div');
   d.style.cssText = `display:flex;flex-direction:column;align-items:${isAI?'flex-start':'flex-end'};margin-bottom:12px;`;
-  d.innerHTML = `<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;">${isAI?'🤖 Interviewer':'👤 You'}</div>
+  d.innerHTML = `<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;">${isAI?'🤖 ATLAS AI':'👤 YOU'}</div>
     <div style="background:${isAI?'var(--bg-card)':'rgba(0,229,255,0.12)'};color:var(--text-primary);padding:10px 14px;border-radius:12px;${isAI?'border-top-left-radius:2px;border:1px solid var(--border);':'border-top-right-radius:2px;border:1px solid var(--emerald);'}font-size:13px;max-width:88%;line-height:1.6;">${text}</div>`;
   c.appendChild(d);
   c.scrollTop = c.scrollHeight;
 }
 
-let r3PersonalizedContext = null;
+function checkResumeStatusOnSetup() {
+  const resumeEl = document.getElementById('setup-status-resume');
+  if (!resumeEl) return;
+  const hasResume = !!(placementResumeText && placementResumeText.trim());
+  if (hasResume) {
+    resumeEl.textContent = '✓ Ready';
+    resumeEl.style.color = 'var(--emerald)';
+  } else {
+    resumeEl.textContent = '✓ Ready (SkillBridge Profile)';
+    resumeEl.style.color = 'var(--emerald)';
+  }
+}
+
+async function testCameraAndMic() {
+  const alertEl = document.getElementById('media-error-alert');
+  const errorMsgEl = document.getElementById('media-error-message');
+  if (alertEl) alertEl.style.display = 'none';
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    r3ActiveStream = stream;
+    r3VideoTrack = stream.getVideoTracks()[0];
+    r3AudioTrack = stream.getAudioTracks()[0];
+
+    // Show inside setup preview
+    const video = document.getElementById('interview-video');
+    if (video) {
+      video.srcObject = stream;
+      video.style.display = 'block';
+    }
+    const offMsg = document.getElementById('camera-off-msg');
+    if (offMsg) offMsg.style.display = 'none';
+
+    document.getElementById('setup-status-camera').textContent = '✓ Connected';
+    document.getElementById('setup-status-camera').style.color = 'var(--emerald)';
+    document.getElementById('setup-status-microphone').textContent = '✓ Connected';
+    document.getElementById('setup-status-microphone').style.color = 'var(--emerald)';
+
+    // Verify resume optimization
+    checkResumeStatusOnSetup();
+
+    // Enable Start button
+    const startBtn = document.getElementById('btn-start-interview');
+    if (startBtn) {
+      startBtn.disabled = false;
+      startBtn.style.background = 'var(--grad-brand)';
+      startBtn.style.color = '#ffffff';
+      startBtn.style.cursor = 'pointer';
+      startBtn.style.border = 'none';
+      startBtn.style.boxShadow = 'var(--shadow-fuchsia)';
+    }
+
+  } catch (err) {
+    console.error("Camera/Mic access error:", err);
+    document.getElementById('setup-status-camera').textContent = '⚠ Error';
+    document.getElementById('setup-status-camera').style.color = 'var(--rose)';
+    document.getElementById('setup-status-microphone').textContent = '⚠ Error';
+    document.getElementById('setup-status-microphone').style.color = 'var(--rose)';
+
+    if (alertEl) {
+      alertEl.style.display = 'block';
+      if (errorMsgEl) errorMsgEl.textContent = 'Camera/microphone permission was denied. Please allow browser access and try again.';
+    }
+  }
+}
+
+async function extractResumeContext() {
+  const ctx = {
+    candidateName: currentUserName || 'Student',
+    targetRole: selectedCompanyType || 'Software Developer',
+    skills: [],
+    projects: [],
+    education: 'B.Tech Computer Science',
+    experience: 'N/A'
+  };
+
+  try {
+    const { data: profile } = await supabase.from('profiles').select('goal, roadmap_data, full_name').eq('id', currentUserId).single();
+    if (profile) {
+      if (profile.full_name) ctx.candidateName = profile.full_name;
+      if (profile.goal) {
+        try {
+          const parsedGoal = JSON.parse(profile.goal);
+          ctx.targetRole = parsedGoal.goal || ctx.targetRole;
+          ctx.education = `${parsedGoal.branch || 'B.Tech'} (${parsedGoal.college_name || 'University'})`;
+        } catch (e) {
+          ctx.targetRole = profile.goal || ctx.targetRole;
+        }
+      }
+      if (profile.roadmap_data?.phases) {
+        profile.roadmap_data.phases.forEach(phase => {
+          if (phase.skills) {
+            phase.skills.forEach(sk => {
+              if (!ctx.skills.includes(sk)) ctx.skills.push(sk);
+            });
+          }
+        });
+      }
+    }
+  } catch (e) {
+    console.error("Profile fetch error for interview context:", e);
+  }
+
+  try {
+    const { data: userProjects } = await supabase.from('projects').select('title, description, status').eq('user_id', currentUserId);
+    if (userProjects) {
+      userProjects.forEach(proj => {
+        ctx.projects.push({
+          title: proj.title,
+          description: proj.description || 'Web development project',
+          status: proj.status || 'Completed'
+        });
+      });
+    }
+  } catch (e) {
+    console.error("Projects fetch error for interview context:", e);
+  }
+
+  if (placementResumeText && placementResumeText.trim()) {
+    const parsePrompt = `You are a resume parser. Analyze this resume text and extract details.
+    Resume Text:
+    "${placementResumeText.substring(0, 3000)}"
+
+    Return ONLY a valid JSON object matching this schema (do not fabricate, keep fields empty if not found):
+    {
+      "candidateName": "Extract name if found, otherwise keep original: ${ctx.candidateName}",
+      "targetRole": "Extract target role, otherwise: ${ctx.targetRole}",
+      "skills": ["Extract list of skills (max 8)"],
+      "projects": [{"title": "project title", "description": "brief description"}],
+      "education": "Extract degree, branch, university",
+      "experience": "Extract work/internship experience details"
+    }`;
+
+    try {
+      const rawRes = await callAI(parsePrompt, 1000);
+      if (rawRes) {
+        const jsonMatch = rawRes.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.candidateName) ctx.candidateName = parsed.candidateName;
+          if (parsed.targetRole) ctx.targetRole = parsed.targetRole;
+          if (parsed.skills && parsed.skills.length > 0) ctx.skills = parsed.skills;
+          if (parsed.projects && parsed.projects.length > 0) {
+            ctx.projects = parsed.projects.map(p => ({
+              title: p.title || 'Project',
+              description: p.description || '',
+              status: 'Completed'
+            }));
+          }
+          if (parsed.education) ctx.education = parsed.education;
+          if (parsed.experience) ctx.experience = parsed.experience;
+        }
+      }
+    } catch (e) {
+      console.warn("AI resume parsing failed, utilizing profile details:", e);
+    }
+  }
+
+  // Fallbacks if lists are empty
+  if (ctx.skills.length === 0) ctx.skills = ['HTML', 'CSS', 'JavaScript', 'APIs'];
+  if (ctx.projects.length === 0) ctx.projects = [{ title: 'SkillBridge Platform', description: 'Career prep ecosystem', status: 'Completed' }];
+
+  r3PersonalizedContext = ctx;
+  return ctx;
+}
 
 async function startVideoInterview() {
-  try {
-    // 1. Fetch profile details (goal, roadmap)
-    const { data: profile } = await supabase.from('profiles').select('goal, roadmap_data').eq('id', currentUserId).single();
-    
-    // 2. Fetch projects
-    const { data: userProjects } = await supabase.from('projects').select('title, description, status').eq('user_id', currentUserId);
-    
-    // 3. Resolve career track
-    const goal = profile?.goal || '';
-    const { track } = getCareerTrackFromGoal(goal);
+  r3SetState('PREPARING');
 
-    // List active roadmap tasks/phases
-    let roadmapTasks = [];
-    if (profile?.roadmap_data?.phases) {
-      roadmapTasks = profile.roadmap_data.phases.slice(0, 2).map(p => p.title);
+  // Verify and load stream
+  if (!r3ActiveStream) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      r3ActiveStream = stream;
+      r3VideoTrack = stream.getVideoTracks()[0];
+      r3AudioTrack = stream.getAudioTracks()[0];
+    } catch(e) {
+      showToast("Camera or Microphone permission denied.", "error");
+      return;
     }
-
-    // List project titles
-    let projectList = [];
-    if (userProjects) {
-      projectList = userProjects.map(p => `${p.title} (${p.status})`);
-    }
-
-    r3PersonalizedContext = {
-      track,
-      goal,
-      roadmapTasks,
-      projects: projectList,
-      resume: (placementResumeText || '').substring(0, 500)
-    };
-
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    const video = document.getElementById('interview-video');
-    video.srcObject = stream;
-    video.style.display = 'block';
-    document.getElementById('camera-off-msg').style.display = 'none';
-    document.getElementById('live-indicator').style.display = 'block';
-    document.getElementById('start-r3-btn').style.display = 'none';
-    document.getElementById('r3-controls').style.display = 'none'; // replaced by new UI
-    document.getElementById('ai-q-display').style.display = 'block';
-
-    // Inject conversational UI
-    if (!document.getElementById('r3-conv-ui')) {
-      const ui = document.createElement('div');
-      ui.id = 'r3-conv-ui';
-      ui.innerHTML = `
-        <div id="r3-status-bar" style="display:flex;align-items:center;gap:8px;background:var(--bg-surface);padding:10px 16px;border-radius:10px;border:1px solid var(--border);margin:12px 0;">
-          <span style="color:var(--amber);">●</span><span style="font-size:13px;color:var(--text-secondary);">Initializing...</span>
-        </div>
-        <div id="r3-transcript" style="height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--bg-base);display:flex;flex-direction:column;gap:4px;margin-bottom:12px;box-shadow:inset 0 4px 20px rgba(0,0,0,.2);">
-          <div class="r3-ph" style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Interview conversation will appear here...</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;">
-          <div id="r3-listen-indicator" style="display:none;flex:1;padding:12px 16px;background:rgba(16,185,129,.08);border:1px solid var(--emerald);border-radius:10px;font-size:13px;color:var(--emerald);">🎤 Listening — speak your answer clearly...</div>
-          <button onclick="endVideoInterview()" style="padding:10px 20px;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;">⏹ End Interview</button>
-        </div>`;
-      document.getElementById('r3-result').before(ui);
-    }
-
-    r3ChatHistory = []; r3QuestionCount = 0; r3InterviewActive = true;
-    if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
-
-    await r3Speak('Welcome to your final AI Technical and HR Interview. I have reviewed your profile and projects. Let us begin.');
-    if (r3InterviewActive) await r3NextQuestion();
-  } catch (err) {
-    console.error("Round 3 Init Error:", err);
-    showToast('Camera or Microphone permission denied. Allow access and try again.', 'error');
   }
+
+  // Parse Resume context in background/loading
+  showToast("Personalizing interview using resume context...", "info");
+  await extractResumeContext();
+
+  // Swap panels
+  document.getElementById('r3-setup-screen').style.display = 'none';
+  document.getElementById('r3-interview-panel').style.display = 'block';
+
+  const video = document.getElementById('interview-video');
+  if (video) {
+    video.srcObject = r3ActiveStream;
+    video.style.display = 'block';
+  }
+  const offMsg = document.getElementById('camera-off-msg');
+  if (offMsg) offMsg.style.display = 'none';
+  const liveInd = document.getElementById('live-indicator');
+  if (liveInd) liveInd.style.display = 'block';
+
+  r3ChatHistory = [];
+  r3Evaluations = [];
+  r3PresenceEvents = [];
+  r3IntegritySummary = [];
+  r3QuestionCount = 0;
+  r3InterviewActive = true;
+  r3InputMode = 'voice';
+
+  const sessionId = crypto.randomUUID();
+  localStorage.setItem('r3_session_id', sessionId);
+  saveSessionToLocalStorage();
+
+  // Start Camera analysis
+  startCameraAnalysis();
+
+  await r3Speak('Welcome to your personalized AI Interview. Let us begin.');
+  await r3NextQuestion();
 }
 
 async function r3NextQuestion() {
   if (!r3InterviewActive) return;
+
   r3QuestionCount++;
-  if (r3QuestionCount > R3_MAX_QUESTIONS) { await r3Finish(); return; }
+  document.getElementById('r3-q-num').textContent = r3QuestionCount;
+  
+  if (r3QuestionCount > R3_MAX_QUESTIONS) {
+    await r3Finish();
+    return;
+  }
 
-  r3SetStatus('thinking');
-  const ctx = r3PersonalizedContext || { track: 'Software Development', goal: 'Software Engineer', roadmapTasks: [], projects: [], resume: '' };
-  const histStr = r3ChatHistory.map(m => `${m.role === 'ai' ? 'Interviewer' : 'Candidate'}: ${m.text}`).join('\n');
+  r3SetState('PROCESSING');
 
-  const prompt = r3QuestionCount === 1
-    ? `You are an expert technical and HR interviewer for the role ${selectedCompanyType}.
-Candidate details:
-- Target Role/Track: ${ctx.track} (Goal: ${ctx.goal})
-- Resume details: "${ctx.resume}"
-- Projects: ${ctx.projects.join(', ') || 'No project showcase entries yet'}
-- Active Roadmap topics: ${ctx.roadmapTasks.join(', ') || 'None'}
+  const ctx = r3PersonalizedContext;
+  const historyLines = r3ChatHistory.map(h => `${h.role === 'ai' ? 'Interviewer' : 'Candidate'}: ${h.text}`);
+  const historyText = historyLines.join('\n\n');
 
-Ask the first question. It should be a welcoming question combined with a question about their resume, track, or projects.
-Make it exactly 1 question, max 2 sentences, do not include preamble, options, or numbers.`
-    : `You are an expert technical and HR interviewer for the role ${selectedCompanyType}.
-Candidate details:
-- Track: ${ctx.track}
-- Resume details: "${ctx.resume}"
-- Projects: ${ctx.projects.join(', ')}
-- Active Roadmap: ${ctx.roadmapTasks.join(', ')}
+  const stageMap = {
+    1: { name: 'Stage 1 — Introduction', desc: 'Ask the candidate to introduce themselves, referencing their target career path.' },
+    2: { name: 'Stage 2 — Resume Verification', desc: `Ask them a detailed technical verification question about one of their claimed skills: ${ctx.skills.slice(0, 4).join(', ')}.` },
+    3: { name: 'Stage 3 — Project Deep Dive', desc: `Choose one project from their resume: ${JSON.stringify(ctx.projects[0])}. Ask what technical challenge they faced and how they solved it.` },
+    4: { name: 'Stage 4 — Project Follow-Up', desc: 'Ask them a follow-up about the trade-offs of the technology choices they discussed in the previous project question.' },
+    5: { name: 'Stage 5 — Technical Core Question', desc: `Ask a core technical concept question related to their target role (${ctx.targetRole}) and claimed skills (${ctx.skills.join(', ')}).` },
+    6: { name: 'Stage 6 — Technical Follow-Up (Depth test)', desc: 'Ask a challenging follow-up question testing depth of knowledge based on their previous technical answer.' },
+    7: { name: 'Stage 7 — Behavioral / HR Scenario', desc: 'Ask a behavioral question about handling project delay, conflict with a team member, or failure.' },
+    8: { name: 'Stage 8 — Wrap-up', desc: 'Ask a final closing question such as "Why should we hire you for this role?" or checking their career interests.' }
+  };
 
-Conversation history:
-${histStr}
+  const currentStage = stageMap[r3QuestionCount];
+  
+  // Fetch previous answer score to check depth
+  let previousScoreNotice = "";
+  if (r3Evaluations.length > 0) {
+    const lastEval = r3Evaluations[r3Evaluations.length - 1];
+    if (lastEval.depth_score < 70) {
+      previousScoreNotice = "The candidate's previous answer lacked depth. Push for more specific details or examples in this question.";
+    }
+  }
 
-Ask the next question (${r3QuestionCount}/${R3_MAX_QUESTIONS}). You can ask a technical follow-up based on their previous answers, or switch to an HR/behavioral question (e.g. conflict resolution, strengths, why they want this role).
-Make it exactly 1 question, max 2 sentences, do not include preamble, options, or numbers.`;
+  const prompt = `You are Atlas, an expert technical and HR interviewer conducting a resume-driven live mock interview.
+  
+  Candidate Details:
+  - Name: ${ctx.candidateName}
+  - Target Role: ${ctx.targetRole}
+  - Education: ${ctx.education}
+  - Skills claimed: ${ctx.skills.join(', ')}
+  - Projects: ${JSON.stringify(ctx.projects)}
+  - Experience: ${ctx.experience}
+  
+  Interview Progression: Question ${r3QuestionCount} of ${R3_MAX_QUESTIONS}
+  Current Stage: ${currentStage.name} - ${currentStage.desc}
+  ${previousScoreNotice}
+  
+  Chat Transcript:
+  ${historyText || '(No messages yet)'}
+  
+  INSTRUCTIONS:
+  1. Generate the next logical question for the interview matching the Current Stage.
+  2. The question must feel realistic and adapt to previous answers.
+  3. Keep the question concise: exactly 1-2 sentences.
+  4. Do NOT output stage markers, greetings, question numbers, metadata, or side notes. Output ONLY the question itself.`;
 
-  const question = await callAI(prompt) || 'Can you describe a challenging project you have worked on and what you learned from it?';
-
+  r3SetState('PROCESSING');
+  
+  const question = await callAI(prompt, 600) || "Could you describe one of your key projects and the core technologies you used?";
+  
   r3ChatHistory.push({ role: 'ai', text: question });
+  
+  // Update display
+  const textEl = document.getElementById('ai-q-display-text');
+  if (textEl) textEl.textContent = question;
+  
   r3AddMsg('ai', question);
-  const qd = document.getElementById('ai-q-display');
-  if (qd) qd.textContent = question;
-
+  
+  r3SetState('ASKING');
   await r3Speak(question);
+
   if (!r3InterviewActive) return;
 
-  r3SetStatus('listening');
-  document.getElementById('r3-listen-indicator').style.display = 'flex';
-  r3Listen();
+  r3SetState('LISTENING');
+  saveSessionToLocalStorage();
 }
 
 function r3Listen() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    showToast('Speech recognition needs Chrome or Edge.', 'error');
-    r3ChatHistory.push({ role: 'user', text: '[No speech recognition available]' });
-    setTimeout(() => r3NextQuestion(), 2000);
+    showToast('Speech recognition not supported in this browser. Fallback to Keyboard Mode.', 'warning');
+    r3InputMode = 'text';
+    r3SetState('LISTENING');
     return;
   }
+
   if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
   r3Recognition = new SR();
   r3Recognition.continuous = false;
@@ -5234,7 +5496,7 @@ function r3Listen() {
 
   let finalText = '';
   let silTimer = null;
-  const li = document.getElementById('r3-listen-indicator');
+  const liveTextEl = document.getElementById('speech-live-text');
 
   r3Recognition.onresult = (e) => {
     finalText = '';
@@ -5243,116 +5505,691 @@ function r3Listen() {
       if (e.results[i].isFinal) finalText += e.results[i][0].transcript;
       else interim += e.results[i][0].transcript;
     }
-    if (li) li.textContent = `🎤 ${finalText || interim || 'Listening...'}`;
+    if (liveTextEl) liveTextEl.textContent = finalText || interim || 'Listening...';
+    
     if (silTimer) clearTimeout(silTimer);
-    if (finalText) silTimer = setTimeout(() => r3Recognition.stop(), 1500);
+    if (finalText.trim()) {
+      silTimer = setTimeout(() => {
+        try { r3Recognition.stop(); } catch(err){}
+      }, 2000);
+    }
   };
 
   r3Recognition.onend = async () => {
     r3IsListening = false;
-    if (li) li.style.display = 'none';
+    if (document.getElementById('mic-pulse-indicator')) {
+      document.getElementById('mic-pulse-indicator').style.display = 'none';
+    }
+
     if (!r3InterviewActive) return;
-    const ans = finalText.trim() || '[No response detected]';
-    r3ChatHistory.push({ role: 'user', text: ans });
-    r3AddMsg('user', ans);
-    await r3NextQuestion();
+
+    const ans = finalText.trim();
+    if (ans) {
+      submitAnswer(ans);
+    } else {
+      r3SetState('LISTENING');
+      if (liveTextEl) liveTextEl.textContent = "No speech detected. Please speak clearly, or click Keyboard Fallback to type.";
+    }
   };
 
   r3Recognition.onerror = async (e) => {
     r3IsListening = false;
-    if (li) li.style.display = 'none';
+    if (document.getElementById('mic-pulse-indicator')) {
+      document.getElementById('mic-pulse-indicator').style.display = 'none';
+    }
     if (!r3InterviewActive) return;
-    r3ChatHistory.push({ role: 'user', text: '[Response unclear]' });
-    await r3NextQuestion();
+    
+    if (e.error === 'no-speech') {
+      r3SetState('LISTENING');
+      if (liveTextEl) liveTextEl.textContent = "No speech detected. Please speak clearly, or click Keyboard Fallback to type.";
+    } else {
+      console.warn("Speech recognition error:", e.error);
+      r3InputMode = 'text';
+      r3SetState('LISTENING');
+      showToast("Speech Recognition failed. Switched to Keyboard fallback.", "warning");
+    }
   };
 
   r3IsListening = true;
   try { r3Recognition.start(); } catch(e) {}
 }
 
+async function submitAnswer(answerText) {
+  if (!r3InterviewActive) return;
+
+  const trimmed = answerText.trim();
+  if (!trimmed || trimmed.includes("Click 'Unmute Mic'") || trimmed.includes("No speech detected")) {
+    showToast("Please provide an answer by speaking or typing.", "warning");
+    r3SetState('LISTENING');
+    if (r3InputMode === 'voice') r3Listen();
+    return;
+  }
+
+  r3ChatHistory.push({ role: 'user', text: trimmed });
+  r3AddMsg('user', trimmed);
+
+  r3SetState('PROCESSING');
+
+  // Evaluate the answer in background
+  await evaluateLastAnswer(trimmed);
+
+  // Sync with local storage
+  saveSessionToLocalStorage();
+
+  // Load next question
+  await r3NextQuestion();
+}
+
+function submitTypedAnswer() {
+  const kbdInput = document.getElementById('r3-keyboard-text');
+  if (!kbdInput) return;
+  const val = kbdInput.value;
+  submitAnswer(val);
+}
+
+function switchInputMode() {
+  r3InputMode = r3InputMode === 'voice' ? 'text' : 'voice';
+  const toggleBtn = document.getElementById('input-mode-toggle');
+  if (toggleBtn) {
+    toggleBtn.textContent = r3InputMode === 'voice' ? 'Keyboard Fallback' : 'Speech Mode';
+  }
+  if (r3State === 'LISTENING') {
+    r3SetState('LISTENING');
+    if (r3InputMode === 'voice') r3Listen();
+  }
+}
+
+async function evaluateLastAnswer(answer) {
+  const lastQuestion = r3ChatHistory[r3ChatHistory.length - 2]?.text || "";
+  if (!lastQuestion) return;
+
+  const evalPrompt = `You are an expert interviewer evaluating a candidate's response to an interview question.
+  
+  Question asked: "${lastQuestion}"
+  Candidate Answer: "${answer}"
+  
+  Evaluate this answer across:
+  1. Technical Accuracy (score 0-100)
+  2. Relevance (score 0-100)
+  3. Depth of Knowledge (score 0-100)
+  4. Reasoning & Problem Solving (score 0-100)
+  5. Communication Quality (score 0-100)
+  6. Resume Consistency (score 0-100)
+  
+  INSTRUCTIONS:
+  - If the answer is extremely brief, incorrect, or dodges the technical details, score below 60.
+  - Return ONLY a valid JSON object matching this schema:
+  {
+    "technical_score": <number>,
+    "relevance_score": <number>,
+    "depth_score": <number>,
+    "reasoning_score": <number>,
+    "communication_score": <number>,
+    "resume_consistency_score": <number>,
+    "feedback": "<brief 1-sentence description of strengths or gaps in this response. Use wording like 'candidate could not sufficiently demonstrate the skill' rather than 'lied'>"
+  }`;
+
+  try {
+    const rawRes = await callAI(evalPrompt, 500);
+    if (rawRes) {
+      const jsonMatch = rawRes.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        r3Evaluations.push({
+          question: lastQuestion,
+          answer: answer,
+          technical_score: parsed.technical_score || 70,
+          relevance_score: parsed.relevance_score || 70,
+          depth_score: parsed.depth_score || 70,
+          reasoning_score: parsed.reasoning_score || 70,
+          communication_score: parsed.communication_score || 70,
+          resume_consistency_score: parsed.resume_consistency_score || 70,
+          feedback: parsed.feedback || "Answer evaluated."
+        });
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn("Evaluation parsing failed, using fallback:", e);
+  }
+
+  r3Evaluations.push({
+    question: lastQuestion,
+    answer: answer,
+    technical_score: 70,
+    relevance_score: 70,
+    depth_score: 70,
+    reasoning_score: 70,
+    communication_score: 70,
+    resume_consistency_score: 70,
+    feedback: "Answer registered."
+  });
+}
+
+function startCameraAnalysis() {
+  const video = document.getElementById('interview-video');
+  const canvas = document.getElementById('hidden-cv-canvas');
+  if (!video || !canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  r3PresenceStats = {
+    framesChecked: 0,
+    framesPresent: 0,
+    engagementScore: 0,
+    postureScore: 0,
+    totalMotion: 0,
+    totalGazeDeviation: 0
+  };
+  r3PresenceEvents = [];
+  r3BaseCentroidY = null;
+  r3LastFrameData = null;
+
+  const calibrationOverlay = document.getElementById('setup-overlay-calibration');
+  if (calibrationOverlay) {
+    calibrationOverlay.textContent = 'Calibrating visual presence...';
+    calibrationOverlay.style.color = 'var(--amber)';
+  }
+
+  logIntegrityEvent("Visual analysis calibrated");
+
+  r3CanvasInterval = setInterval(() => {
+    if (!r3InterviewActive) return;
+    if (video.paused || video.ended || !r3VideoTrack || !r3VideoTrack.enabled) {
+      logIntegrityEvent("Webcam is disabled or unavailable");
+      return;
+    }
+
+    try {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+
+      let totalMass = 0;
+      let centroidY = 0;
+      let centroidX = 0;
+      let brightnessSum = 0;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const currentPixels = [];
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const r = data[idx];
+          const g = data[idx+1];
+          const b = data[idx+2];
+          
+          const brightness = 0.299*r + 0.587*g + 0.114*b;
+          brightnessSum += brightness;
+          currentPixels.push(brightness);
+
+          const weight = brightness > 50 ? brightness : 0;
+          totalMass += weight;
+          centroidY += y * weight;
+          centroidX += x * weight;
+        }
+      }
+
+      const avgBrightness = brightnessSum / (w * h);
+      const avgYCentroid = totalMass > 0 ? (centroidY / totalMass) : (h / 2);
+      const avgXCentroid = totalMass > 0 ? (centroidX / totalMass) : (w / 2);
+
+      r3PresenceStats.framesChecked++;
+
+      if (avgBrightness < 10) {
+        logIntegrityEvent("Face missing / low light");
+        if (calibrationOverlay) {
+          calibrationOverlay.textContent = '⚠ Face missing / Covered';
+          calibrationOverlay.style.color = 'var(--rose)';
+        }
+      } else {
+        r3PresenceStats.framesPresent++;
+        
+        if (r3BaseCentroidY === null) {
+          r3BaseCentroidY = avgYCentroid;
+          logIntegrityEvent("Posture baseline calibrated");
+          if (calibrationOverlay) {
+            calibrationOverlay.textContent = 'Presence: Calibrated';
+            calibrationOverlay.style.color = 'var(--emerald)';
+          }
+        } else {
+          const yDiff = avgYCentroid - r3BaseCentroidY;
+          if (yDiff > 2.2) {
+            logIntegrityEvent("Slouched posture detected");
+            r3PresenceStats.postureScore += 50;
+            if (calibrationOverlay) {
+              calibrationOverlay.textContent = '⚠ Posture: Slouched';
+              calibrationOverlay.style.color = 'var(--amber)';
+            }
+          } else {
+            r3PresenceStats.postureScore += 100;
+            if (calibrationOverlay) {
+              calibrationOverlay.textContent = 'Presence: Stable';
+              calibrationOverlay.style.color = 'var(--emerald)';
+            }
+          }
+
+          const xDiff = Math.abs(avgXCentroid - (w / 2));
+          if (xDiff > 3.8) {
+            logIntegrityEvent("Gaze deviation detected");
+            r3PresenceStats.engagementScore += 50;
+            r3PresenceStats.totalGazeDeviation++;
+          } else {
+            r3PresenceStats.engagementScore += 100;
+          }
+        }
+      }
+
+      if (r3LastFrameData !== null) {
+        let frameDeltaSum = 0;
+        for (let i = 0; i < currentPixels.length; i++) {
+          frameDeltaSum += Math.abs(currentPixels[i] - r3LastFrameData[i]);
+        }
+        const avgDelta = frameDeltaSum / currentPixels.length;
+        r3PresenceStats.totalMotion += avgDelta;
+
+        if (avgDelta > 32) {
+          logIntegrityEvent("Excessive movement detected");
+        }
+      }
+
+      r3LastFrameData = currentPixels;
+
+    } catch (e) {
+      console.warn("Visual analyzer frame capture error:", e);
+    }
+  }, 1500);
+}
+
+function logIntegrityEvent(msg) {
+  const timestamp = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const eventLogEl = document.getElementById('integrity-events-log');
+  if (!eventLogEl) return;
+  
+  if (eventLogEl.firstElementChild?.textContent.includes('No alerts detected')) {
+    eventLogEl.innerHTML = '';
+  }
+
+  const div = document.createElement('div');
+  div.style.marginBottom = '4px';
+  div.innerHTML = `<span style="color:var(--text-muted);">${timestamp}</span> — <span style="color:var(--rose); font-weight:600;">${msg}</span>`;
+  eventLogEl.appendChild(div);
+  eventLogEl.scrollTop = eventLogEl.scrollHeight;
+
+  r3PresenceEvents.push({
+    event_type: msg,
+    timestamp: new Date().toISOString()
+  });
+
+  if (!r3IntegritySummary.includes(msg)) {
+    r3IntegritySummary.push(msg);
+  }
+}
+
+function saveSessionToLocalStorage() {
+  if (!r3InterviewActive) return;
+  const sessionState = {
+    session_id: localStorage.getItem('r3_session_id') || crypto.randomUUID(),
+    r3QuestionCount,
+    r3ChatHistory,
+    r3Evaluations,
+    r3PresenceEvents,
+    r3IntegritySummary,
+    r3PresenceStats,
+    r3PersonalizedContext,
+    r3InputMode,
+    timestamp: Date.now()
+  };
+  localStorage.setItem('r3_active_session', JSON.stringify(sessionState));
+}
+
+function showResumeInterviewModal(saved) {
+  // Prevent duplicate modals
+  if (document.getElementById('r3-resume-modal')) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'r3-resume-modal';
+  modal.style.cssText = 'position:fixed; inset:0; background:rgba(5,7,10,0.85); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; z-index:9999;';
+  modal.innerHTML = `
+    <div style="background:var(--bg-surface); border:1px solid var(--border); padding:32px; border-radius:16px; max-width:400px; text-align:center; box-shadow:var(--shadow-card);">
+      <div style="font-size:42px; margin-bottom:16px; animation: pulse 1.5s infinite;">🎙</div>
+      <h3 style="color:#ffffff; font-size:18px; font-weight:700; margin:0 0 8px 0;">Resume Active Interview?</h3>
+      <p style="color:var(--text-secondary); font-size:13px; line-height:1.5; margin:0 0 24px 0;">We found an active interview session in progress (Question ${saved.r3QuestionCount} / 8). Would you like to resume where you left off?</p>
+      <div style="display:flex; gap:12px;">
+        <button id="r3-btn-resume" style="flex:1; padding:12px; background:var(--grad-brand); border:none; color:#ffffff; font-weight:600; border-radius:8px; cursor:pointer;">Resume Session</button>
+        <button id="r3-btn-restart" style="flex:1; padding:12px; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:#ffffff; font-weight:600; border-radius:8px; cursor:pointer;">Start Fresh</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById('r3-btn-resume').onclick = () => {
+    document.body.removeChild(modal);
+    resumeInterviewSession(saved);
+  };
+  document.getElementById('r3-btn-restart').onclick = () => {
+    document.body.removeChild(modal);
+    localStorage.removeItem('r3_active_session');
+    localStorage.removeItem('r3_session_id');
+    initPlacementTab();
+  };
+}
+
+async function resumeInterviewSession(saved) {
+  r3QuestionCount = saved.r3QuestionCount - 1; // back one so r3NextQuestion increments to correct number
+  r3ChatHistory = saved.r3ChatHistory || [];
+  r3Evaluations = saved.r3Evaluations || [];
+  r3PresenceEvents = saved.r3PresenceEvents || [];
+  r3IntegritySummary = saved.r3IntegritySummary || [];
+  r3PresenceStats = saved.r3PresenceStats || { framesChecked: 0, framesPresent: 0, engagementScore: 0, postureScore: 0, totalMotion: 0, totalGazeDeviation: 0 };
+  r3PersonalizedContext = saved.r3PersonalizedContext;
+  r3InputMode = saved.r3InputMode || 'voice';
+
+  document.getElementById('r3-setup-screen').style.display = 'none';
+  document.getElementById('r3-interview-panel').style.display = 'block';
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    r3ActiveStream = stream;
+    r3VideoTrack = stream.getVideoTracks()[0];
+    r3AudioTrack = stream.getAudioTracks()[0];
+
+    const video = document.getElementById('interview-video');
+    if (video) {
+      video.srcObject = stream;
+      video.style.display = 'block';
+    }
+    const offMsg = document.getElementById('camera-off-msg');
+    if (offMsg) offMsg.style.display = 'none';
+    const liveInd = document.getElementById('live-indicator');
+    if (liveInd) liveInd.style.display = 'block';
+
+    r3InterviewActive = true;
+    startCameraAnalysis();
+
+    // Rebuild log
+    const logEl = document.getElementById('r3-transcript-log');
+    if (logEl) {
+      logEl.innerHTML = '';
+      r3ChatHistory.forEach(msg => {
+        const isAI = msg.role === 'ai';
+        const div = document.createElement('div');
+        div.style.cssText = `display:flex; flex-direction:column; align-items:${isAI?'flex-start':'flex-end'}; margin-bottom:12px;`;
+        div.innerHTML = `<div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:.05em;">${isAI?'🤖 ATLAS AI':'👤 YOU'}</div>
+          <div style="background:${isAI?'var(--bg-card)':'rgba(0,229,255,0.12)'}; color:var(--text-primary); padding:10px 14px; border-radius:12px; ${isAI?'border-top-left-radius:2px; border:1px solid var(--border);':'border-top-right-radius:2px; border:1px solid var(--emerald);'} font-size:13px; max-width:88%; line-height:1.6;">${msg.text}</div>`;
+        logEl.appendChild(div);
+      });
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    r3SetState('READY');
+    await r3NextQuestion();
+
+  } catch(err) {
+    console.error("Resuming media access failed:", err);
+    showToast("Failed to reconnect camera/microphone. Starting fresh.", "error");
+    localStorage.removeItem('r3_active_session');
+    localStorage.removeItem('r3_session_id');
+    initPlacementTab();
+  }
+}
+
+async function runResumeVerification() {
+  const ctx = r3PersonalizedContext;
+  if (!ctx || !ctx.skills || ctx.skills.length === 0) return [];
+
+  const transcript = r3ChatHistory.map(h => `${h.role === 'ai' ? 'Atlas' : 'Candidate'}: ${h.text}`).join('\n');
+  const verifyPrompt = `You are a technical recruiter conducting resume verification based on the interview transcript.
+  
+  Skills to verify: ${ctx.skills.join(', ')}
+  
+  Transcript:
+  ${transcript}
+  
+  Evaluate each skill's demonstration status. Status options are: "Demonstrated", "Partially demonstrated", or "Could not sufficiently demonstrate".
+  If a skill was not tested or the candidate failed to show understanding of it, choose "Could not sufficiently demonstrate".
+  
+  Return ONLY a valid JSON object matching this schema:
+  {
+    "verification": [
+      { "skill": "skill name", "status": "Demonstrated|Partially demonstrated|Could not sufficiently demonstrate" }
+    ]
+  }`;
+
+  try {
+    const rawRes = await callAI(verifyPrompt, 1000);
+    if (rawRes) {
+      const jsonMatch = rawRes.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return parsed.verification || [];
+      }
+    }
+  } catch (e) {
+    console.warn("Resume verification call failed:", e);
+  }
+
+  return ctx.skills.map(skill => ({
+    skill: skill,
+    status: 'Partially demonstrated'
+  }));
+}
+
 async function r3Finish() {
   r3InterviewActive = false;
   if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
-  r3SetStatus('thinking');
-  const qd = document.getElementById('ai-q-display');
-  if (qd) qd.textContent = '✅ Generating your results...';
+  clearInterval(r3CanvasInterval);
 
-  await r3Speak('The interview is now complete. Please give me a moment to evaluate your performance.');
+  r3SetState('FINAL_EVALUATION');
+  
+  const textEl = document.getElementById('ai-q-display-text');
+  if (textEl) textEl.textContent = 'Generating final performance report...';
 
-  const histStr = r3ChatHistory.map(m => `${m.role==='ai'?'Interviewer':'Candidate'}: ${m.text}`).join('\n\n');
-  const evalPrompt = `Expert interviewer conducting a final evaluation of this candidate transcript:
-${histStr}
+  await r3Speak('The interview is now complete. Please wait while I compile your final report.');
 
-Evaluate and grade across these dimensions:
-1. Technical Accuracy (1-100)
-2. Communication Skills (1-100)
-3. Depth of Answers (1-100)
-4. Problem-solving capability (1-100)
-
-Calculate an overall average score (0-100). If answers are generic, brief, or dodge technical details, score below 70.
-Return ONLY valid JSON format:
-{
-  "score": <overall score number>,
-  "hire": "Strong Hire|Hire|No Hire",
-  "communication": "Excellent|Good|Average|Poor",
-  "technical": "Excellent|Good|Average|Poor",
-  "strengths": ["...", "..."],
-  "improvements": ["...", "..."],
-  "summary": "<2-3 sentence assessment summarizing performance across technical accuracy, communication, depth, and problem-solving>"
-}`;
-  const raw = await callAI(evalPrompt, 500);
-
-  let sc=78, hire='Hire', comm='Good', tech='Good', summary='The candidate demonstrated solid communication skills and relevant experience.';
-  let strengths=['Clear communication','Relevant experience'], improvements=['Add specific metrics','Show deeper technical depth'];
-  try {
-    if (raw) { const p = JSON.parse(raw.match(/\{[\s\S]*\}/)[0]); sc=p.score||sc; hire=p.hire||hire; comm=p.communication||comm; tech=p.technical||tech; strengths=p.strengths||strengths; improvements=p.improvements||improvements; summary=p.summary||summary; }
-  } catch(e) {}
-
+  // Visual/Stream cleanup
+  if (r3ActiveStream) {
+    r3ActiveStream.getTracks().forEach(t => t.stop());
+  }
   const video = document.getElementById('interview-video');
-  if (video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
-  ['live-indicator','ai-q-display'].forEach(id => { const e=document.getElementById(id); if(e) e.style.display='none'; });
-  const ui = document.getElementById('r3-conv-ui');
-  if (ui) ui.style.display = 'none';
+  if (video) video.style.display = 'none';
+  const liveInd = document.getElementById('live-indicator');
+  if (liveInd) liveInd.style.display = 'none';
+  document.getElementById('camera-off-msg').style.display = 'flex';
+  document.getElementById('r3-interview-panel').style.display = 'none';
+
+  // Calculate final scores
+  let avgTech = 75;
+  let avgReason = 75;
+  let avgResume = 75;
+  let avgComm = 75;
+
+  if (r3Evaluations.length > 0) {
+    avgTech = Math.round(r3Evaluations.reduce((acc, curr) => acc + curr.technical_score, 0) / r3Evaluations.length);
+    avgReason = Math.round(r3Evaluations.reduce((acc, curr) => acc + curr.reasoning_score, 0) / r3Evaluations.length);
+    avgResume = Math.round(r3Evaluations.reduce((acc, curr) => acc + curr.resume_consistency_score, 0) / r3Evaluations.length);
+    avgComm = Math.round(r3Evaluations.reduce((acc, curr) => acc + curr.communication_score, 0) / r3Evaluations.length);
+  }
+
+  // Calculate presence percentages
+  const frames = r3PresenceStats.framesChecked || 1;
+  const presentFrames = r3PresenceStats.framesPresent;
+  const camPresencePct = Math.round((presentFrames / frames) * 100);
+  const engagementPct = Math.round((r3PresenceStats.engagementScore) / frames) || 85;
+  const posturePct = Math.round((r3PresenceStats.postureScore) / frames) || 85;
+  const professionalPresencePct = Math.round((camPresencePct + engagementPct + posturePct) / 3);
+
+  // Overall Score Calculation (Content 70%, Comm 20%, Presence 10%)
+  const contentScore = Math.round((avgTech + avgReason + avgResume) / 3);
+  const sc = Math.round(contentScore * 0.7 + avgComm * 0.2 + professionalPresencePct * 0.1);
+
+  // Verify resume claims
+  const verificationList = await runResumeVerification();
+
+  const evalPrompt = `Given the final interview evaluations:
+  Content Score: ${contentScore}%
+  Communication Score: ${avgComm}%
+  Presence Score: ${professionalPresencePct}%
+  
+  Answer logs: ${JSON.stringify(r3Evaluations)}
+  Integrity events logged: ${r3IntegritySummary.join(', ')}
+  
+  Provide a final hiring decision summary (2-3 sentences). Use strictly objective, observable language (e.g. "Frequent gaze deviation detected" or "Multiple frame exits" instead of "nervous" or "liar").
+  Identify:
+  1. Strengths (2-3 specific evidence-based strengths).
+  2. Areas to Improve (2-3 actionable areas, specifying topics like SQL, React, Communication, etc.).
+  3. Actionable SkillBridge module links recommendations.
+  
+  Return ONLY a valid JSON object matching this schema:
+  {
+    "hiringDecision": "Strong Hire|Hire|No Hire",
+    "summary": "assessment summary...",
+    "strengths": ["strength1", "strength2"],
+    "weaknesses": [{"topic": "SQL|React|Communication|etc", "feedback": "feedback text..."}],
+    "feedbackAdvice": "paragraph of advice..."
+  }`;
+
+  let hire = 'Hire';
+  let summary = 'The candidate demonstrated relevant technical aptitude and completed key project verification questions.';
+  let strengths = ['Project experience', 'Core technical accuracy'];
+  let weaknesses = [
+    { topic: 'SQL', feedback: 'Struggled with complex queries and joins.' },
+    { topic: 'Communication', feedback: 'Responses lacked structured reasoning.' }
+  ];
+  let feedbackAdvice = 'Keep technical answers structured using Concept -> Reason -> Example -> Trade-off.';
+
+  try {
+    const rawRes = await callAI(evalPrompt, 1000);
+    if (rawRes) {
+      const jsonMatch = rawRes.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        hire = parsed.hiringDecision || hire;
+        summary = parsed.summary || summary;
+        strengths = parsed.strengths || strengths;
+        weaknesses = parsed.weaknesses || weaknesses;
+        feedbackAdvice = parsed.feedbackAdvice || feedbackAdvice;
+      }
+    }
+  } catch(err) {
+    console.warn("AI final evaluation generation failed, using defaults:", err);
+  }
 
   const hireColor = hire === 'Strong Hire' ? 'var(--emerald)' : hire === 'Hire' ? 'var(--amber)' : 'var(--rose)';
+  
   const res = document.getElementById('r3-result');
   res.style.display = 'block';
   res.innerHTML = `
-    <div style="padding:28px;background:var(--bg-card);border-radius:16px;border:2px solid var(--emerald);box-shadow:0 0 30px rgba(16,185,129,.15);">
-      <div style="text-align:center;margin-bottom:24px;">
-        <div style="font-size:48px;margin-bottom:12px;">🏆</div>
-        <div style="font-size:24px;font-weight:800;color:var(--emerald);">Interview Complete!</div>
-        <p style="font-size:14px;color:var(--text-secondary);margin-top:6px;">${summary}</p>
+    <div style="padding:28px; background:var(--bg-card); border-radius:16px; border:2px solid var(--emerald); box-shadow:0 0 30px rgba(16,185,129,.15);">
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="font-size:48px; margin-bottom:12px;">🏆</div>
+        <div style="font-size:24px; font-weight:800; color:var(--emerald);">Interview Complete!</div>
+        <p style="font-size:14px; color:var(--text-secondary); margin-top:6px;">${summary}</p>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px;">
-        <div style="background:var(--bg-surface);padding:18px;border-radius:12px;border:1px solid var(--border);text-align:center;">
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Score</div>
-          <div style="font-size:30px;font-weight:800;color:var(--fuchsia);">${sc}/100</div>
+
+      <!-- Core score breakdowns -->
+      <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-bottom:20px;">
+        <div style="background:var(--bg-surface); padding:18px; border-radius:12px; border:1px solid var(--border); text-align:center;">
+          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px;">Overall Interview Score</div>
+          <div style="font-size:36px; font-weight:800; color:var(--fuchsia);">${sc}%</div>
         </div>
-        <div style="background:var(--bg-surface);padding:18px;border-radius:12px;border:1px solid var(--border);text-align:center;">
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Decision</div>
-          <div style="font-size:20px;font-weight:700;color:${hireColor};">${hire}</div>
-        </div>
-        <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);text-align:center;">
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Communication</div>
-          <div style="font-size:16px;font-weight:600;color:var(--amber);">${comm}</div>
-        </div>
-        <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);text-align:center;">
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Technical</div>
-          <div style="font-size:16px;font-weight:600;color:var(--amber);">${tech}</div>
+        <div style="background:var(--bg-surface); padding:18px; border-radius:12px; border:1px solid var(--border); text-align:center;">
+          <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px;">Hiring Decision</div>
+          <div style="font-size:24px; font-weight:700; color:${hireColor};">${hire}</div>
         </div>
       </div>
-      <div style="background:var(--bg-surface);padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <div><div style="font-size:11px;color:var(--emerald);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">✅ Strengths</div><ul style="padding-left:16px;font-size:13px;color:var(--text-secondary);line-height:1.7;">${strengths.map(s=>`<li>${s}</li>`).join('')}</ul></div>
-          <div><div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">📈 Improve</div><ul style="padding-left:16px;font-size:13px;color:var(--text-secondary);line-height:1.7;">${improvements.map(i=>`<li>${i}</li>`).join('')}</ul></div>
+
+      <!-- Detailed Metrics Grid -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px;">
+        <!-- CONTENT SCORING -->
+        <div style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border);">
+          <h4 style="font-size:12px; color:var(--emerald); text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px 0;">Content Assessment</h4>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--text-secondary);">
+            <div style="display:flex; justify-content:space-between;"><span>Technical Knowledge</span><span style="font-weight:600; color:#fff;">${avgTech}%</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Problem Solving</span><span style="font-weight:600; color:#fff;">${avgReason}%</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Resume Knowledge</span><span style="font-weight:600; color:#fff;">${avgResume}%</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Communication Skill</span><span style="font-weight:600; color:#fff;">${avgComm}%</span></div>
+          </div>
+        </div>
+
+        <!-- PRESENCE SCORING -->
+        <div style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border);">
+          <h4 style="font-size:12px; color:var(--fuchsia); text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px 0;">Interview Presence</h4>
+          <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--text-secondary);">
+            <div style="display:flex; justify-content:space-between;"><span>Camera Presence</span><span style="font-weight:600; color:#fff;">${camPresencePct}%</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Gaze Engagement</span><span style="font-weight:600; color:#fff;">${engagementPct}%</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Posture Index</span><span style="font-weight:600; color:#fff;">${posturePct}%</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Professional Presence</span><span style="font-weight:600; color:#fff;">${professionalPresencePct}%</span></div>
+          </div>
         </div>
       </div>
-      <button onclick="generateFinalReport()" style="width:100%;padding:14px;background:var(--grad-brand);color:white;border:none;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;box-shadow:var(--shadow-fuchsia);">⬇️ Download Full Placement Report</button>
-    </div>`;
+
+      <!-- RESUME VERIFICATION -->
+      <div style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
+        <h4 style="font-size:12px; color:var(--amber); text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px 0;">Resume Claim Verification</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px; color:var(--text-secondary);">
+          ${verificationList.map(v => {
+            let badgeColor = 'var(--rose)';
+            let badgeIcon = '⚠';
+            if (v.status === 'Demonstrated') { badgeColor = 'var(--emerald)'; badgeIcon = '✓'; }
+            else if (v.status === 'Partially demonstrated') { badgeColor = 'var(--amber)'; badgeIcon = '~'; }
+            return `<div style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
+              <span>${v.skill}</span>
+              <span style="color:${badgeColor}; font-weight:600; font-size:12px;">${badgeIcon} ${v.status}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- STRENGTHS & ROADMAP ADVICE -->
+      <div style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div>
+            <div style="font-size:11px; color:var(--emerald); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;">✅ Strengths</div>
+            <ul style="padding-left:16px; font-size:13px; color:var(--text-secondary); line-height:1.7;">
+              ${strengths.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>
+          <div>
+            <div style="font-size:11px; color:var(--amber); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;">📈 Improve (Actionable)</div>
+            <ul style="padding-left:16px; font-size:13px; color:var(--text-secondary); line-height:1.7; list-style-type:none;">
+              ${weaknesses.map(w => {
+                let actionLink = '';
+                if (w.topic.toLowerCase().includes('sql') || w.topic.toLowerCase().includes('database')) {
+                  actionLink = `<a href="#" onclick="window.switchTab('tasks'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Practice SQL in Tasks</a>`;
+                } else if (w.topic.toLowerCase().includes('communication') || w.topic.toLowerCase().includes('hr') || w.topic.toLowerCase().includes('behavioral')) {
+                  actionLink = `<a href="#" onclick="window.switchTab('placement'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Practice Interview in Placement</a>`;
+                } else {
+                  actionLink = `<a href="#" onclick="window.switchTab('roadmap'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Review Skill in Roadmap</a>`;
+                }
+                return `<li style="margin-bottom:8px;">⚠ <strong>${w.topic}</strong>: ${w.feedback} ${actionLink}</li>`;
+              }).join('')}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedbacks advice paragraph -->
+      <div style="background:var(--bg-surface); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:20px; font-size:13px; color:var(--text-secondary); line-height:1.5;">
+        <span style="font-weight:700; color:#fff; display:block; margin-bottom:6px;">✨ AI Feedback Recommendation</span>
+        ${feedbackAdvice}
+      </div>
+
+      <button onclick="generateFinalReport()" style="width:100%; padding:14px; background:var(--grad-brand); color:white; border:none; border-radius:10px; font-weight:600; font-size:15px; cursor:pointer; box-shadow:var(--shadow-fuchsia);">Download Full Placement Report</button>
+    </div>
+  `;
 
   placementProgress.r3 = true;
-  await savePlacementAttempt(3, sc, sc >= 70);
+  placementProgress.r3Score = sc;
+
+  // Persist structured interview session
+  const activeSessionId = localStorage.getItem('r3_session_id') || crypto.randomUUID();
+  await saveDetailedInterviewData(activeSessionId, sc, contentScore, avgComm, professionalPresencePct, strengths, weaknesses, feedbackAdvice, verificationList);
+
+  // Clear active session since complete
+  localStorage.removeItem('r3_active_session');
+  localStorage.removeItem('r3_session_id');
 
   // Reload statistics dynamically
   const { data: refreshedAttempts } = await supabase.from('placement_attempts').select('*').eq('user_id', currentUserId);
@@ -5361,23 +6198,177 @@ Return ONLY valid JSON format:
   }
 
   updatePlacementProgress();
-  await r3Speak(`Your interview score is ${sc} out of 100. Decision: ${hire}. Well done for completing the interview!`);
+  await r3Speak(`Your interview score is ${sc} percent. hiring decision: ${hire}. Thank you for completing the interview.`);
+}
+
+async function saveDetailedInterviewData(session_id, overall_score, content_score, communication_score, presence_score, strengths, weaknesses, recommendations, verificationList) {
+  const sessionObj = {
+    id: session_id,
+    user_id: currentUserId,
+    started_at: new Date(Date.now() - 15 * 60000).toISOString(),
+    completed_at: new Date().toISOString(),
+    target_role: r3PersonalizedContext?.targetRole || selectedCompanyType,
+    status: 'completed'
+  };
+
+  try {
+    const { error: sessionErr } = await supabase.from('interview_sessions').insert(sessionObj);
+    if (!sessionErr) {
+      for (let i = 0; i < r3ChatHistory.length; i++) {
+        if (r3ChatHistory[i].role === 'ai') {
+          const q_id = crypto.randomUUID();
+          await supabase.from('interview_questions').insert({
+            id: q_id,
+            session_id: session_id,
+            question: r3ChatHistory[i].text,
+            question_type: 'technical',
+            sequence: i,
+            skill: r3PersonalizedContext?.skills[i % r3PersonalizedContext.skills.length] || 'General'
+          });
+
+          const nextMsg = r3ChatHistory[i+1];
+          if (nextMsg && nextMsg.role === 'user') {
+            const a_id = crypto.randomUUID();
+            await supabase.from('interview_answers').insert({
+              id: a_id,
+              question_id: q_id,
+              answer_text: nextMsg.text,
+              timestamp: new Date().toISOString()
+            });
+
+            const matchingEval = r3Evaluations.find(ev => ev.question === r3ChatHistory[i].text);
+            if (matchingEval) {
+              await supabase.from('interview_evaluations').insert({
+                answer_id: a_id,
+                technical_score: matchingEval.technical_score,
+                relevance_score: matchingEval.relevance_score,
+                depth_score: matchingEval.depth_score,
+                communication_score: matchingEval.communication_score,
+                resume_consistency_score: matchingEval.resume_consistency_score,
+                feedback: matchingEval.feedback
+              });
+            }
+          }
+        }
+      }
+
+      for (const ev of r3PresenceEvents) {
+        await supabase.from('interview_presence_events').insert({
+          session_id: session_id,
+          event_type: ev.event_type,
+          timestamp: ev.timestamp
+        });
+      }
+
+      await supabase.from('interview_final_results').insert({
+        session_id: session_id,
+        overall_score: overall_score,
+        content_score: content_score,
+        communication_score: communication_score,
+        presence_score: presence_score,
+        integrity_summary: r3IntegritySummary,
+        strengths: strengths,
+        weaknesses: weaknesses.map(w => `${w.topic}: ${w.feedback}`),
+        recommendations: recommendations
+      });
+    } else {
+      throw new Error("Tables likely do not exist: " + sessionErr.message);
+    }
+  } catch (err) {
+    console.warn("Structured tables failed (using placement_attempts details fallback):", err);
+    
+    // Save inside placement_attempts.details
+    const r3Details = {
+      companyType: selectedCompanyType,
+      session_id: session_id,
+      overall_score: overall_score,
+      content_score: content_score,
+      communication_score: communication_score,
+      presence_score: presence_score,
+      strengths: strengths,
+      weaknesses: weaknesses,
+      recommendations: recommendations,
+      chat_history: r3ChatHistory,
+      evaluations: r3Evaluations,
+      presence_events: r3PresenceEvents,
+      integrity_summary: r3IntegritySummary,
+      resume_verification: verificationList,
+      context: r3PersonalizedContext
+    };
+
+    await savePlacementAttempt(3, overall_score, overall_score >= 70, r3Details);
+  }
+}
+
+async function savePlacementAttempt(round, score, passed, details = null) {
+  const insertDetails = details || { companyType: selectedCompanyType };
+  await supabase.from('placement_attempts').insert({
+    user_id: currentUserId,
+    round,
+    score,
+    passed,
+    details: insertDetails
+  });
 }
 
 async function endVideoInterview() {
   r3InterviewActive = false;
   if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-  if (!document.getElementById('r3-result').innerHTML.trim()) await r3Finish();
+  clearInterval(r3CanvasInterval);
+  if (r3ActiveStream) {
+    r3ActiveStream.getTracks().forEach(t => t.stop());
+  }
+  if (!document.getElementById('r3-result').innerHTML.trim()) {
+    await r3Finish();
+  }
 }
 
-function toggleMic() {
-  const video = document.getElementById('interview-video');
-  if (!video.srcObject) return;
-  const audioTrack = video.srcObject.getAudioTracks()[0];
+function toggleCameraTrack() {
+  if (!r3ActiveStream) return;
+  const videoTrack = r3ActiveStream.getVideoTracks()[0];
+  if (!videoTrack) return;
+  videoTrack.enabled = !videoTrack.enabled;
+  
+  const camBtn = document.getElementById('r3-cam-btn');
+  if (camBtn) {
+    camBtn.textContent = `📷 Camera: ${videoTrack.enabled ? 'ON' : 'OFF'}`;
+    camBtn.style.background = videoTrack.enabled ? 'rgba(255,255,255,0.04)' : 'rgba(239, 68, 68, 0.1)';
+    camBtn.style.color = videoTrack.enabled ? '#ffffff' : '#EF4444';
+  }
+
+  const cameraOffMsg = document.getElementById('camera-off-msg');
+  if (cameraOffMsg) {
+    cameraOffMsg.style.display = videoTrack.enabled ? 'none' : 'flex';
+  }
+
+  logIntegrityEvent(`Camera toggled ${videoTrack.enabled ? 'ON' : 'OFF'}`);
+}
+
+function toggleMicTrack() {
+  if (!r3ActiveStream) return;
+  const audioTrack = r3ActiveStream.getAudioTracks()[0];
   if (!audioTrack) return;
   audioTrack.enabled = !audioTrack.enabled;
-  document.getElementById('mic-toggle-btn').textContent = `🎤 Mic: ${audioTrack.enabled ? 'ON' : 'OFF'}`;
+  
+  const micBtn = document.getElementById('r3-mic-btn');
+  if (micBtn) {
+    micBtn.textContent = `🎤 Mic: ${audioTrack.enabled ? 'ON' : 'OFF'}`;
+    micBtn.style.background = audioTrack.enabled ? 'rgba(255,255,255,0.04)' : 'rgba(239, 68, 68, 0.1)';
+    micBtn.style.color = audioTrack.enabled ? '#ffffff' : '#EF4444';
+  }
+
+  if (!audioTrack.enabled && r3Recognition && r3IsListening) {
+    try { r3Recognition.abort(); } catch(e){}
+    r3IsListening = false;
+    if (document.getElementById('mic-pulse-indicator')) {
+      document.getElementById('mic-pulse-indicator').style.display = 'none';
+    }
+  } else if (audioTrack.enabled && r3State === 'LISTENING' && !r3IsListening && r3InputMode === 'voice') {
+    r3Listen();
+  }
+
+  logIntegrityEvent(`Microphone toggled ${audioTrack.enabled ? 'ON' : 'OFF'}`);
 }
 
 
@@ -5471,24 +6462,55 @@ async function generateFinalReport() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
+  // Basic styling
   doc.setFontSize(22);
-  doc.text("Placement Readiness Report", 20, 30);
-  doc.setFontSize(14);
-  doc.text(`Candidate: ${currentUserName || 'Student'}`, 20, 45);
-  doc.text(`Target Role: ${selectedCompanyType}`, 20, 55);
+  doc.setTextColor(0, 150, 105);
+  doc.text("SkillBridge Placement Readiness Report", 20, 30);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 20, 38);
 
   doc.setDrawColor(0, 150, 105);
-  doc.line(20, 60, 190, 60);
+  doc.line(20, 42, 190, 42);
 
-  doc.text("Performance Metrics:", 20, 75);
-  doc.text(`- Round 1 (Aptitude): ${placementProgress.r1Score}/100`, 30, 85);
-  doc.text(`- Round 2 (Technical): Cleared`, 30, 95);
-  doc.text(`- Round 3 (Video): Completed`, 30, 105);
+  doc.setFontSize(13);
+  doc.setTextColor(40, 40, 40);
+  doc.text(`Candidate Name: ${currentUserName || 'Student'}`, 20, 52);
+  doc.text(`Target Track: ${r3PersonalizedContext?.targetRole || selectedCompanyType}`, 20, 60);
+  
+  doc.line(20, 66, 190, 66);
 
-  doc.text("Expert Feedback:", 20, 125);
-  const feedback = await callAI(`Give a summary placement feedback for a student who scored well in aptitude and cleared technical rounds for a ${selectedCompanyType} role.`);
-  const splitFeedback = doc.splitTextToSize(feedback || "Outstanding performance across all rounds.", 160);
-  doc.text(splitFeedback, 20, 135);
+  doc.setFontSize(15);
+  doc.text("Job Readiness Index Performance", 20, 78);
+  
+  doc.setFontSize(12);
+  doc.text(`- Round 1 (Aptitude & Technical MCQ): ${placementProgress.r1Score ? placementProgress.r1Score + '%' : 'Not Assessed'}`, 25, 88);
+  doc.text(`- Round 2 (Coding & DSA Challenge): ${placementProgress.r2Score ? placementProgress.r2Score + '%' : 'Not Assessed'}`, 25, 98);
+  doc.text(`- Round 3 (AI Video Mock Interview): ${placementProgress.r3Score ? placementProgress.r3Score + '%' : 'Not Assessed'}`, 25, 108);
+
+  const scores = [placementProgress.r1Score, placementProgress.r2Score, placementProgress.r3Score].filter(s => s > 0);
+  const netScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 'N/A';
+  doc.text(`Combined Job Readiness Score: ${netScore}%`, 25, 118);
+
+  doc.line(20, 126, 190, 126);
+
+  doc.setFontSize(15);
+  doc.text("AI Interview Evaluation Summary", 20, 138);
+
+  let reportFeedback = "The candidate demonstrated technical accuracy and project familiarity. Focus areas include technical communication, architectural reasoning, and backend design scaling.";
+  if (r3Evaluations && r3Evaluations.length > 0) {
+    const avgTech = Math.round(r3Evaluations.reduce((acc, curr) => acc + curr.technical_score, 0) / r3Evaluations.length);
+    const avgComm = Math.round(r3Evaluations.reduce((acc, curr) => acc + curr.communication_score, 0) / r3Evaluations.length);
+    doc.setFontSize(12);
+    doc.text(`- Technical Content Score: ${avgTech}/100`, 25, 148);
+    doc.text(`- Communication Skill Score: ${avgComm}/100`, 25, 156);
+  }
+
+  doc.setFontSize(12);
+  doc.text("Actionable Recommendations:", 20, 168);
+  const splitFeedback = doc.splitTextToSize(reportFeedback, 160);
+  doc.text(splitFeedback, 20, 176);
 
   doc.save('SkillBridge_Placement_Report.pdf');
 }
