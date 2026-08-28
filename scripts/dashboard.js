@@ -3019,35 +3019,39 @@ function downloadRoadmapPDF() {
 
 async function callAI(prompt, maxTokens = 800) {
   if (GROQ_API_KEY) {
-    try {
-      console.log('[callAI] Attempting prompt with Groq...');
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-specdec',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: maxTokens,
-          temperature: 0.7
-        })
-      });
+    const groqModels = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'llama3-8b-8192', 'llama3-70b-8192'];
+    for (const model of groqModels) {
+      try {
+        console.log(`[callAI] Attempting prompt with Groq model: ${model}...`);
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${GROQ_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: maxTokens,
+            temperature: 0.7
+          })
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        const content = data.choices?.[0]?.message?.content;
-        if (content) {
-          console.log('[callAI] Success with Groq');
-          return content;
+        if (res.ok) {
+          const data = await res.json();
+          const content = data.choices?.[0]?.message?.content;
+          if (content) {
+            console.log(`[callAI] Success with Groq model: ${model}`);
+            return content;
+          }
+        } else {
+          const errBody = await res.json().catch(() => ({}));
+          console.warn(`[callAI] Groq (${model}) returned status:`, res.status, errBody);
+          if (res.status === 401) break; // Invalid key, don't try other models
         }
-      } else {
-        const errBody = await res.json().catch(() => ({}));
-        console.warn('[callAI] Groq returned status:', res.status, errBody);
+      } catch (e) {
+        console.error(`[callAI] Groq (${model}) call failed:`, e);
       }
-    } catch (e) {
-      console.error('[callAI] Groq call failed:', e);
     }
   }
 
@@ -5068,6 +5072,18 @@ window.runCodingTestCases = runCodingTestCases;
 window.submitCodingChallenge = submitCodingChallenge;
 window.retryRound2 = retryRound2;
 
+// Expose Round 3 functions to window for inline HTML onclick/onchange attributes
+window.handleResumeFile = handleResumeFile;
+window.scrollToRound = scrollToRound;
+window.testCameraAndMic = testCameraAndMic;
+window.startVideoInterview = startVideoInterview;
+window.toggleCameraTrack = toggleCameraTrack;
+window.toggleMicTrack = toggleMicTrack;
+window.endInterview = endVideoInterview;
+window.switchInputMode = switchInputMode;
+window.submitTypedAnswer = submitTypedAnswer;
+window.generateFinalReport = generateFinalReport;
+
 // ── Round 3: Conversational AI Video Interview ───────────
 let r3ActiveStream = null;
 let r3VideoTrack = null;
@@ -6404,23 +6420,36 @@ function updatePlacementProgress() {
   if (r3) document.getElementById('step-r3-circle').style.background = '#059669', document.getElementById('step-r3-circle').style.color = 'white';
 
   // Unlock sections
+  const sec2 = document.getElementById('section-round2');
+  const r2Lock = document.getElementById('r2-lock-text');
   if (r1) {
-    document.getElementById('section-round2').style.opacity = '1';
-    document.getElementById('section-round2').style.pointerEvents = 'auto';
-    document.getElementById('r2-lock-text').textContent = '✅ Round 1 Passed';
+    if (sec2) {
+      sec2.style.opacity = '1';
+      sec2.style.pointerEvents = 'auto';
+    }
+    if (r2Lock) r2Lock.textContent = '✅ Round 1 Passed';
   } else {
-    document.getElementById('section-round2').style.opacity = '0.5';
-    document.getElementById('section-round2').style.pointerEvents = 'none';
-    document.getElementById('r2-lock-text').textContent = '🔒 Pass Round 1 to unlock';
+    if (sec2) {
+      sec2.style.opacity = '0.5';
+      sec2.style.pointerEvents = 'none';
+    }
+    if (r2Lock) r2Lock.textContent = '🔒 Pass Round 1 to unlock';
   }
+
+  const sec3 = document.getElementById('section-round3');
+  const r3Lock = document.getElementById('r3-lock-text');
   if (r2) {
-    document.getElementById('section-round3').style.opacity = '1';
-    document.getElementById('section-round3').style.pointerEvents = 'auto';
-    document.getElementById('r3-lock-text').textContent = '✅ Round 2 Passed';
+    if (sec3) {
+      sec3.style.opacity = '1';
+      sec3.style.pointerEvents = 'auto';
+    }
+    if (r3Lock) r3Lock.textContent = '✅ Round 2 Passed';
   } else {
-    document.getElementById('section-round3').style.opacity = '0.5';
-    document.getElementById('section-round3').style.pointerEvents = 'none';
-    document.getElementById('r3-lock-text').textContent = '🔒 Pass Round 2 to unlock';
+    if (sec3) {
+      sec3.style.opacity = '0.5';
+      sec3.style.pointerEvents = 'none';
+    }
+    if (r3Lock) r3Lock.textContent = '🔒 Pass Round 2 to unlock';
   }
 }
 
@@ -7336,123 +7365,158 @@ async function sendMentorMessage() {
   let success = false;
   let reply = '';
 
-  // Try Groq first if key is present
+  // Try Groq first with multi-model fallback
   if (GROQ_API_KEY) {
-    try {
-      const messages = [
-        { role: 'system', content: window.mentorSystemPrompt },
-        ...mentorHistory.slice(-6)
-      ];
+    const groqModels = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'llama3-8b-8192', 'llama3-70b-8192'];
+    for (const model of groqModels) {
+      try {
+        const messages = [
+          { role: 'system', content: window.mentorSystemPrompt },
+          ...mentorHistory.slice(-6)
+        ];
 
-      console.log('[sendMentorMessage] Attempting prompt with Groq...');
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-specdec',
-          messages,
-          max_tokens: 400,
-          temperature: 0.7
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        reply = data.choices?.[0]?.message?.content || '';
-        if (reply) {
-          success = true;
-          console.log('[sendMentorMessage] Success with Groq');
-        }
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        console.warn("[sendMentorMessage] Groq API returned status:", res.status, errData);
-      }
-    } catch (err) {
-      console.error("[sendMentorMessage] Groq chat error:", err);
-    }
-  }
-
-  // Try OpenRouter if Groq is missing or failed
-  if (!success && OPENROUTER_KEY) {
-    try {
-      const messages = [
-        { role: 'system', content: window.mentorSystemPrompt },
-        ...mentorHistory.slice(-6)
-      ];
-
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_KEY}`,
-          'HTTP-Referer': window.location.origin
-        },
-        body: JSON.stringify({
-          model: 'openrouter/free',
-          messages,
-          max_tokens: 400,
-          temperature: 0.7
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        reply = data.choices?.[0]?.message?.content || '';
-        if (reply) {
-          success = true;
-          console.log('[sendMentorMessage] Success with OpenRouter');
-        }
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        console.error("OpenRouter API Error:", res.status, errData);
-      }
-    } catch (err) {
-      console.error("OpenRouter chat error:", err);
-    }
-  }
-
-  // Fallback to Gemini if OpenRouter failed or key is missing
-  if (!success && GEMINI_KEY) {
-    try {
-      console.log('[sendMentorMessage] Falling back to Gemini API...');
-      
-      // Convert OpenAI style history to Gemini history
-      const contents = mentorHistory.slice(-6).map(h => ({
-        role: h.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: h.content }]
-      }));
-
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          systemInstruction: {
-            parts: [{ text: window.mentorSystemPrompt || 'You are Atlas, a professional career mentor.' }]
+        console.log(`[sendMentorMessage] Attempting prompt with Groq (${model})...`);
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${GROQ_API_KEY}`
           },
-          generationConfig: {
-            maxOutputTokens: 400,
+          body: JSON.stringify({
+            model: model,
+            messages,
+            max_tokens: 400,
             temperature: 0.7
-          }
-        })
-      });
+          })
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (reply) {
-          success = true;
-          console.log('[sendMentorMessage] Success with Gemini API');
+        if (res.ok) {
+          const data = await res.json();
+          reply = data.choices?.[0]?.message?.content || '';
+          if (reply) {
+            success = true;
+            console.log(`[sendMentorMessage] Success with Groq (${model})`);
+            break;
+          }
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.warn(`[sendMentorMessage] Groq (${model}) returned status:`, res.status, errData);
+          if (res.status === 401) break;
         }
-      } else {
-        const errBody = await res.json().catch(() => ({}));
-        console.error('[sendMentorMessage] Gemini API returned status:', res.status, errBody);
+      } catch (err) {
+        console.error(`[sendMentorMessage] Groq (${model}) chat error:`, err);
       }
-    } catch (err) {
-      console.error("Gemini fallback chat error:", err);
+    }
+  }
+
+  // Try OpenRouter if Groq failed
+  if (!success && OPENROUTER_KEY) {
+    const openrouterModels = [
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'google/gemini-2.0-flash-exp:free',
+      'mistralai/mistral-7b-instruct:free'
+    ];
+    for (const model of openrouterModels) {
+      try {
+        const messages = [
+          { role: 'system', content: window.mentorSystemPrompt },
+          ...mentorHistory.slice(-6)
+        ];
+
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENROUTER_KEY}`,
+            'HTTP-Referer': window.location.origin
+          },
+          body: JSON.stringify({
+            model: model,
+            messages,
+            max_tokens: 400,
+            temperature: 0.7
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          reply = data.choices?.[0]?.message?.content || '';
+          if (reply) {
+            success = true;
+            console.log(`[sendMentorMessage] Success with OpenRouter (${model})`);
+            break;
+          }
+        } else {
+          if (res.status === 401) break;
+        }
+      } catch (err) {
+        console.error('OpenRouter chat error:', err);
+      }
+    }
+  }
+
+  // Fallback to Gemini if other providers failed
+  if (!success && GEMINI_KEY) {
+    const geminiModels = ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+    for (const model of geminiModels) {
+      try {
+        console.log(`[sendMentorMessage] Falling back to Gemini (${model})...`);
+        const contents = mentorHistory.slice(-6).map(h => ({
+          role: h.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: h.content }]
+        }));
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents,
+            systemInstruction: {
+              parts: [{ text: window.mentorSystemPrompt || 'You are Atlas, a professional career mentor.' }]
+            },
+            generationConfig: {
+              maxOutputTokens: 400,
+              temperature: 0.7
+            }
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (reply) {
+            success = true;
+            console.log(`[sendMentorMessage] Success with Gemini (${model})`);
+            break;
+          }
+        }
+      } catch (err) {
+        console.error('Gemini fallback chat error:', err);
+      }
+    }
+  }
+
+  // Intelligent Contextual Fallback if all external APIs are unreachable/exhausted
+  if (!success || !reply) {
+    const lower = msg.toLowerCase();
+    if (lower.includes('resume')) {
+      reply = `**Resume Optimization Tips from Atlas:**\n\n1. **Use Action Verbs & Metrics**: Instead of *"worked on APIs"*, write *"Built scalable REST APIs in Node.js reducing latency by 35%"*.\n2. **Keep it 1-Page**: Focus strictly on relevant technical projects and skills.\n3. **Include Live Links**: Add your GitHub repository and live deployment URLs for each major project.\n\n*Actionable Tip*: Run your resume through our **Placement Simulator** in the sidebar to get instant ATS feedback! 🚀`;
+      success = true;
+    } else if (lower.includes('interview')) {
+      reply = `**Interview Preparation Strategy:**\n\n1. **DSA & Core CS**: Master Arrays, Strings, Hashing, and Trees (75-100 standard LeetCode problems).\n2. **STAR Method**: Practice Behavioral questions using *Situation, Task, Action, Result*.\n3. **Mock Interviews**: Practice articulating your thought process out loud.\n\n*Actionable Tip*: Head over to the **Placement** tab to attempt the AI Video Mock Interview! 🎯`;
+      success = true;
+    } else if (lower.includes('placed') || lower.includes('how long')) {
+      reply = `**Placement Timeline Guide:**\n\nWith consistent 2-3 hours daily practice, students typically become job-ready in **3 to 6 months**:\n- **Month 1-2**: Foundation & Core Skills (Languages, Data Structures)\n- **Month 3-4**: 2 Full-stack or Domain Projects & Portfolio\n- **Month 5-6**: Active Application & Mock Interviews\n\n*Actionable Tip*: Complete your daily roadmap checkpoints to maintain your streak! ⚡`;
+      success = true;
+    } else if (lower.includes('dsa') || lower.includes('algorithm')) {
+      reply = `**Top DSA Resources Recommended by Atlas:**\n\n1. **NeetCode 150 / Striver's SDE Sheet**: Best curated problem sets.\n2. **LeetCode**: Practice Easy and Medium problems consistently.\n3. **SkillBridge Quick Test**: Assess your algorithmic strengths right here!\n\n*Actionable Tip*: Solve at least 2 problems daily before moving to new tech stacks. 💡`;
+      success = true;
+    } else if (lower.includes('skill') || lower.includes('learn next') || lower.includes('roadmap')) {
+      reply = `**Next Recommended Skills:**\n\nBased on your profile, focus on:\n1. **Core Problem Solving**: Data structures & algorithm fundamentals.\n2. **Industry Frameworks**: Modern tooling & API integration.\n3. **System Design Basics**: Caching, databases, and microservice basics.\n\n*Actionable Tip*: Check the **AI Roadmap** tab for your personalized step-by-step path! 🗺️`;
+      success = true;
+    } else {
+      reply = `Bilkul! Based on your target goals, the key is consistent daily learning and building hands-on projects. Focus on completing your active roadmap checkpoints and practicing interview scenarios.\n\nWhat specific topic would you like to explore next? 🚀`;
+      success = true;
     }
   }
 
