@@ -66,15 +66,16 @@
 
     body {
       font-family: var(--font-sans);
-      overflow: hidden;
-      height: 100vh;
+      min-height: 100vh;
       background: var(--bg-primary);
       color: var(--text-secondary);
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
     .auth-layout {
       display: flex;
-      height: 100vh;
+      min-height: 100vh;
       width: 100vw;
     }
 
@@ -82,13 +83,14 @@
     .left-panel {
       flex: 1.15;
       background: var(--bg-primary);
-      padding: 44px 48px;
+      padding: 36px 44px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       position: relative;
       overflow: hidden;
       border-right: 1px solid var(--border);
+      min-height: 100vh;
     }
 
     @media (max-width: 960px) {
@@ -218,15 +220,15 @@
 
     /* 1. Placement Alert Card */
     .card-placement {
-      top: 14%;
-      left: 6%;
-      width: 250px;
+      top: 17%;
+      left: 3%;
+      width: 220px;
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
       border-left: 4px solid var(--success);
-      border-radius: 16px;
-      padding: 16px 18px;
+      border-radius: 14px;
+      padding: 12px 14px;
       box-shadow: 0 10px 28px rgba(26, 21, 18, 0.06);
       color: var(--text-primary);
       animation: floatWobble1 5.8s ease-in-out infinite;
@@ -255,12 +257,13 @@
 
     /* 2. 3 New Project Matches Pill */
     .card-project-match {
-      top: 15%;
-      right: 8%;
+      top: 13%;
+      right: 5%;
       background: var(--pill-green);
       color: #FFFFFF;
       border-radius: 9999px;
-      padding: 10px 20px;
+      padding: 8px 16px;
+      font-size: 0.76rem;
       box-shadow: 0 8px 24px rgba(62, 171, 124, 0.28);
       animation: floatWobble2 4.9s ease-in-out infinite;
     }
@@ -271,15 +274,15 @@
 
     /* 3. React.js Pill */
     .pill-react {
-      bottom: 22%;
-      left: 7%;
+      bottom: 20%;
+      left: 4%;
       background: var(--accent-soft);
       color: var(--text-primary);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
       border: 1px solid rgba(232, 148, 106, 0.3);
       border-radius: 9999px;
-      padding: 8px 18px;
+      padding: 6px 14px;
       box-shadow: 0 6px 18px rgba(232, 148, 106, 0.16);
       animation: floatWobble3 6.4s ease-in-out infinite;
     }
@@ -290,14 +293,14 @@
 
     /* 4. Mentor Session Card */
     .card-mentor {
-      bottom: 16%;
-      right: 7%;
-      width: 240px;
+      bottom: 14%;
+      right: 4%;
+      width: 220px;
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 18px;
+      border-radius: 14px;
+      padding: 12px 14px;
       box-shadow: 0 10px 28px rgba(26, 21, 18, 0.06);
       animation: floatWobble4 6.8s ease-in-out infinite;
     }
@@ -465,45 +468,59 @@
       flex: 1;
       background: var(--bg-secondary);
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 40px 32px;
+      justify-content: flex-start;
+      padding: 24px 20px;
       overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 100vh;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .right-panel::-webkit-scrollbar {
+      width: 5px;
+    }
+    .right-panel::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
     }
 
     @media (max-width: 768px) {
       .right-panel {
         width: 100%;
-        padding: 24px 20px;
+        padding: 20px 14px;
       }
     }
 
     .form-container {
       width: 100%;
-      max-width: 440px;
+      max-width: 420px;
       background: var(--bg-secondary);
-      padding: 38px;
-      border-radius: 20px;
+      padding: 24px 22px;
+      border-radius: 16px;
       border: 1px solid var(--border);
-      box-shadow: 0 12px 36px rgba(26, 21, 18, 0.04);
+      box-shadow: 0 10px 30px rgba(26, 21, 18, 0.04);
+      margin: auto 0;
     }
 
     .welcome-text {
-      margin-bottom: 26px;
+      margin-bottom: 14px;
     }
 
     .welcome-text h1 {
       font-family: var(--font-heading);
-      font-size: 1.75rem;
+      font-size: 1.45rem;
       font-weight: 800;
       color: var(--text-primary);
-      margin-bottom: 6px;
+      margin-bottom: 3px;
       letter-spacing: -0.025em;
     }
 
     .welcome-text p {
       color: var(--text-secondary);
-      font-size: 0.95rem;
+      font-size: 0.85rem;
     }
 
     /* Tab Switcher */
@@ -511,17 +528,17 @@
       display: flex;
       background: var(--bg-tertiary);
       border: 1px solid var(--border);
-      padding: 4px;
-      border-radius: 12px;
-      margin-bottom: 24px;
+      padding: 3px;
+      border-radius: 10px;
+      margin-bottom: 14px;
       position: relative;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 10px 16px;
-      border-radius: 9px;
-      font-size: 0.9rem;
+      padding: 7px 12px;
+      border-radius: 7px;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--text-secondary);
       cursor: pointer;
@@ -529,6 +546,14 @@
       transition: all 0.2s ease;
       position: relative;
       user-select: none;
+      background: transparent;
+      border: none;
+      font-family: inherit;
+    }
+
+    .tab-btn:hover:not(.active) {
+      color: var(--text-primary);
+      background: rgba(232, 148, 106, 0.08);
     }
 
     .tab-btn.active {
@@ -541,13 +566,45 @@
     .tab-btn.active::after {
       content: '';
       position: absolute;
-      bottom: 3px;
+      bottom: 2px;
       left: 50%;
       transform: translateX(-50%);
-      width: 22px;
-      height: 2.5px;
+      width: 20px;
+      height: 2px;
       background: var(--accent-primary);
       border-radius: 2px;
+    }
+
+    .auth-switch-prompt {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .auth-switch-prompt a,
+    .auth-footer-toggle a {
+      color: var(--accent-primary);
+      font-weight: 700;
+      text-decoration: none;
+      transition: color 0.2s, text-decoration 0.2s;
+    }
+
+    .auth-switch-prompt a:hover,
+    .auth-footer-toggle a:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+
+    .auth-footer-toggle {
+      text-align: center;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-weight: 500;
     }
 
     /* Form Styles */
@@ -560,16 +617,16 @@
     }
 
     .input-group {
-      margin-bottom: 18px;
+      margin-bottom: 11px;
       position: relative;
     }
 
     .input-group label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--text-primary);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .input-wrapper {
@@ -579,12 +636,12 @@
     .input-wrapper i,
     .input-wrapper svg {
       position: absolute;
-      left: 14px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-muted);
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
       pointer-events: none;
     }
 
@@ -593,10 +650,10 @@
       width: 100%;
       background: var(--bg-secondary);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 16px 12px 42px;
+      border-radius: 9px;
+      padding: 9px 12px 9px 36px;
       font-family: var(--font-sans);
-      font-size: 0.92rem;
+      font-size: 0.86rem;
       color: var(--text-primary);
       outline: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -604,7 +661,7 @@
 
     input[type="password"],
     input[type="text"] {
-      padding-right: 44px;
+      padding-right: 38px;
     }
 
     /* Suppress browser native password reveal / clear buttons (Edge, Chrome, Safari) */
@@ -638,6 +695,170 @@
     select option {
       background: var(--bg-secondary);
       color: var(--text-primary);
+    }
+
+    /* ─── CUSTOM SELECT DROPDOWN COMPONENT ─── */
+    .custom-select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .custom-select-btn {
+      width: 100%;
+      height: 40px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-size: 0.86rem;
+      color: var(--text-primary);
+      text-align: left;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+
+    .custom-select-btn:hover {
+      border-color: rgba(232, 148, 106, 0.6);
+      background: var(--bg-tertiary);
+    }
+
+    .custom-select-btn:focus,
+    .custom-select-wrapper.open .custom-select-btn {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(232, 148, 106, 0.18);
+      background: var(--bg-secondary);
+    }
+
+    .custom-select-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .custom-select-left .select-icon {
+      color: var(--text-muted);
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .custom-select-label {
+      font-weight: 500;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .custom-select-label.placeholder {
+      color: var(--text-muted);
+    }
+
+    .custom-select-btn .chevron-icon {
+      color: var(--text-muted);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s;
+    }
+
+    .custom-select-wrapper.open .chevron-icon {
+      transform: rotate(180deg);
+      color: var(--accent-primary);
+    }
+
+    /* Floating Dropdown Menu */
+    .custom-select-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(26, 21, 18, 0.12), 0 4px 12px rgba(26, 21, 18, 0.04);
+      padding: 6px;
+      z-index: 150;
+      max-height: 230px;
+      overflow-y: auto;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px) scale(0.98);
+      transform-origin: top center;
+      transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .custom-select-menu::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-select-menu::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .custom-select-wrapper.open .custom-select-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+
+    .custom-select-group-header {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent-primary);
+      padding: 8px 10px 4px;
+      user-select: none;
+    }
+
+    .custom-select-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      user-select: none;
+    }
+
+    .custom-select-option:hover,
+    .custom-select-option.focused {
+      background: rgba(232, 148, 106, 0.12);
+      color: var(--text-primary);
+    }
+
+    .custom-select-option.selected {
+      background: var(--accent-soft);
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .custom-select-option .opt-check {
+      width: 14px;
+      height: 14px;
+      color: var(--accent-primary);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .custom-select-option.selected .opt-check {
+      opacity: 1;
     }
 
     .eye-toggle {
@@ -686,15 +907,15 @@
     /* Submit Buttons */
     .submit-btn {
       width: 100%;
-      height: 48px;
+      height: 42px;
       background: var(--accent-primary);
       color: #FFFFFF;
-      border-radius: 10px;
+      border-radius: 9px;
       font-weight: 700;
-      font-size: 0.98rem;
+      font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.2s ease;
-      margin-top: 10px;
+      margin-top: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -718,10 +939,10 @@
     .divider {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin: 22px 0;
+      gap: 10px;
+      margin: 14px 0;
       color: var(--text-muted);
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -737,19 +958,19 @@
 
     .oauth-row {
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
 
     .oauth-btn {
       flex: 1;
-      height: 46px;
-      border-radius: 10px;
+      height: 38px;
+      border-radius: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.84rem;
       cursor: pointer;
       transition: all 0.2s ease;
       background: var(--bg-secondary);
@@ -976,9 +1197,9 @@
         </div>
 
         <!-- Tab Switcher -->
-        <div class="tab-switcher">
-          <div class="tab-btn active" id="tab-signin">Sign In</div>
-          <div class="tab-btn" id="tab-signup">Sign Up</div>
+        <div class="tab-switcher" role="tablist" aria-label="Authentication Options">
+          <button type="button" class="tab-btn active" id="tab-signin" role="tab" aria-selected="true" aria-controls="form-signin">Sign In</button>
+          <button type="button" class="tab-btn" id="tab-signup" role="tab" aria-selected="false" aria-controls="form-signup">Sign Up</button>
         </div>
 
         <!-- SIGN IN FORM -->
@@ -1005,6 +1226,10 @@
           <button type="submit" class="submit-btn" id="signin-submit">
             <span>Sign In</span>
           </button>
+
+          <div class="auth-switch-prompt">
+            Don't have an account? <a href="javascript:void(0)" onclick="showSignUp()">Sign Up</a>
+          </div>
         </form>
 
         <!-- SIGN UP FORM -->
@@ -1042,23 +1267,62 @@
 
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
             <div class="input-group">
-              <label>Branch</label>
-              <div class="input-wrapper">
-                <i data-lucide="book-open"></i>
-                <select id="branch" style="padding-left:42px;" required>
+              <label for="branch-select-btn">Branch</label>
+              <div class="custom-select-wrapper" id="branch-custom-select">
+                <select id="branch" name="branch" style="display:none;" required>
                   <option value="" disabled selected>Select</option>
-                  <optgroup label="Engineering">
-                    <option>Computer Science / IT</option>
-                    <option>Electronics (ECE)</option>
-                    <option>Mechanical</option>
-                    <option>Civil</option>
-                    <option>Chemical</option>
-                  </optgroup>
-                  <optgroup label="Management">
-                    <option>BBA / MBA</option>
-                  </optgroup>
-                  <option>Other</option>
+                  <option value="Computer Science / IT">Computer Science / IT</option>
+                  <option value="Electronics (ECE)">Electronics (ECE)</option>
+                  <option value="Mechanical">Mechanical</option>
+                  <option value="Civil">Civil</option>
+                  <option value="Chemical">Chemical</option>
+                  <option value="BBA / MBA">BBA / MBA</option>
+                  <option value="Other">Other</option>
                 </select>
+
+                <button type="button" class="custom-select-btn" id="branch-select-btn" aria-haspopup="listbox" aria-expanded="false">
+                  <div class="custom-select-left">
+                    <i data-lucide="book-open" class="select-icon"></i>
+                    <span class="custom-select-label placeholder" id="branch-label">Select</span>
+                  </div>
+                  <i data-lucide="chevron-down" class="chevron-icon"></i>
+                </button>
+
+                <div class="custom-select-menu" id="branch-menu" role="listbox" tabindex="-1">
+                  <div class="custom-select-group-header">Engineering</div>
+                  <div class="custom-select-option" role="option" data-value="Computer Science / IT">
+                    <span>Computer Science / IT</span>
+                    <i data-lucide="check" class="opt-check"></i>
+                  </div>
+                  <div class="custom-select-option" role="option" data-value="Electronics (ECE)">
+                    <span>Electronics (ECE)</span>
+                    <i data-lucide="check" class="opt-check"></i>
+                  </div>
+                  <div class="custom-select-option" role="option" data-value="Mechanical">
+                    <span>Mechanical</span>
+                    <i data-lucide="check" class="opt-check"></i>
+                  </div>
+                  <div class="custom-select-option" role="option" data-value="Civil">
+                    <span>Civil</span>
+                    <i data-lucide="check" class="opt-check"></i>
+                  </div>
+                  <div class="custom-select-option" role="option" data-value="Chemical">
+                    <span>Chemical</span>
+                    <i data-lucide="check" class="opt-check"></i>
+                  </div>
+
+                  <div class="custom-select-group-header">Management</div>
+                  <div class="custom-select-option" role="option" data-value="BBA / MBA">
+                    <span>BBA / MBA</span>
+                    <i data-lucide="check" class="opt-check"></i>
+                  </div>
+
+                  <div class="custom-select-group-header">Other</div>
+                  <div class="custom-select-option" role="option" data-value="Other">
+                    <span>Other</span>
+                    <i data-lucide="check" class="opt-check"></i>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="input-group">
@@ -1075,9 +1339,13 @@
             <label for="terms">I agree to the <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a></label>
           </div>
 
-          <button type="submit" class="submit-btn" id="signup-submit" style="margin-top:24px;">
+          <button type="submit" class="submit-btn" id="signup-submit" style="margin-top:10px;">
             <span>Create My Account →</span>
           </button>
+
+          <div class="auth-switch-prompt">
+            Already have an account? <a href="javascript:void(0)" onclick="showSignIn()">Sign In</a>
+          </div>
         </form>
 
         <div class="divider">or continue with</div>
@@ -1091,6 +1359,11 @@
             <i data-lucide="github" style="width:18px; height:18px;"></i>
             <span>GitHub</span>
           </button>
+        </div>
+
+        <div class="auth-footer-toggle">
+          <span id="footer-toggle-text">Don't have an account?</span>
+          <a href="javascript:void(0)" id="footer-toggle-action" onclick="toggleAuthMode()">Sign Up</a>
         </div>
 
         <div id="auth-message"></div>
@@ -1109,15 +1382,30 @@
     const formSignUp = document.getElementById('form-signup');
     const formTitle = document.getElementById('form-title');
     const formSubtitle = document.getElementById('form-subtitle');
+    const footerToggleText = document.getElementById('footer-toggle-text');
+    const footerToggleAction = document.getElementById('footer-toggle-action');
 
     function showSignIn() {
       formSignIn.classList.add('active');
       formSignUp.classList.remove('active');
       tabSignIn.classList.add('active');
       tabSignUp.classList.remove('active');
+      tabSignIn.setAttribute('aria-selected', 'true');
+      tabSignUp.setAttribute('aria-selected', 'false');
 
       formTitle.textContent = "Welcome back 👋";
       formSubtitle.textContent = "Sign in to continue your journey";
+
+      if (footerToggleText && footerToggleAction) {
+        footerToggleText.textContent = "Don't have an account?";
+        footerToggleAction.textContent = "Sign Up";
+      }
+
+      if (window.history && window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.set('tab', 'signin');
+        window.history.replaceState(null, '', url);
+      }
     }
 
     function showSignUp() {
@@ -1125,9 +1413,30 @@
       formSignUp.classList.add('active');
       tabSignUp.classList.add('active');
       tabSignIn.classList.remove('active');
+      tabSignIn.setAttribute('aria-selected', 'false');
+      tabSignUp.setAttribute('aria-selected', 'true');
 
       formTitle.textContent = "Create Account 🚀";
       formSubtitle.textContent = "Join 15L+ students today";
+
+      if (footerToggleText && footerToggleAction) {
+        footerToggleText.textContent = "Already have an account?";
+        footerToggleAction.textContent = "Sign In";
+      }
+
+      if (window.history && window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.set('tab', 'signup');
+        window.history.replaceState(null, '', url);
+      }
+    }
+
+    function toggleAuthMode() {
+      if (formSignIn.classList.contains('active')) {
+        showSignUp();
+      } else {
+        showSignIn();
+      }
     }
 
     tabSignIn.addEventListener('click', showSignIn);
@@ -1135,11 +1444,75 @@
 
     // URL param tab check
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('tab') === 'signup') {
+    if (urlParams.get('tab') === 'signup' || urlParams.get('mode') === 'signup') {
       showSignUp();
     } else {
       showSignIn();
     }
+
+    // ── CUSTOM SELECT DROPDOWN LOGIC ──
+    (function initCustomSelect() {
+      const selectWrapper = document.getElementById('branch-custom-select');
+      if (!selectWrapper) return;
+
+      const triggerBtn = document.getElementById('branch-select-btn');
+      const label = document.getElementById('branch-label');
+      const menu = document.getElementById('branch-menu');
+      const nativeSelect = document.getElementById('branch');
+      const options = menu.querySelectorAll('.custom-select-option');
+
+      function toggleMenu(open) {
+        const isOpen = open !== undefined ? open : !selectWrapper.classList.contains('open');
+        if (isOpen) {
+          selectWrapper.classList.add('open');
+          triggerBtn.setAttribute('aria-expanded', 'true');
+        } else {
+          selectWrapper.classList.remove('open');
+          triggerBtn.setAttribute('aria-expanded', 'false');
+        }
+      }
+
+      triggerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+      });
+
+      options.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const val = opt.getAttribute('data-value');
+          nativeSelect.value = val;
+          label.textContent = val;
+          label.classList.remove('placeholder');
+
+          options.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+
+          toggleMenu(false);
+          triggerBtn.focus();
+
+          // Trigger change event on native select for any listener
+          nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!selectWrapper.contains(e.target)) {
+          toggleMenu(false);
+        }
+      });
+
+      // Keyboard navigation
+      triggerBtn.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleMenu(true);
+        } else if (e.key === 'Escape') {
+          toggleMenu(false);
+        }
+      });
+    })();
   </script>
 
   <script>

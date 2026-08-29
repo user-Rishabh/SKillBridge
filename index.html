@@ -443,6 +443,40 @@
       opacity: 0.9;
     }
 
+    /* Single Hand-Drawn Hero Headline Accent */
+    .scribble-wrap {
+      position: relative;
+      display: inline-block;
+      white-space: nowrap;
+      padding: 0 4px;
+    }
+    .scribble-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -46%) rotate(-2.5deg);
+      width: calc(100% + 24px);
+      height: calc(100% + 20px);
+      pointer-events: none;
+      overflow: visible;
+      z-index: 1;
+    }
+    .scribble-path {
+      fill: none;
+      stroke: var(--accent-primary);
+      stroke-width: 4.5px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 600;
+      stroke-dashoffset: 600;
+      animation: drawScribble 0.75s cubic-bezier(0.65, 0, 0.35, 1) forwards 0.35s;
+    }
+    @keyframes drawScribble {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
     .hero-sub {
       font-size: 1.05rem;
       color: var(--text-secondary);
@@ -1579,8 +1613,9 @@
           <a href="#faq" class="nav-link" id="nav-faq">FAQ</a>
         </div>
 
-        <div>
-          <a href="auth.html" class="nav-cta" id="nav-cta">Get Started Free</a>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <a href="auth.html?tab=signin" class="nav-link" id="nav-signin" style="font-weight:600;">Sign In</a>
+          <a href="auth.html?tab=signup" class="nav-cta" id="nav-cta">Get Started Free</a>
         </div>
       </div>
     </nav>
@@ -1603,7 +1638,7 @@
           <!-- Oversized Headline with Solid Dark Headline Chip (Fully Contained with Generous Padding) -->
           <h1 class="hero-heading" id="hero-heading">
             Know exactly what to learn.<br>
-            <span class="headline-pill"><span class="sparkle-icon">✦</span> Get hired on autopilot <span class="sparkle-icon">✳</span></span>
+            <span class="headline-pill"><span class="sparkle-icon">✦</span> Get <span class="scribble-wrap">hired<svg class="scribble-circle" viewBox="0 0 160 64" fill="none" preserveAspectRatio="none" aria-hidden="true"><path class="scribble-path" vector-effect="non-scaling-stroke" d="M 14,24 C 12,8 55,4 110,8 C 148,11 156,28 148,44 C 136,58 70,60 26,52 C 5,47 4,30 20,16 C 32,7 68,4 104,5.5"/></svg></span> on autopilot <span class="sparkle-icon">✳</span></span>
           </h1>
 
           <p class="hero-sub">

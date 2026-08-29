@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,9 @@
     <title>Dashboard | SkillBridge</title>
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -38,9 +40,16 @@
     </script>
 
     <style>
-      /* ── SkillBridge Design Overrides & Micro-Utilities ── */
-      body, .app-container, .main-content {
+      /* ── SkillBridge Warm Design Overrides & Micro-Utilities ── */
+      body, .app-container {
         background-color: var(--bg-primary) !important;
+      }
+      .main-content {
+        background-color: var(--bg-primary) !important;
+        background-image:
+          linear-gradient(rgba(232, 221, 209, 0.45) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(232, 221, 209, 0.45) 1px, transparent 1px) !important;
+        background-size: 48px 48px !important;
         color: var(--text-primary) !important;
         font-family: var(--font-sans) !important;
       }
@@ -49,13 +58,10 @@
 
 <body>
     <div class="app-container" style="display: flex; width: 100%;">
-        <!-- Sidebar (Always Dark) -->
+        <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <a href="index.html" class="sidebar-logo">
-                <div class="logo-icon">
-                    <i data-lucide="layers" class="text-white w-4 h-4"></i>
-                </div>
-                <span class="logo-text">SkillBridge</span>
+                <span class="logo-text">Skill<span>Bridge</span></span>
             </a>
 
             <nav class="nav-group">
@@ -277,7 +283,7 @@
                     </p>
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px;">
-                      <span id="cc-focus-progress" style="font-size: 13px; font-weight: 600; color: var(--text-muted);">Progress: 0/1</span>
+                      <span id="cc-focus-progress" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Progress: 0/1</span>
                       <button id="cc-focus-btn" class="btn-action" style="padding: 10px 20px; border-radius: 10px;">
                         Start Task →
                       </button>
@@ -293,8 +299,8 @@
                         <svg class="radial-svg" viewBox="0 0 160 160">
                           <defs>
                             <linearGradient id="readinessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                              <stop offset="0%" stop-color="#B5D2E6" />
-                              <stop offset="100%" stop-color="#6F9FBE" />
+                              <stop offset="0%" stop-color="#F3D9C4" />
+                              <stop offset="100%" stop-color="#E8946A" />
                             </linearGradient>
                           </defs>
                           <circle class="radial-bg" cx="80" cy="80" r="70" />
@@ -346,7 +352,7 @@
                       </div>
                     </div>
                     
-                    <p id="cc-readiness-message" style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin: 14px 0;">
+                    <p id="cc-readiness-message" style="font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin: 14px 0;">
                        Set your career goal and roadmap to calculate readiness.
                     </p>
                     
