@@ -9,7 +9,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Poppins:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="styles/animations.css">
@@ -45,11 +45,12 @@
 
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-heading: 'Poppins', 'Plus Jakarta Sans', sans-serif;
-      --font-logo: 'Poppins', sans-serif;
+      --font-logo: 'Fredoka', 'Poppins', sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
 
       --shadow-card: 0 4px 20px rgba(26, 21, 18, 0.05);
       --shadow-elevated: 0 18px 45px rgba(26, 21, 18, 0.08), 0 2px 8px rgba(26, 21, 18, 0.04);
+      --shadow-floating-nav: 0 12px 36px rgba(26, 21, 18, 0.08), 0 2px 8px rgba(26, 21, 18, 0.04);
     }
 
     * {
@@ -154,7 +155,7 @@
       left: 0;
       height: 3px;
       background: var(--accent-primary);
-      z-index: 1000;
+      z-index: 1001;
       transition: width 0.1s ease;
     }
 
@@ -171,27 +172,38 @@
       padding: 0 24px;
     }
 
-    /* Navbar — Static & Clean */
-    .navbar {
+    /* ═══════════════════════════════════ FLOATING ISLAND NAVBAR (Nomu-Style) */
+    .navbar-wrapper {
       position: fixed;
-      top: 0;
+      top: 18px;
       left: 0;
       right: 0;
-      height: 68px;
-      background: rgba(253, 248, 243, 0.94) !important;
-      backdrop-filter: blur(16px) !important;
-      -webkit-backdrop-filter: blur(16px) !important;
-      border-bottom: 1px solid var(--border) !important;
       z-index: 999;
       display: flex;
+      justify-content: center;
+      padding: 0 20px;
+      pointer-events: none;
+    }
+
+    .navbar {
+      pointer-events: auto;
+      max-width: 1080px;
+      width: 100%;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.94) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 50px !important;
+      box-shadow: var(--shadow-floating-nav) !important;
+      display: flex;
       align-items: center;
+      padding: 0 10px 0 24px;
+      margin: 0 auto;
     }
 
     .nav-inner {
-      max-width: 1160px;
       width: 100%;
-      margin: 0 auto;
-      padding: 0 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -199,27 +211,27 @@
 
     .nav-logo {
       font-family: var(--font-logo) !important;
-      font-size: 1.45rem !important;
-      font-weight: 800 !important;
-      letter-spacing: -0.04em !important;
+      font-size: 1.4rem !important;
+      font-weight: 700 !important;
+      letter-spacing: -0.03em !important;
       color: var(--text-primary) !important;
       text-decoration: none;
       display: flex;
       align-items: center;
-      gap: 2px;
+      gap: 1px;
     }
     .nav-logo span {
       color: var(--accent-primary) !important;
-      font-weight: 800 !important;
+      font-weight: 700 !important;
     }
 
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 40px !important;
+      gap: 36px !important;
     }
     .nav-link {
-      font-size: 0.9rem !important;
+      font-size: 0.88rem !important;
       font-weight: 600 !important;
       color: var(--text-secondary) !important;
       text-decoration: none;
@@ -234,9 +246,9 @@
       background: var(--accent-primary) !important;
       color: #FFFFFF !important;
       font-weight: 700 !important;
-      font-size: 0.86rem !important;
-      padding: 9px 18px !important;
-      border-radius: 8px !important;
+      font-size: 0.84rem !important;
+      padding: 8px 18px !important;
+      border-radius: 50px !important;
       text-decoration: none;
       transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease !important;
       border: 1px solid var(--accent-primary) !important;
@@ -248,7 +260,7 @@
     .nav-cta:hover {
       background: var(--accent-hover) !important;
       border-color: var(--accent-hover) !important;
-      transform: translateY(-2px) scale(1.03);
+      transform: translateY(-1px) scale(1.03);
       box-shadow: 0 4px 14px rgba(232, 148, 106, 0.35);
     }
 
@@ -316,7 +328,7 @@
 
     /* ═══════════════════════════════════ HERO SECTION (Clean, Decluttered, Editorial) */
     .hero {
-      padding: 130px 0 60px !important;
+      padding: 130px 0 45px !important;
       background: transparent !important;
       position: relative;
       z-index: 1;
@@ -484,14 +496,14 @@
       font-weight: 500;
     }
 
-    /* Dashboard Preview Card Ambient Floating Motion (Right Column - Fully Contained, No Top Clipping) */
+    /* Dashboard Preview Card Ambient Floating Motion (Right Column - Fully Contained) */
     .hero-card-wrap {
       perspective: 1000px;
       position: relative;
       width: 100%;
       max-width: 420px;
       margin: 0 0 0 auto;
-      padding-top: 22px; /* Clear breathing room so +8% badge is not cut off */
+      padding-top: 22px;
     }
 
     .hero-weekly-badge {
@@ -671,6 +683,21 @@
     .hdc-next-meta {
       font-size: 0.72rem;
       color: var(--text-muted);
+    }
+
+    /* ═══════════════════════════════════ WAVY SECTION DIVIDERS (Layered Warm Terrain) */
+    .wavy-divider {
+      width: 100%;
+      overflow: hidden;
+      line-height: 0;
+      position: relative;
+      z-index: 2;
+    }
+    .wavy-divider svg {
+      position: relative;
+      display: block;
+      width: calc(100% + 1.3px);
+      height: 75px;
     }
 
     /* ═══════════════════════════════════ LOGO / TRUST MARQUEE */
@@ -1439,7 +1466,7 @@
     .footer-brand .footer-logo {
       font-family: var(--font-logo);
       font-size: 1.45rem;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--text-primary);
       margin-bottom: 8px;
     }
@@ -1495,6 +1522,8 @@
 
     /* Mobile Media Queries */
     @media (max-width: 960px) {
+      .navbar-wrapper { top: 12px; padding: 0 12px; }
+      .navbar { height: 56px; border-radius: 40px !important; }
       .hero-inner { grid-template-columns: 1fr; gap: 40px; }
       .hero-floating-pills { display: none; }
       .hero-card-wrap { max-width: 100%; margin: 0 auto; padding-top: 20px; }
@@ -1536,24 +1565,26 @@
   <!-- Scroll Progress Bar -->
   <div class="scroll-progress" id="progress-bar"></div>
 
-  <!-- ═══════════════════════════════════ NAVBAR (Static) -->
-  <nav class="navbar" id="navbar">
-    <div class="nav-inner">
-      <a href="#" class="nav-logo" id="nav-logo">Skill<span>Bridge</span></a>
+  <!-- ═══════════════════════════════════ FLOATING ISLAND NAVBAR (Nomu-Style) -->
+  <div class="navbar-wrapper">
+    <nav class="navbar" id="navbar">
+      <div class="nav-inner">
+        <a href="#" class="nav-logo" id="nav-logo">Skill<span>Bridge</span></a>
 
-      <div class="nav-links">
-        <a href="#problem" class="nav-link" id="nav-problem">Why It Exists</a>
-        <a href="#how" class="nav-link" id="nav-how">How It Works</a>
-        <a href="#features" class="nav-link" id="nav-features">Features</a>
-        <a href="#compare" class="nav-link" id="nav-compare">Compare</a>
-        <a href="#faq" class="nav-link" id="nav-faq">FAQ</a>
-      </div>
+        <div class="nav-links">
+          <a href="#problem" class="nav-link" id="nav-problem">Why It Exists</a>
+          <a href="#how" class="nav-link" id="nav-how">How It Works</a>
+          <a href="#features" class="nav-link" id="nav-features">Features</a>
+          <a href="#compare" class="nav-link" id="nav-compare">Compare</a>
+          <a href="#faq" class="nav-link" id="nav-faq">FAQ</a>
+        </div>
 
-      <div style="display: flex; align-items: center; gap: 16px;">
-        <a href="auth.html" class="nav-cta" id="nav-cta">Get Started Free</a>
+        <div>
+          <a href="auth.html" class="nav-cta" id="nav-cta">Get Started Free</a>
+        </div>
       </div>
-    </div>
-  </nav>
+    </nav>
+  </div>
 
   <!-- ═══════════════════════════════════ HERO (Editorial Bold + 2 Cleanly Placed Nomu Pills) -->
   <section class="hero" id="hero">
@@ -1658,6 +1689,14 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════ WAVY SECTION DIVIDER 1 (Transition into Marquee) -->
+  <div class="wavy-divider" aria-hidden="true">
+    <svg viewBox="0 0 1440 90" fill="none" preserveAspectRatio="none">
+      <path d="M0,45 C320,80 540,15 880,55 C1160,88 1340,30 1440,48 L1440,90 L0,90 Z" fill="#FFFFFF" stroke="#E8DDD1" stroke-width="1.5"/>
+      <path d="M0,60 C380,25 720,85 1100,40 C1280,18 1380,50 1440,60 L1440,90 L0,90 Z" fill="#F5EDE4" opacity="0.6"/>
+    </svg>
+  </div>
 
   <!-- ═══════════════════════════════════ LOGO / TRUST MARQUEE TICKER -->
   <div class="marquee-section">
@@ -2160,6 +2199,14 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════════════════════════════════ WAVY SECTION DIVIDER 2 (Transition into Final CTA) -->
+  <div class="wavy-divider" aria-hidden="true" style="transform: rotate(180deg);">
+    <svg viewBox="0 0 1440 90" fill="none" preserveAspectRatio="none">
+      <path d="M0,45 C320,80 540,15 880,55 C1160,88 1340,30 1440,48 L1440,90 L0,90 Z" fill="#F5EDE4" stroke="#E8DDD1" stroke-width="1.5"/>
+      <path d="M0,60 C380,25 720,85 1100,40 C1280,18 1380,50 1440,60 L1440,90 L0,90 Z" fill="#FDF8F3" opacity="0.7"/>
+    </svg>
+  </div>
 
   <!-- ═══════════════════════════════════ FINAL CTA -->
   <section class="cta-section">
