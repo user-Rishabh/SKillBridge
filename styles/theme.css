@@ -241,7 +241,6 @@ p {
 }
 
 .card:hover {
-    background: var(--bg-card);
     border-color: var(--border-hover);
     box-shadow: var(--shadow-medium);
 }

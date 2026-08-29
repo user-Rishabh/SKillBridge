@@ -542,8 +542,8 @@ async function loadQuickTestTab() {
 
     // Render score box
     document.getElementById('qt-score-box').innerHTML = `
-      <div id="qt-overall-score" style="font-size: 48px; font-weight: 800; color: var(--emerald); margin-bottom: 4px;">${latest.score}%</div>
-      <div id="qt-score-level" style="font-size: 14px; font-weight: 600; color: #ffffff; margin-bottom: 12px;">
+      <div id="qt-overall-score" style="font-size: 48px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">${latest.score}%</div>
+      <div id="qt-score-level" style="font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 12px;">
         ${latest.score >= 80 ? 'Strong Performance' : latest.score >= 60 ? 'Good Progress' : 'Needs Improvement'}
       </div>
       <div class="cc-progress-container" style="max-width: 260px; margin: 0 auto;">
@@ -556,11 +556,11 @@ async function loadQuickTestTab() {
     // Render skill breakdowns
     const breakdownHTML = Object.entries(latest.skills).map(([skillName, score]) => {
       const level = score >= 80 ? 'Strong' : score >= 60 ? 'Good' : score >= 40 ? 'Developing' : 'Needs Improvement';
-      const color = score >= 80 ? 'var(--emerald)' : score >= 60 ? 'var(--emerald)' : score >= 40 ? 'var(--warning)' : 'var(--text-error)';
+      const color = score >= 80 ? '#1B6344' : score >= 60 ? '#1B6344' : score >= 40 ? '#8A5E12' : '#992604';
       return `
         <div>
-          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-            <span style="color:#ffffff; font-weight:600;">${skillName}</span>
+          <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;">
+            <span style="color:var(--text-primary); font-weight:700;">${skillName}</span>
             <span style="color:${color}; font-weight:700;">${score}% · ${level}</span>
           </div>
           <div class="cc-progress-container">
@@ -585,17 +585,17 @@ async function loadQuickTestTab() {
       if (aIdx < assessments.length - 1) {
         const prev = assessments[aIdx + 1];
         const diff = a.score - prev.score;
-        if (diff > 0) diffText = `<span style="color:var(--emerald); font-size:11px; font-weight:600; margin-top:2px; display:block;">↑ +${diff}% from previous test</span>`;
-        else if (diff < 0) diffText = `<span style="color:var(--text-error); font-size:11px; font-weight:600; margin-top:2px; display:block;">↓ ${diff}% from previous test</span>`;
+        if (diff > 0) diffText = `<span style="color:#1B6344; font-size:11px; font-weight:600; margin-top:2px; display:block;">↑ +${diff}% from previous test</span>`;
+        else if (diff < 0) diffText = `<span style="color:#992604; font-size:11px; font-weight:600; margin-top:2px; display:block;">↓ ${diff}% from previous test</span>`;
       }
       return `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:10px; font-size:13px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:10px; font-size:13px;">
           <div>
-            <strong style="color:#ffffff;">${a.date}</strong>
-            <div style="color:var(--text-muted); font-size:11px; margin-top:2px;">${a.trackName}</div>
+            <strong style="color:var(--text-primary); font-weight:700;">${a.date}</strong>
+            <div style="color:var(--text-secondary); font-size:11px; margin-top:2px; font-weight:500;">${a.trackName}</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:700; color:var(--emerald);">${a.score}%</div>
+            <div style="font-weight:800; color:var(--text-primary);">${a.score}%</div>
             ${diffText}
           </div>
         </div>
@@ -2498,25 +2498,25 @@ async function renderFullRoadmap(roadmap) {
   if (activeTask) {
     const focusXP = activeTask.difficulty === 'Hard' ? 50 : activeTask.difficulty === 'Medium' ? 30 : 15;
     currentFocusHTML = `
-      <div style="background: rgba(0, 229, 255, 0.04); border: 1.5px solid var(--emerald); border-radius: 12px; padding: 18px; margin-top: 20px;">
+      <div style="background: var(--bg-tertiary); border: 1.5px solid var(--border-strong); border-radius: 12px; padding: 18px; margin-top: 20px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--emerald); text-transform: uppercase;">Current Focus</span>
+          <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #1B6344; text-transform: uppercase;">Current Focus</span>
           <span class="cc-badge badge-cyan">${activeTask.difficulty} · +${focusXP} XP</span>
         </div>
-        <h4 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 4px 0;">${activeTask.title}</h4>
+        <h4 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 4px 0;">${activeTask.title}</h4>
         <p style="font-size: 12px; color: var(--text-secondary); margin: 6px 0 14px 0; line-height: 1.4;">
           ${getTaskDescription(activeTask.title)}
         </p>
-        <button onclick="openTaskDetail('${activeTask.id}')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px; box-shadow: 0 0 12px rgba(0, 229, 255, 0.25);">
+        <button onclick="openTaskDetail('${activeTask.id}')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;">
           Continue Learning →
         </button>
       </div>
     `;
   } else {
     currentFocusHTML = `
-      <div style="background: rgba(16, 185, 129, 0.04); border: 1.5px solid #10B981; border-radius: 12px; padding: 18px; margin-top: 20px; text-align: center;">
+      <div style="background: var(--success-light); border: 1.5px solid var(--success); border-radius: 12px; padding: 18px; margin-top: 20px; text-align: center;">
         <div style="font-size: 24px; margin-bottom: 6px;">🎉</div>
-        <h4 style="font-size: 16px; font-weight: 700; color: #34D399; margin: 4px 0;">Roadmap Fully Mastered!</h4>
+        <h4 style="font-size: 16px; font-weight: 700; color: #1B6344; margin: 4px 0;">Roadmap Fully Mastered!</h4>
         <p style="font-size: 12px; color: var(--text-secondary); margin: 6px 0 0 0; line-height: 1.4;">
           You have completed all skills and are ready to tackle projects or start mock placement interviews.
         </p>
@@ -2561,9 +2561,9 @@ async function renderFullRoadmap(roadmap) {
     <!-- 1. ACTIVE CAREER PATH CARD -->
     <div class="cc-card cc-hero" style="margin-bottom: 24px;">
       <div>
-        <div class="cc-badge badge-cyan" style="margin-bottom: 8px;">🎯 ACTIVE PATHWAY</div>
-        <h2 style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 4px 0;">${goalTitle}</h2>
-        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 16px; max-width: 500px;">
+        <div class="cc-badge badge-purple" style="background: #FFFFFF; color: #9C4119; border: 1px solid rgba(232, 148, 106, 0.4); font-weight: 800; margin-bottom: 8px;">🎯 ACTIVE PATHWAY</div>
+        <h2 style="font-size: 26px; font-weight: 800; color: var(--text-primary); margin: 4px 0;">${goalTitle}</h2>
+        <div style="font-size: 13px; color: #4A3B30; font-weight: 500; line-height: 1.4; margin-bottom: 16px; max-width: 500px;">
           Personalized roadmap based on: Current skill level • Career goal • Existing skills • Completed tasks • Projects • Learning progress
         </div>
         
@@ -2576,7 +2576,7 @@ async function renderFullRoadmap(roadmap) {
       </div>
       
       <div>
-        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
           <span>Overall Progress</span>
           <span>${overallPct}% Complete</span>
         </div>
@@ -2588,7 +2588,7 @@ async function renderFullRoadmap(roadmap) {
           <button onclick="window.switchTab('tasks')" class="btn-primary" style="flex: 1; justify-content: center; padding: 12px; border-radius: 10px;">
             Continue Learning →
           </button>
-          <button onclick="openAdjustRoadmapModal()" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+          <button onclick="openAdjustRoadmapModal()" class="btn-outline" style="flex: 1; justify-content: center; padding: 12px; border-radius: 10px;">
             Adjust Goals
           </button>
         </div>
@@ -2598,7 +2598,7 @@ async function renderFullRoadmap(roadmap) {
     <!-- 2. CAREER JOURNEY OVERVIEW -->
     <div class="cc-card" style="margin-bottom: 24px;">
       <div class="cc-badge badge-cyan" style="margin-bottom: 12px;">🗺️ YOUR CAREER JOURNEY</div>
-      <h3 style="font-size: 16px; font-weight: 700; color: #ffffff; margin: 0 0 16px 0;">Journey Milestones</h3>
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin: 0 0 16px 0;">Journey Milestones</h3>
       
       <div class="rm-timeline-grid">
         <!-- Stage 1 -->
@@ -2643,15 +2643,15 @@ async function renderFullRoadmap(roadmap) {
       <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
         <div>
           <div class="cc-badge badge-rose" style="margin-bottom: 8px;">🎯 ACTIVE OBJECTIVE</div>
-          <h3 style="font-size: 22px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0;">${activePhaseObjName}</h3>
+          <h3 style="font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0 0 6px 0;">${activePhaseObjName}</h3>
           <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; max-width: 600px;">
             ${activePhaseObjDesc}
           </p>
         </div>
         
         <div style="text-align: right; min-width: 120px;">
-          <div style="font-size: 24px; font-weight: 800; color: var(--emerald);">${activePhasePctVal}%</div>
-          <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">${activePhaseSkillsMasteredCount} / ${activePhaseSkillsTotalCount} Mastered</div>
+          <div style="font-size: 24px; font-weight: 800; color: var(--pill-green);">${activePhasePctVal}%</div>
+          <div style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">${activePhaseSkillsMasteredCount} / ${activePhaseSkillsTotalCount} Mastered</div>
         </div>
       </div>
       
@@ -2660,7 +2660,7 @@ async function renderFullRoadmap(roadmap) {
       </div>
       
       <div style="margin-bottom: 12px;">
-        <h4 style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; margin-top: 0;">
+        <h4 style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em; margin-top: 0;">
           Skills you will master:
         </h4>
         <div class="rm-skill-grid">
@@ -2673,7 +2673,7 @@ async function renderFullRoadmap(roadmap) {
 
     <!-- 4. FULL ROADMAP PHASES -->
     <div>
-      <h3 style="font-size: 18px; font-weight: 700; color: #ffffff; margin: 28px 0 16px 0; display: flex; align-items: center; gap: 8px;">
+      <h3 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 28px 0 16px 0; display: flex; align-items: center; gap: 8px;">
         ⚙️ Complete Roadmap Timeline
       </h3>
       
@@ -2684,18 +2684,18 @@ async function renderFullRoadmap(roadmap) {
             <span class="cc-badge ${isPhase1Done ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
               ${isPhase1Done ? '✓ Phase 01' : '🎯 Phase 01'}
             </span>
-            <strong style="color: #ffffff; font-size: 14px;">Foundation</strong>
+            <strong style="color: var(--text-primary); font-size: 14px;">Foundation</strong>
           </div>
           <div style="display: flex; align-items: center; gap: 16px;">
-            <span style="font-size: 12px; font-weight: 600; color: ${isPhase1Done ? '#34D399' : 'var(--text-muted)'};">${phase1Pct}% Complete</span>
-            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+            <span style="font-size: 12px; font-weight: 700; color: ${isPhase1Done ? '#1B6344' : 'var(--text-secondary)'};">${phase1Pct}% Complete</span>
+            <span style="font-size: 14px; color: var(--text-secondary);">▼</span>
           </div>
         </div>
         <div class="rm-accordion-content">
           <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
             ${stagePhaseDescriptions[0]}
           </p>
-          <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
           <div class="rm-skill-grid">
             ${stageTasks[0].map(t => `
               <span class="rm-skill-tag ${t.status === 'completed' ? 'mastered' : ''}">
@@ -2703,8 +2703,8 @@ async function renderFullRoadmap(roadmap) {
               </span>
             `).join('')}
           </div>
-          <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
-            <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px; background: rgba(255,255,255,0.04) !important; color: #ffffff !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: none !important;" onmouseover="this.style.background='rgba(255,255,255,0.08)';" onmouseout="this.style.background='rgba(255,255,255,0.04)';">
+          <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;">
               Open Workspace ➔
             </button>
           </div>
@@ -2718,23 +2718,23 @@ async function renderFullRoadmap(roadmap) {
             <span class="cc-badge ${!isPhase1Done ? 'badge-rose' : isPhase2Done ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
               ${!isPhase1Done ? '🔒 Phase 02' : isPhase2Done ? '✓ Phase 02' : '🎯 Phase 02'}
             </span>
-            <strong style="color: #ffffff; font-size: 14px;">Core Skills</strong>
+            <strong style="color: var(--text-primary); font-size: 14px;">Core Skills</strong>
           </div>
           <div style="display: flex; align-items: center; gap: 16px;">
-            <span style="font-size: 12px; font-weight: 600; color: ${isPhase2Done ? '#34D399' : 'var(--text-muted)'};">${isPhase1Done ? phase2Pct + '%' : 'Locked'}</span>
-            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+            <span style="font-size: 12px; font-weight: 700; color: ${isPhase2Done ? '#1B6344' : 'var(--text-secondary)'};">${isPhase1Done ? phase2Pct + '%' : 'Locked'}</span>
+            <span style="font-size: 14px; color: var(--text-secondary);">▼</span>
           </div>
         </div>
         <div class="rm-accordion-content">
           ${!isPhase1Done ? `
-            <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">
+            <div style="text-align: center; padding: 12px; color: var(--text-secondary); font-size: 13px;">
               Complete Phase 01: Foundation to unlock core roadmap skills.
             </div>
           ` : `
             <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
               ${stagePhaseDescriptions[1]}
             </p>
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
             <div class="rm-skill-grid">
               ${stageTasks[1].map(t => `
                 <span class="rm-skill-tag ${t.status === 'completed' ? 'mastered' : ''}">
@@ -2742,8 +2742,8 @@ async function renderFullRoadmap(roadmap) {
                 </span>
               `).join('')}
             </div>
-            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
-              <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+              <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;">
                 Open Workspace ➔
               </button>
             </div>
@@ -2758,23 +2758,23 @@ async function renderFullRoadmap(roadmap) {
             <span class="cc-badge ${!isPhase2Done ? 'badge-rose' : isPhase3Done ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
               ${!isPhase2Done ? '🔒 Phase 03' : isPhase3Done ? '✓ Phase 03' : '🎯 Phase 03'}
             </span>
-            <strong style="color: #ffffff; font-size: 14px;">Advanced Skills</strong>
+            <strong style="color: var(--text-primary); font-size: 14px;">Advanced Skills</strong>
           </div>
           <div style="display: flex; align-items: center; gap: 16px;">
-            <span style="font-size: 12px; font-weight: 600; color: ${isPhase3Done ? '#34D399' : 'var(--text-muted)'};">${isPhase2Done ? phase3Pct + '%' : 'Locked'}</span>
-            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+            <span style="font-size: 12px; font-weight: 700; color: ${isPhase3Done ? '#1B6344' : 'var(--text-secondary)'};">${isPhase2Done ? phase3Pct + '%' : 'Locked'}</span>
+            <span style="font-size: 14px; color: var(--text-secondary);">▼</span>
           </div>
         </div>
         <div class="rm-accordion-content">
           ${!isPhase2Done ? `
-            <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">
+            <div style="text-align: center; padding: 12px; color: var(--text-secondary); font-size: 13px;">
               Complete Phase 02: Core Skills to unlock advanced specialization topics.
             </div>
           ` : `
             <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
               ${stagePhaseDescriptions[2]}
             </p>
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checkpoints:</div>
             <div class="rm-skill-grid">
               ${stageTasks[2].map(t => `
                 <span class="rm-skill-tag ${t.status === 'completed' ? 'mastered' : ''}">
@@ -2782,8 +2782,8 @@ async function renderFullRoadmap(roadmap) {
                 </span>
               `).join('')}
             </div>
-            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
-              <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+              <button onclick="window.switchTab('tasks')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;">
                 Open Workspace ➔
               </button>
             </div>
@@ -2798,23 +2798,23 @@ async function renderFullRoadmap(roadmap) {
             <span class="cc-badge ${!isProjectsUnlocked ? 'badge-rose' : isProjectsDone ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
               ${!isProjectsUnlocked ? '🔒 Phase 04' : isProjectsDone ? '✓ Phase 04' : '🎯 Phase 04'}
             </span>
-            <strong style="color: #ffffff; font-size: 14px;">Real-World Projects</strong>
+            <strong style="color: var(--text-primary); font-size: 14px;">Real-World Projects</strong>
           </div>
           <div style="display: flex; align-items: center; gap: 16px;">
-            <span style="font-size: 12px; font-weight: 600; color: ${isProjectsDone ? '#34D399' : 'var(--text-muted)'};">${isProjectsUnlocked ? projectsPct + '%' : 'Locked'}</span>
-            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+            <span style="font-size: 12px; font-weight: 700; color: ${isProjectsDone ? '#1B6344' : 'var(--text-secondary)'};">${isProjectsUnlocked ? projectsPct + '%' : 'Locked'}</span>
+            <span style="font-size: 14px; color: var(--text-secondary);">▼</span>
           </div>
         </div>
         <div class="rm-accordion-content">
           ${!isProjectsUnlocked ? `
-            <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">
+            <div style="text-align: center; padding: 12px; color: var(--text-secondary); font-size: 13px;">
               Complete Phase 03: Advanced Skills to unlock real-world project portfolios.
             </div>
           ` : `
             <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
               Apply your skills by building projects that demonstrate real-world capability.
             </p>
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Core Capstone Portfolios:</div>
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Core Capstone Portfolios:</div>
             <div class="rm-skill-grid">
               <span class="rm-skill-tag ${completedProjects >= 1 ? 'mastered' : 'active'}">
                 ${completedProjects >= 1 ? '✓' : '•'} Mobile Banking Application
@@ -2826,8 +2826,8 @@ async function renderFullRoadmap(roadmap) {
                 ${completedProjects >= 3 ? '✓' : '•'} SaaS Dashboard Interface
               </span>
             </div>
-            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
-              <button onclick="window.switchTab('projects')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+              <button onclick="window.switchTab('projects')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;">
                 Manage Project Sandbox ➔
               </button>
             </div>
@@ -2842,23 +2842,23 @@ async function renderFullRoadmap(roadmap) {
             <span class="cc-badge ${!isJobReadyUnlocked ? 'badge-rose' : placementCompletedCount === 5 ? 'badge-cyan' : 'badge-purple'}" style="margin-right: 12px;">
               ${!isJobReadyUnlocked ? '🔒 Phase 05' : placementCompletedCount === 5 ? '✓ Phase 05' : '🎯 Phase 05'}
             </span>
-            <strong style="color: #ffffff; font-size: 14px;">Job Ready</strong>
+            <strong style="color: var(--text-primary); font-size: 14px;">Job Ready</strong>
           </div>
           <div style="display: flex; align-items: center; gap: 16px;">
-            <span style="font-size: 12px; font-weight: 600; color: ${placementCompletedCount === 5 ? '#34D399' : 'var(--text-muted)'};">${isJobReadyUnlocked ? jobReadyPct + '%' : 'Locked'}</span>
-            <span style="font-size: 14px; color: var(--text-muted);">▼</span>
+            <span style="font-size: 12px; font-weight: 700; color: ${placementCompletedCount === 5 ? '#1B6344' : 'var(--text-secondary)'};">${isJobReadyUnlocked ? jobReadyPct + '%' : 'Locked'}</span>
+            <span style="font-size: 14px; color: var(--text-secondary);">▼</span>
           </div>
         </div>
         <div class="rm-accordion-content">
           ${!isJobReadyUnlocked ? `
-            <div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 13px;">
+            <div style="text-align: center; padding: 12px; color: var(--text-secondary); font-size: 13px;">
               Complete Phase 04: Real-World Projects to unlock mock placement and profile screening.
             </div>
           ` : `
             <p style="font-size: 13px; color: var(--text-secondary); margin: 0 0 16px 0;">
               Turn your skills and projects into a complete placement-ready profile.
             </p>
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checklist:</div>
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; margin-top: 0;">Checklist:</div>
             <div class="rm-skill-grid">
               <span class="rm-skill-tag ${placementProgressItems[0] ? 'mastered' : 'active'}">
                 ${placementProgressItems[0] ? '✓' : '•'} Resume Optimization
@@ -2876,8 +2876,8 @@ async function renderFullRoadmap(roadmap) {
                 ${placementProgressItems[4] ? '✓' : '•'} Mock Interview
               </span>
             </div>
-            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 16px;">
-              <button onclick="window.switchTab('placement')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+              <button onclick="window.switchTab('placement')" class="btn-primary" style="padding: 8px 16px; font-size: 12px; border-radius: 8px;">
                 Enter Placement Board ➔
               </button>
             </div>
@@ -7307,29 +7307,29 @@ function addMentorMessage(role, text) {
     ${isAI ? `
       <div style="width:32px;height:32px;
         border-radius:50%;flex-shrink:0;
-        background:linear-gradient(
-          135deg,#059669,#34D399);
+        background:var(--accent-soft);
+        border:1.5px solid var(--accent-primary);
         display:flex;align-items:center;
-        justify-content:center;font-size:14px;
+        justify-content:center;font-size:16px;
         margin-top:4px;">🤖</div>
     ` : ''}
     <div style="
-      max-width:70%;padding:12px 16px;
+      max-width:75%;padding:12px 18px;
       border-radius:16px;
       border-${isAI ? 'bottom-left' : 'bottom-right'}-radius:4px;
-      background:${isAI ? 'white' : '#059669'};
-      color:${isAI ? '#0F172A' : 'white'};
+      background:${isAI ? '#FFFFFF' : 'var(--accent-primary)'};
+      color:${isAI ? 'var(--text-primary)' : '#FFFFFF'};
       font-size:14px;line-height:1.6;
-      border:${isAI ? '1px solid #E2E8F0' : 'none'};
-      box-shadow:${isAI ? '0 2px 8px rgba(0,0,0,0.06)' : 'none'};
+      border:${isAI ? '1.5px solid var(--border-strong)' : 'none'};
+      box-shadow:${isAI ? '0 1px 3px rgba(43,36,32,0.04)' : 'none'};
     ">${formatted}</div>
     ${!isAI ? `
       <div style="width:32px;height:32px;
         border-radius:50%;flex-shrink:0;
-        background:#059669;
+        background:var(--pill-purple);
         display:flex;align-items:center;
         justify-content:center;font-size:14px;
-        color:white;font-weight:600;margin-top:4px;">
+        color:white;font-weight:700;margin-top:4px;">
         ${currentUserName?.charAt(0) || 'U'}
       </div>
     ` : ''}
