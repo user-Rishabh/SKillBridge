@@ -1,8 +1,7 @@
 /* ══════════════════════════════════════════════════════════════
-   SKILLBRIDGE — LANDING PAGE JAVASCRIPT (REDESIGNED)
-   Career Navigation + Skill Verification System
+   SKILLBRIDGE — LANDING PAGE JAVASCRIPT (NOMU-INSPIRED LIVELY)
+   Warm Cream & Peach/Terracotta Palette • Live Counters • Rotating Micro-Copy
    ══════════════════════════════════════════════════════════════ */
-
 
 /* ── Scroll Progress Bar ───────────────────────────────────── */
 (function initScrollProgress() {
@@ -16,12 +15,12 @@
 })();
 
 
-/* ── Navbar Scroll State ───────────────────────────────────── */
+/* ── Navbar Scroll State (Static Styling, Elevation on Scroll) ─ */
 (function initNavbar() {
   const nav = document.getElementById('navbar');
   if (!nav) return;
   window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 40);
+    nav.classList.toggle('scrolled', window.scrollY > 30);
   }, { passive: true });
 })();
 
@@ -43,6 +42,80 @@
 })();
 
 
+/* ── Playful Rotating Micro-Copy (Nomu-inspired) ────────────── */
+(function initRotatingMicroCopy() {
+  const container = document.getElementById('hero-microcopy');
+  if (!container) return;
+
+  const phrases = [
+    { icon: "✦", text: "Analyzing your skills in real-time..." },
+    { icon: "✳", text: "Mapping your missing prerequisite gaps..." },
+    { icon: "✶", text: "Building your milestone roadmap..." },
+    { icon: "✧", text: "Calculating verified job readiness..." },
+    { icon: "✦", text: "Matching live hiring partner standards..." }
+  ];
+
+  let index = 0;
+  const iconEl = container.querySelector('.microcopy-icon');
+  const textEl = container.querySelector('.microcopy-text');
+
+  if (!iconEl || !textEl) return;
+
+  setInterval(() => {
+    container.classList.add('fade-out');
+    setTimeout(() => {
+      index = (index + 1) % phrases.length;
+      iconEl.textContent = phrases[index].icon;
+      textEl.textContent = phrases[index].text;
+      container.classList.remove('fade-out');
+    }, 250);
+  }, 2300);
+})();
+
+
+/* ── Live Counters Up-Animation (1.2s Ease-Out) ────────────── */
+(function initLiveCounters() {
+  const counterElements = document.querySelectorAll('[data-counter]');
+  if (!counterElements.length) return;
+
+  function easeOutQuad(t) {
+    return t * (2 - t);
+  }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseFloat(el.getAttribute('data-target') || '0');
+        const prefix = el.getAttribute('data-prefix') || '';
+        const suffix = el.getAttribute('data-suffix') || '';
+        const duration = 1200;
+        const start = performance.now();
+
+        function animate(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const current = Math.floor(easeOutQuad(progress) * target);
+
+          el.textContent = `${prefix}${current.toLocaleString()}${suffix}`;
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            el.textContent = `${prefix}${target.toLocaleString()}${suffix}`;
+          }
+        }
+
+        requestAnimationFrame(animate);
+        io.unobserve(el);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  counterElements.forEach(el => io.observe(el));
+})();
+
+
 /* ── Hero: Circular Progress Ring Animation ────────────────── */
 (function initRing() {
   const ringFill = document.getElementById('ring-fill');
@@ -54,163 +127,47 @@
   const CIRCUM  = 2 * Math.PI * RADIUS; // ≈ 314.16
   const DURATION = 1500; // ms
 
-  // Animate after brief delay on page load
-  setTimeout(() => {
-    const start = performance.now();
+  const io = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      setTimeout(() => {
+        const start = performance.now();
+        function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
-    function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+        function step(now) {
+          const t   = Math.min((now - start) / DURATION, 1);
+          const pct = easeOut(t) * TARGET;
+          const offset = CIRCUM - (pct / 100) * CIRCUM;
+          ringFill.style.strokeDashoffset = offset;
+          ringPct.textContent = Math.round(pct) + '%';
+          if (t < 1) requestAnimationFrame(step);
+        }
 
-    function step(now) {
-      const t   = Math.min((now - start) / DURATION, 1);
-      const pct = easeOut(t) * TARGET;
-      const offset = CIRCUM - (pct / 100) * CIRCUM;
-      ringFill.style.strokeDashoffset = offset;
-      ringPct.textContent = Math.round(pct) + '%';
-      if (t < 1) requestAnimationFrame(step);
+        requestAnimationFrame(step);
+      }, 300);
+      io.disconnect();
     }
+  }, { threshold: 0.2 });
 
-    requestAnimationFrame(step);
-  }, 400);
+  const heroCard = document.querySelector('.hero-dashboard-card');
+  if (heroCard) io.observe(heroCard);
 })();
 
 
-/* ── Skill Bars Animated Fill ──────────────────────────────── */
+/* ── Skill Bars Animated Fill on Scroll ────────────────────── */
 (function initSkillBars() {
   const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const bars = entry.target.querySelectorAll('.bar-fill');
         bars.forEach((bar, i) => {
-          setTimeout(() => bar.classList.add('animated'), i * 200);
+          setTimeout(() => bar.classList.add('animated'), i * 180);
         });
         io.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.3 });
+  }, { threshold: 0.25 });
 
-  // Animate hero skill bars immediately after ring
-  const heroSkills = document.querySelector('.hdc-skills');
-  if (heroSkills) {
-    setTimeout(() => {
-      heroSkills.querySelectorAll('.bar-fill').forEach((bar, i) => {
-        setTimeout(() => bar.classList.add('animated'), 600 + i * 200);
-      });
-    }, 0);
-  }
-
-  // All other skill-bar groups trigger on scroll
-  document.querySelectorAll('.skill-bars:not(.hdc-skills), .dp-skills, .weak-list').forEach(el => io.observe(el));
-})();
-
-
-/* ── Steps Line Draw on Scroll ─────────────────────────────── */
-(function initStepsLine() {
-  const line = document.getElementById('steps-line');
-  const row  = document.getElementById('steps-row');
-  if (!line || !row) return;
-
-  const io = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting) {
-      line.classList.add('animated');
-      io.disconnect();
-    }
-  }, { threshold: 0.3 });
-
-  io.observe(row);
-})();
-
-
-/* ── Dashboard Preview: Count-up Score & Bar Trigger ──────── */
-(function initDashboardPreview() {
-  const mockDash = document.querySelector('.mock-dashboard');
-  if (!mockDash) return;
-
-  let triggered = false;
-
-  const io = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && !triggered) {
-      triggered = true;
-
-      // Animate dp-skills bars
-      mockDash.querySelectorAll('.dp-skills .bar-fill, .weak-list .bar-fill').forEach((bar, i) => {
-        setTimeout(() => bar.classList.add('animated'), i * 150);
-      });
-
-      io.disconnect();
-    }
-  }, { threshold: 0.2 });
-
-  io.observe(mockDash);
-})();
-
-
-/* ── Comparison Table Row Reveal ───────────────────────────── */
-(function initTableRows() {
-  const rows = document.querySelectorAll('.trow');
-  if (!rows.length) return;
-
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        rows.forEach((row, i) => {
-          setTimeout(() => row.classList.add('revealed'), i * 100);
-        });
-        io.disconnect();
-      }
-    });
-  }, { threshold: 0.15 });
-
-  const table = document.querySelector('.table-wrap');
-  if (table) io.observe(table);
-})();
-
-
-/* ── CTA Floating Particles ────────────────────────────────── */
-(function initCTAParticles() {
-  const container = document.getElementById('cta-particles');
-  if (!container) return;
-
-  for (let i = 0; i < 20; i++) {
-    const p = document.createElement('div');
-    p.className = 'cta-particle';
-    p.style.cssText = `
-      left: ${Math.random() * 100}%;
-      bottom: ${Math.random() * -20}%;
-      width: ${2 + Math.random() * 4}px;
-      height: ${2 + Math.random() * 4}px;
-      opacity: ${0.1 + Math.random() * 0.4};
-      animation-duration: ${5 + Math.random() * 10}s;
-      animation-delay: ${Math.random() * 6}s;
-    `;
-    container.appendChild(p);
-  }
-})();
-
-
-/* ── Button Ripple Effect ──────────────────────────────────── */
-(function initRipple() {
-  document.querySelectorAll('.btn').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-      const rect   = btn.getBoundingClientRect();
-      const size   = Math.max(rect.width, rect.height);
-      const x      = e.clientX - rect.left - size / 2;
-      const y      = e.clientY - rect.top  - size / 2;
-      const ripple = document.createElement('span');
-      ripple.className = 'ripple';
-      ripple.style.cssText = `
-        width: ${size}px; height: ${size}px;
-        left: ${x}px; top: ${y}px;
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.25);
-        transform: scale(0);
-        animation: ripple-anim 0.45s linear;
-        pointer-events: none;
-      `;
-      btn.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 500);
-    });
-  });
+  document.querySelectorAll('.skill-bars, .dp-skills, .weak-list').forEach(el => io.observe(el));
 })();
 
 

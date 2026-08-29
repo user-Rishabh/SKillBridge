@@ -15,8 +15,11 @@ const responses = {
 function addMessage(text, isUser = false) {
     const div = document.createElement('div');
     div.className = isUser 
-        ? 'ml-auto bg-primary text-white p-3 rounded-2xl max-w-[85%] shadow-md animate-slide-in-right' 
-        : 'bg-white/5 p-3 rounded-2xl border border-white/5 max-w-[85%] shadow-sm animate-slide-in-left';
+        ? 'ml-auto bg-primary text-white p-3 rounded-2xl max-w-[85%] shadow-sm animate-slide-in-right' 
+        : 'bg-white text-navy p-3 rounded-2xl border border-border max-w-[85%] shadow-sm animate-slide-in-left';
+    div.style.color = isUser ? '#FFFFFF' : 'var(--navy)';
+    div.style.background = isUser ? 'var(--primary)' : '#FFFFFF';
+    div.style.border = isUser ? 'none' : '1px solid var(--border)';
     div.innerHTML = text; // Use innerHTML for formatting if needed
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -25,7 +28,9 @@ function addMessage(text, isUser = false) {
 function addTypingIndicator() {
     const div = document.createElement('div');
     div.id = 'typing-indicator';
-    div.className = 'bg-white/5 p-3 rounded-xl border border-white/5 w-16 flex gap-1 items-center justify-center';
+    div.className = 'bg-white p-3 rounded-xl border border-border w-16 flex gap-1 items-center justify-center';
+    div.style.background = '#FFFFFF';
+    div.style.border = '1px solid var(--border)';
     div.innerHTML = `
         <span class="w-1.5 h-1.5 bg-text-muted rounded-full animate-bounce"></span>
         <span class="w-1.5 h-1.5 bg-text-muted rounded-full animate-bounce [animation-delay:0.2s]"></span>

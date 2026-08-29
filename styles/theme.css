@@ -1,44 +1,106 @@
 /* 
    SkillBridge AI - Premium Design System
-   Theme: Cream + Black + Green Accent
-   Author: Antigravity
+   Theme: Warm Ivory & Powder Blue (Light Premium + Deep Navy Editorial)
 */
 
-:root {
-    /* Color Palette — Cream + Black + Emerald */
-    --cream:        #F5F0E8;
-    --cream-2:      #EDE8DC;
-    --cream-3:      #FAF7F2;
-    --black:        #0D0D0D;
-    --black-2:      #1A1A1A;
-    --black-3:      #2A2A2A;
-    --emerald:      #059669;
-    --emerald-dark: #047857;
-    --emerald-light:#D1FAE5;
-    --emerald-glow: rgba(5,150,105,0.15);
-    --mint:         #34D399;
-    --gold:         #D4A843;
-    --text-primary: #0D0D0D;
-    --text-muted:   #6B6560;
-    --text-light:   #9E9890;
-    --border:       rgba(13,13,13,0.1);
-    --border-strong:rgba(13,13,13,0.2);
-    
-    /* Typography */
+:root, [data-theme="light"], [data-theme="day"] {
+    /* PRIMARY PALETTE */
+    --ivory:                #FFF1E7;
+    --powder-blue:          #B5D2E6;
+
+    /* DARK CONTRAST */
+    --navy:                 #17283A;
+    --navy-soft:            #29445A;
+
+    /* LIGHT SURFACES */
+    --background:           #FFF9F5;
+    --surface:              #FFFFFF;
+    --surface-warm:         #FFF1E7;
+    --surface-blue:         #EEF6FB;
+    --surface-blue-strong:  #DCECF6;
+
+    /* APPLICATION SURFACES */
+    --bg-primary:           #FFF9F5;
+    --bg-sidebar:           #FFFFFF;
+    --bg-secondary:         #EEF6FB;
+    --bg-card:              #FFFFFF;
+    --bg-card-hover:        #F8FBFD;
+    --bg-elevated:          #FFFFFF;
+
+    /* BACKWARD COMPATIBILITY ALIASES */
+    --bg-base:              #FFF9F5;
+    --bg-surface:           #FFFFFF;
+    --bg-surface-elevated:  #FFFFFF;
+
+    /* BORDERS */
+    --border:               #E4E1DE;
+    --border-hover:         #C9DCE9;
+    --border-blue:          #C9DCE9;
+    --border-primary:       #B5D2E6;
+    --border-strong:        #B5D2E6;
+    --border-active:        #6F9FBE;
+
+    /* TEXT */
+    --text-primary:         #17283A;
+    --text-secondary:       #536575;
+    --text-muted:           #82909B;
+    --text-subtle:          #A2AFBA;
+    --text-light:           #536575;
+    --text-white:           #FFFFFF;
+
+    /* PRIMARY ACCENT & BRAND */
+    --primary:              #6F9FBE;
+    --primary-dark:         #4F7896;
+    --brand:                #6F9FBE;
+    --brand-light:          #B5D2E6;
+    --action:               #6F9FBE;
+    --color-primary:        #6F9FBE;
+    --color-primary-light:  #B5D2E6;
+    --color-secondary:      #536575;
+    --color-deep:           #17283A;
+    --color-neutral:        #FFF9F5;
+
+    /* SEMANTIC */
+    --success:              #5D9278;
+    --success-light:        #EDF6F1;
+    --warning:              #C49455;
+    --danger:               #B96C6C;
+    --info:                 #4F7896;
+
+    /* LEGACY ALIASES */
+    --emerald:              var(--primary);
+    --emerald-dark:         var(--primary-dark);
+    --emerald-light:        var(--powder-blue);
+    --emerald-glow:         rgba(111, 159, 190, 0.12);
+    --mint:                 var(--powder-blue);
+    --fuchsia:              var(--primary);
+    --amber:                var(--warning);
+    --rose:                 var(--danger);
+
+    /* GRADIENTS */
+    --grad-primary:         linear-gradient(135deg, #6F9FBE, #B5D2E6);
+    --grad-hero:            linear-gradient(135deg, #FFF1E7 0%, #FFF7F1 100%);
+    --grad-brand:           linear-gradient(135deg, #6F9FBE 0%, #4F7896 100%);
+    --grad-ivory:           linear-gradient(135deg, #FFF1E7 0%, #FCEFE5 100%);
+
+    /* TYPOGRAPHY */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-heading: 'Plus Jakarta Sans', var(--font-family);
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     
-    /* Shadows & Effects */
-    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 10px -2px rgba(0, 0, 0, 0.03);
-    --shadow-medium: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 12px -4px rgba(0, 0, 0, 0.04);
+    /* SHADOWS & EFFECTS */
+    --shadow-soft:          0 4px 18px rgba(23, 40, 58, 0.05);
+    --shadow-medium:        0 8px 24px rgba(23, 40, 58, 0.06);
+    --shadow-elevated:      0 12px 32px rgba(23, 40, 58, 0.08);
+    --shadow-ambient:       0 0 20px rgba(111, 159, 190, 0.08);
     
-    /* Border Radius */
+    /* BORDER RADIUS */
     --radius-sm: 8px;
     --radius-md: 12px;
-    --radius-lg: 16px;
+    --radius-lg: 14px;
     --radius-full: 9999px;
 
-    /* Spacing */
+    /* SPACING */
     --space-xs: 0.5rem;
     --space-sm: 1rem;
     --space-md: 1.5rem;
@@ -54,7 +116,7 @@
 }
 
 body {
-    background-color: var(--cream);
+    background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-family);
     line-height: 1.6;
@@ -74,7 +136,9 @@ p {
 }
 
 /* Typography Utilities */
-.text-emerald { color: var(--emerald); }
+.text-ivory { color: var(--ivory); }
+.text-blue { color: var(--primary); }
+.text-navy { color: var(--navy); }
 .text-muted { color: var(--text-muted); }
 .font-bold { font-weight: 700; }
 .font-medium { font-weight: 500; }
@@ -98,39 +162,75 @@ p {
 }
 
 .btn-primary {
-    background-color: var(--black);
-    color: var(--cream);
+    background-color: var(--primary);
+    color: #FFFFFF;
+    border: none;
+    font-weight: 700;
 }
 
 .btn-primary:hover {
-    background-color: var(--emerald);
+    background-color: var(--primary-dark);
+    color: #FFFFFF;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    box-shadow: 0 4px 14px rgba(79, 120, 150, 0.25);
+}
+
+.btn-secondary {
+    background-color: var(--powder-blue);
+    color: var(--navy);
+    border: 1px solid var(--border-blue);
+}
+
+.btn-secondary:hover {
+    background-color: var(--surface-blue-strong);
+    color: var(--navy);
+    transform: translateY(-1px);
 }
 
 .btn-outline {
     background: transparent;
-    border-color: var(--black);
-    color: var(--black);
-    border-width: 1.5px;
+    border: 1px solid var(--primary);
+    color: var(--primary-dark);
 }
 
 .btn-outline:hover {
-    background: var(--black);
-    color: var(--cream);
+    background: var(--surface-blue);
+    color: var(--navy);
+    border-color: var(--primary-dark);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+    background: var(--surface-blue);
+    color: var(--text-primary);
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: #FFFFFF;
+}
+
+.btn-danger:hover {
+    filter: brightness(0.92);
 }
 
 /* Cards */
 .card {
-    background: #FDFAF5;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-soft);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
+    background: var(--bg-card);
+    border-color: var(--border-hover);
     box-shadow: var(--shadow-medium);
 }
 
@@ -144,8 +244,8 @@ p {
 
 .input-label {
     font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-primary);
+    font-weight: 600;
+    color: var(--text-secondary);
 }
 
 .input {
@@ -153,7 +253,7 @@ p {
     padding: 0.75rem 1rem;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
-    background: #FDFAF5;
+    background: #FFFFFF;
     font-family: inherit;
     font-size: 1rem;
     transition: all 0.2s ease;
@@ -162,22 +262,22 @@ p {
 
 .input:focus {
     outline: none;
-    border-color: var(--emerald);
-    box-shadow: 0 0 0 4px var(--emerald-glow);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(111, 159, 190, 0.15);
 }
 
 /* Progress Indicators */
 .progress-track {
     width: 100%;
     height: 8px;
-    background: var(--border);
+    background: #E7EEF2;
     border-radius: var(--radius-full);
     overflow: hidden;
 }
 
 .progress-fill {
     height: 100%;
-    background: var(--emerald);
+    background: var(--primary);
     border-radius: var(--radius-full);
     transition: width 0.6s cubic-bezier(0.65, 0, 0.35, 1);
 }
@@ -191,7 +291,7 @@ p {
 }
 
 .nav-link:hover, .nav-link.active {
-    color: var(--emerald);
+    color: var(--primary);
 }
 
 /* Section Header */
@@ -203,8 +303,9 @@ p {
 .section-tag {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    background: rgba(5, 150, 105, 0.1);
-    color: var(--emerald);
+    background: var(--surface-blue);
+    color: var(--primary-dark);
+    border: 1px solid var(--border-blue);
     border-radius: var(--radius-full);
     font-size: 0.75rem;
     font-weight: 700;

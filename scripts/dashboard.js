@@ -1139,25 +1139,25 @@ async function generateCourseNotes(taskId, title) {
         margin-bottom: 1rem;
         font-weight: 700;
       }
-      .viewer-markdown h1 { font-size: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
-      .viewer-markdown h2 { font-size: 1.5rem; color: #D946EF; }
-      .viewer-markdown h3 { font-size: 1.2rem; }
+      .viewer-markdown h1 { font-size: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: var(--navy); }
+      .viewer-markdown h2 { font-size: 1.5rem; color: var(--primary-dark); }
+      .viewer-markdown h3 { font-size: 1.2rem; color: var(--navy); }
       .viewer-markdown p {
-        color: #CBD5E1;
+        color: var(--text-secondary);
         line-height: 1.75;
         margin-bottom: 1.2rem;
       }
       .viewer-markdown code {
-        background: rgba(255,255,255,0.06);
+        background: var(--surface-blue);
         padding: 3px 6px;
         border-radius: 6px;
-        font-family: 'Courier New', Courier, monospace;
+        font-family: 'JetBrains Mono', monospace;
         font-size: 0.9em;
-        color: #F472B6;
+        color: var(--primary-dark);
       }
       .viewer-markdown pre {
-        background: #0B0424;
-        border: 1px solid rgba(255,255,255,0.08);
+        background: var(--surface-blue);
+        border: 1px solid var(--border-blue);
         padding: 20px;
         border-radius: 12px;
         overflow-x: auto;
@@ -1166,20 +1166,20 @@ async function generateCourseNotes(taskId, title) {
       .viewer-markdown pre code {
         background: none;
         padding: 0;
-        color: #E2E8F0;
+        color: var(--navy);
         font-size: 0.88rem;
       }
       .viewer-markdown ul, .viewer-markdown ol {
         margin-bottom: 1.2rem;
         padding-left: 24px;
-        color: #CBD5E1;
+        color: var(--text-secondary);
       }
       .viewer-markdown li {
         margin-bottom: 0.5rem;
       }
       .viewer-markdown blockquote {
-        border-left: 4px solid #D946EF;
-        background: rgba(217, 70, 239, 0.05);
+        border-left: 4px solid var(--primary);
+        background: var(--surface-blue);
         padding: 12px 20px;
         margin: 1.5rem 0;
         border-radius: 0 8px 8px 0;
@@ -1530,25 +1530,25 @@ function showQuizModal(taskId, title, quiz, phase) {
     const q = quiz.questions[currentQ];
     const progress = ((currentQ) / quiz.questions.length) * 100;
     modal.innerHTML = `
-      <div style="background:rgba(12, 5, 31, 0.85);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:32px;max-width:540px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,0.5);backdrop-filter:blur(10px);">
+      <div style="background:#FFFFFF;border:1px solid var(--border);border-radius:24px;padding:32px;max-width:540px;width:100%;box-shadow:0 20px 60px rgba(23,40,58,0.15);backdrop-filter:blur(10px);">
         <div style="margin-bottom:24px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:#94A3B8;margin-bottom:8px;font-weight:600;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;">
             <span>QUESTION ${currentQ + 1} OF ${quiz.questions.length}</span>
-            <span style="color:var(--fuchsia);">SCORE: ${score}/${currentQ}</span>
+            <span style="color:var(--primary-dark);">SCORE: ${score}/${currentQ}</span>
           </div>
-          <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;">
-            <div style="height:100%;width:${progress}%;background:linear-gradient(90deg, #D946EF, #7C3AED);border-radius:3px;transition:width 300ms;"></div>
+          <div style="height:6px;background:#E7EEF2;border-radius:3px;overflow:hidden;">
+            <div style="height:100%;width:${progress}%;background:var(--primary);border-radius:3px;transition:width 300ms;"></div>
           </div>
         </div>
-        <div style="font-size:16px;font-weight:600;line-height:1.6;margin-bottom:24px;color:#FFFFFF;">${q.q}</div>
+        <div style="font-size:16px;font-weight:600;line-height:1.6;margin-bottom:24px;color:var(--navy);">${q.q}</div>
         <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
           ${q.options.map((opt, i) => `
             <button onclick="selectAnswer(${i}, ${q.answer}, '${q.explanation.replace(/'/g, "\\'")}', this)" 
-              style="text-align:left;padding:14px 18px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:#E2E8F0;cursor:pointer;font-size:14px;transition:all 150ms;display:flex;align-items:center;gap:12px;" 
-              onmouseover="if(!this.disabled){this.style.borderColor='var(--fuchsia)';this.style.background='rgba(217,70,239,0.05)';}" 
-              onmouseout="if(!this.disabled){this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='rgba(255,255,255,0.02)';}"
+              style="text-align:left;padding:14px 18px;border-radius:12px;border:1.5px solid var(--border);background:#FFFFFF;color:var(--navy);cursor:pointer;font-size:14px;transition:all 150ms;display:flex;align-items:center;gap:12px;" 
+              onmouseover="if(!this.disabled){this.style.borderColor='var(--primary)';this.style.background='var(--surface-blue)';}" 
+              onmouseout="if(!this.disabled){this.style.borderColor='var(--border)';this.style.background='#FFFFFF';}"
             >
-              <span style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#FFFFFF;">
+              <span style="width:28px;height:28px;border-radius:50%;background:var(--surface-blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:var(--primary-dark);">
                 ${['A', 'B', 'C', 'D'][i]}
               </span>
               ${opt}
@@ -1564,9 +1564,9 @@ function showQuizModal(taskId, title, quiz, phase) {
     modal.querySelectorAll('button[onclick*="selectAnswer"]').forEach(b => b.disabled = true);
     const isCorrect = selected === correct; if (isCorrect) score++;
     answers.push({ selected, correct });
-    modal.querySelectorAll('button[onclick*="selectAnswer"]').forEach((b, i) => { if (i === correct) { b.style.background = 'rgba(16,185,129,0.15)'; b.style.borderColor = '#10B981'; b.style.color = '#34D399'; } else if (i === selected && !isCorrect) { b.style.background = 'rgba(239,68,68,0.15)'; b.style.borderColor = '#EF4444'; b.style.color = '#FCA5A5'; } });
+    modal.querySelectorAll('button[onclick*="selectAnswer"]').forEach((b, i) => { if (i === correct) { b.style.background = '#EDF6F1'; b.style.borderColor = 'var(--success)'; b.style.color = '#4F8068'; } else if (i === selected && !isCorrect) { b.style.background = '#FAEEEE'; b.style.borderColor = 'var(--danger)'; b.style.color = '#9B5959'; } });
     const exp = document.getElementById('explanation-area');
-    if (exp) { exp.innerHTML = `<div style="padding:14px 18px;border-radius:12px;background:${isCorrect ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'};border:1px solid ${isCorrect ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'};font-size:13px;color:${isCorrect ? '#34D399' : '#FCA5A5'};margin-bottom:20px;line-height:1.5;">${isCorrect ? '✓ Correct! ' : '✗ Incorrect. '}${explanation}</div><button onclick="nextQuestion()" style="width:100%;background:linear-gradient(135deg, #D946EF, #7C3AED);color:white;border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(217,70,239,0.3);transition:all 200ms;" onmouseover="this.style.filter='brightness(1.1)';" onmouseout="this.style.filter='none';">${currentQ + 1 < quiz.questions.length ? 'Next Question →' : 'See Results 🏆'}</button>`; }
+    if (exp) { exp.innerHTML = `<div style="padding:14px 18px;border-radius:12px;background:${isCorrect ? '#EDF6F1' : '#FAEEEE'};border:1px solid ${isCorrect ? 'var(--success)' : 'var(--danger)'};font-size:13px;color:${isCorrect ? '#4F8068' : '#9B5959'};margin-bottom:20px;line-height:1.5;">${isCorrect ? '✓ Correct! ' : '✗ Incorrect. '}${explanation}</div><button onclick="nextQuestion()" style="width:100%;background:var(--primary);color:#FFFFFF;border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(79,120,150,0.25);transition:all 200ms;" onmouseover="this.style.background='var(--primary-dark)';" onmouseout="this.style.background='var(--primary)';">${currentQ + 1 < quiz.questions.length ? 'Next Question →' : 'See Results 🏆'}</button>`; }
   };
   window.nextQuestion = function () { currentQ++; if (currentQ < quiz.questions.length) { renderQuestion(); } else { showQuizResults(taskId, score, quiz.questions.length, title, phase); } };
   renderQuestion();
@@ -1707,29 +1707,29 @@ async function showQuizResults(taskId, score, total, taskTitle, phase) {
           <h3 style="font-size:20px;margin:0 0 8px;font-weight:700;">
             ${pct >= 80 ? '🎉 Excellent Work!' : pct >= 60 ? '👍 Good Effort!' : '💪 Keep Practicing!'}
           </h3>
-          <p style="color:#CBD5E1;font-size:14px;margin:0 0 24px;">
+          <p style="color:var(--text-secondary);font-size:14px;margin:0 0 24px;">
             ${pct >= 80 ? 'You passed the quiz! This task is marked as complete.' : 'You need 80% or higher to complete this task.'}
           </p>
 
-          <div style="background:linear-gradient(135deg,rgba(217,70,239,0.12),rgba(124,58,237,0.12));border:1px solid rgba(217,70,239,0.2);border-radius:16px;padding:20px;margin-bottom:24px;">
-            <div style="font-size:32px;font-weight:800;color:#D946EF;">+${xpEarned} XP</div>
-            <div style="font-size:12px;color:#A78BFA;margin-top:6px;font-weight:600;">Total XP: ${newXP} | Level ${newLevel}</div>
-            ${levelUp ? `<div style="margin-top:12px;font-size:12px;color:#34D399;font-weight:700;animation:bounce 1s infinite;">🎊 LEVEL UP! Reached Level ${newLevel}!</div>` : ''}
+          <div style="background:var(--surface-blue);border:1px solid var(--border-blue);border-radius:16px;padding:20px;margin-bottom:24px;">
+            <div style="font-size:32px;font-weight:800;color:var(--navy);">+${xpEarned} XP</div>
+            <div style="font-size:12px;color:var(--primary-dark);margin-top:6px;font-weight:600;">Total XP: ${newXP} | Level ${newLevel}</div>
+            ${levelUp ? `<div style="margin-top:12px;font-size:12px;color:var(--success);font-weight:700;animation:bounce 1s infinite;">🎊 LEVEL UP! Reached Level ${newLevel}!</div>` : ''}
           </div>
 
           <button onclick="document.getElementById('quiz-modal').remove();loadTasks();" 
-            style="width:100%;background:linear-gradient(135deg, #D946EF, #7C3AED);color:white;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(217,70,239,0.3);transition:all 200ms;margin-bottom:12px;"
-            onmouseover="this.style.transform='translateY(-2px)';"
-            onmouseout="this.style.transform='translateY(0)';"
+            style="width:100%;background:var(--primary);color:#FFFFFF;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(79,120,150,0.25);transition:all 200ms;margin-bottom:12px;"
+            onmouseover="this.style.background='var(--primary-dark)';this.style.transform='translateY(-2px)';"
+            onmouseout="this.style.background='var(--primary)';this.style.transform='translateY(0)';"
           >
             ${pct >= 80 ? 'Back to Tasks ✓' : 'Back to Dashboard'}
           </button>
           
           ${pct < 80 ? `
             <button onclick="document.getElementById('quiz-modal').remove();startQuiz('${taskId}', '${taskTitle}', '${phase}');" 
-              style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:white;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;transition:all 200ms;"
-              onmouseover="this.style.background='rgba(255,255,255,0.1)';"
-              onmouseout="this.style.background='rgba(255,255,255,0.06)';"
+              style="width:100%;background:#FFFFFF;border:1px solid var(--border);color:var(--navy);padding:14px;border-radius:12px;font-weight:700;cursor:pointer;transition:all 200ms;"
+              onmouseover="this.style.background='var(--surface-blue)';"
+              onmouseout="this.style.background='#FFFFFF';"
             >
               🔄 Try Quiz Again
             </button>
@@ -2147,20 +2147,24 @@ async function buildActivityHeatmap(userId) {
         cell.style.background = 'transparent';
         cell.style.pointerEvents = 'none';
       } else {
-        cell.style.background = isActive ? 'var(--fuchsia, #D946EF)' : 'rgba(255, 255, 255, 0.05)';
-        cell.style.border = '1px solid rgba(255, 255, 255, 0.03)';
+        cell.style.background = isActive ? '#6F9FBE' : '#EEF2F4';
+        cell.style.border = '1px solid #E4E1DE';
         cell.title = `${ds} (${isActive ? 'Active' : 'No activity'})`;
         
         // Add a micro hover effect
-        cell.style.transition = 'transform 0.15s ease, background-color 0.15s ease';
+        cell.style.transition = 'transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease';
         cell.onmouseover = () => {
           cell.style.transform = 'scale(1.3)';
           if (isActive) {
-            cell.style.boxShadow = '0 0 8px var(--fuchsia, #D946EF)';
+            cell.style.boxShadow = '0 0 8px rgba(111, 159, 190, 0.4)';
+            cell.style.background = '#4F7896';
+          } else {
+            cell.style.background = '#DCECF6';
           }
         };
         cell.onmouseout = () => {
           cell.style.transform = 'scale(1)';
+          cell.style.background = isActive ? '#6F9FBE' : '#EEF2F4';
           cell.style.boxShadow = 'none';
         };
       }
@@ -6816,28 +6820,30 @@ async function loadSavedVideos(userId) {
   }
 
   list.innerHTML = data.map(v => `
-    <div style="display:flex;gap:8px;
+    <div style="display:flex;gap:10px;
       padding:10px 12px;cursor:pointer;
-      border-bottom:1px solid #F8FAFC;
+      border-bottom:1px solid var(--border);
+      border-radius:8px;
       transition:background 150ms;"
       onclick="playVideo('${v.video_id}',
         '${v.title?.replace(/'/g, "\\'")}',
         '${v.channel?.replace(/'/g, "\\'")}',
         '${v.thumbnail}')"
-      onmouseover="this.style.background='#F8FAFC'"
-      onmouseout="this.style.background='white'">
+      onmouseover="this.style.background='var(--bg-card-hover)'"
+      onmouseout="this.style.background='transparent'">
       <img src="${v.thumbnail}"
         style="width:60px;height:34px;
-        border-radius:4px;object-fit:cover;
+        border-radius:6px;object-fit:cover;
+        border:1px solid var(--border);
         flex-shrink:0;">
       <div style="flex:1;overflow:hidden;">
         <div style="font-size:12px;
-          font-weight:500;color:#0F172A;
+          font-weight:600;color:var(--text-primary);
           white-space:nowrap;overflow:hidden;
           text-overflow:ellipsis;">
           ${v.title}
         </div>
-        <div style="font-size:11px;color:#94A3B8;">
+        <div style="font-size:11px;color:var(--text-muted);">
           ${v.channel}
         </div>
       </div>
@@ -7013,7 +7019,7 @@ function renderProjectsGrid(projects) {
 
   if (!projects?.length) {
     grid.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:40px;color:#94A3B8;">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);">
         No projects yet. Generate your roadmap to get project suggestions!
       </div>
     `;
@@ -7024,42 +7030,40 @@ function renderProjectsGrid(projects) {
     const isDone = proj.status === 'completed';
     const pct = proj.progress_pct || 0;
     const diffColor = {
-      'Beginner': '#10B981',
-      'Intermediate': '#F59E0B',
-      'Advanced': '#EF4444'
-    }[proj.difficulty] || '#94A3B8';
+      'Beginner': '#18C98B',
+      'Intermediate': '#FFB72B',
+      'Advanced': '#FF4D5E'
+    }[proj.difficulty] || '#8B96A8';
 
     return `
-      <div style="background:white;border-radius:14px;border:1px solid ${isDone ? '#A7F3D0' : '#E2E8F0'};overflow:hidden;transition:all 200ms;cursor:pointer;"
-        onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.08)'"
-        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'"
+      <div class="cc-card" style="padding:0;overflow:hidden;cursor:pointer;"
         onclick="openProjectDetail(${i})">
-        <div style="padding:16px;border-bottom:1px solid #F8FAFC;">
+        <div style="padding:16px;border-bottom:1px solid var(--border);">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${diffColor}20;color:${diffColor};font-weight:500;">
+              <span class="cc-badge" style="background:${diffColor}20;color:${diffColor};border:1px solid ${diffColor}40;">
                 ${proj.difficulty || 'Intermediate'}
               </span>
-              ${proj.from_roadmap ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:#EDE9FE;color:#7C3AED;font-weight:500;">Roadmap</span>` : ''}
-              ${proj.is_custom ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:#F0FDF4;color:#059669;font-weight:500;">Custom</span>` : ''}
-              ${isDone ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:#D1FAE5;color:#059669;font-weight:500;">✓ Done</span>` : ''}
+              ${proj.from_roadmap ? `<span class="cc-badge badge-purple">Roadmap</span>` : ''}
+              ${proj.is_custom ? `<span class="cc-badge badge-cyan">Custom</span>` : ''}
+              ${isDone ? `<span class="cc-badge badge-green">✓ Done</span>` : ''}
             </div>
-            <span style="font-size:13px;font-weight:700;color:#059669;">+${proj.xp_reward || 100} XP</span>
+            <span style="font-size:13px;font-weight:700;color:var(--brand-light);">+${proj.xp_reward || 100} XP</span>
           </div>
-          <h4 style="font-size:15px;font-weight:600;color:#0F172A;margin-bottom:6px;line-height:1.3;">${proj.title}</h4>
-          <p style="font-size:12px;color:#64748B;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${proj.description || ''}</p>
+          <h4 style="font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:6px;line-height:1.3;">${proj.title}</h4>
+          <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${proj.description || ''}</p>
         </div>
-        <div style="padding:10px 16px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #F8FAFC;">
-          ${(proj.tech_stack || []).map(t => `<span style="background:#F1F5F9;color:#475569;padding:2px 8px;border-radius:6px;font-size:11px;">${t}</span>`).join('')}
+        <div style="padding:10px 16px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border);">
+          ${(proj.tech_stack || []).map(t => `<span class="role-pill" style="padding:3px 10px;font-size:11px;">${t}</span>`).join('')}
         </div>
         <div style="padding:12px 16px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;margin-bottom:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary);margin-bottom:6px;">
             <span>Progress</span><span>${pct}%</span>
           </div>
-          <div style="height:4px;background:#F1F5F9;border-radius:2px;">
-            <div style="height:100%;width:${pct}%;background:#059669;border-radius:2px;transition:width 600ms ease;"></div>
+          <div class="cc-progress-container" style="height:6px;">
+            <div class="cc-progress-bar" style="width:${pct}%;"></div>
           </div>
-          <div style="font-size:11px;color:#94A3B8;margin-top:6px;">~${proj.estimated_hours || 10} hours</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">~${proj.estimated_hours || 10} hours</div>
         </div>
       </div>
     `;
@@ -7070,8 +7074,9 @@ function filterProjects(filter, btn) {
   ['all', 'active', 'completed', 'custom'].forEach(f => {
     const b = document.getElementById('proj-filter-' + f);
     if (b) {
-      b.style.background = f === filter ? '#059669' : '#F1F5F9';
-      b.style.color = f === filter ? 'white' : '#64748B';
+      b.style.background = f === filter ? 'var(--primary)' : '#FFFFFF';
+      b.style.color = f === filter ? '#FFFFFF' : 'var(--text-secondary)';
+      b.style.border = f === filter ? '1px solid var(--primary)' : '1px solid var(--border)';
     }
   });
   const all = window.allProjectsData || [];
@@ -7091,51 +7096,51 @@ async function openProjectDetail(index) {
 
   const checkpoints = proj.checkpoints || [];
   content.innerHTML = `
-    <div style="padding:24px;">
+    <div style="padding:24px;background:#FFFFFF;color:var(--text-primary);border-radius:18px;border:1px solid var(--border);box-shadow:0 20px 60px rgba(23,40,58,0.12);">
       <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
         <div style="flex:1;">
-          <h3 style="font-size:18px;font-weight:600;margin-bottom:6px;">${proj.title}</h3>
-          <p style="font-size:13px;color:#64748B;line-height:1.5;">${proj.description}</p>
+          <h3 style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px;">${proj.title}</h3>
+          <p style="font-size:13px;color:var(--text-secondary);line-height:1.5;">${proj.description}</p>
         </div>
-        <button onclick="closeProjectDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94A3B8;flex-shrink:0;margin-left:10px;">✕</button>
+        <button onclick="closeProjectDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);flex-shrink:0;margin-left:10px;">✕</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
-        <div style="background:#F8FAFC;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:16px;font-weight:600;color:#059669;">+${proj.xp_reward || 100}</div>
-          <div style="font-size:11px;color:#64748B;">XP Reward</div>
+        <div style="background:var(--surface-blue);border:1px solid var(--border-blue);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:var(--primary-dark);">+${proj.xp_reward || 100}</div>
+          <div style="font-size:11px;color:var(--text-muted);">XP Reward</div>
         </div>
-        <div style="background:#F8FAFC;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:16px;font-weight:600;color:#0F172A;">~${proj.estimated_hours || 10}h</div>
-          <div style="font-size:11px;color:#64748B;">Estimated</div>
+        <div style="background:var(--surface-blue);border:1px solid var(--border-blue);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:var(--navy);">~${proj.estimated_hours || 10}h</div>
+          <div style="font-size:11px;color:var(--text-muted);">Estimated</div>
         </div>
-        <div style="background:#F8FAFC;border-radius:8px;padding:10px;text-align:center;">
-          <div style="font-size:16px;font-weight:600;color:#0F172A;">${checkpoints.length}</div>
-          <div style="font-size:11px;color:#64748B;">Checkpoints</div>
+        <div style="background:var(--surface-blue);border:1px solid var(--border-blue);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:var(--navy);">${checkpoints.length}</div>
+          <div style="font-size:11px;color:var(--text-muted);">Checkpoints</div>
         </div>
       </div>
       ${checkpoints.length > 0 ? `
         <div style="margin-bottom:20px;">
-          <h4 style="font-size:14px;font-weight:600;margin-bottom:12px;">📋 Checkpoints</h4>
+          <h4 style="font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;margin-bottom:12px;">📋 Checkpoints</h4>
           ${checkpoints.map((cp, ci) => `
-            <div style="display:flex;gap:10px;align-items:center;padding:10px;background:#F8FAFC;border-radius:8px;margin-bottom:6px;">
-              <div style="width:20px;height:20px;border-radius:50%;border:2px solid #E2E8F0;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;"></div>
-              <span style="font-size:13px;color:#0F172A;">${cp}</span>
+            <div style="display:flex;gap:10px;align-items:center;padding:10px 14px;background:var(--surface-blue);border:1px solid var(--border-blue);border-radius:8px;margin-bottom:6px;">
+              <div style="width:18px;height:18px;border-radius:50%;border:2px solid var(--primary);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;"></div>
+              <span style="font-size:13px;color:var(--navy);">${cp}</span>
             </div>
           `).join('')}
         </div>
       ` : ''}
       <div style="margin-bottom:20px;">
-        <label style="font-size:12px;font-weight:500;color:#475569;margin-bottom:4px;display:block;">GitHub Repository URL</label>
+        <label style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block;">GitHub Repository URL</label>
         <div style="display:flex;gap:8px;">
-          <input id="proj-github-input" value="${proj.github_url || ''}" placeholder="https://github.com/..." style="flex:1;padding:8px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:13px;outline:none;">
-          <button onclick="saveGithubUrl(${index})" style="padding:8px 14px;background:#0F172A;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">Save</button>
+          <input id="proj-github-input" value="${proj.github_url || ''}" placeholder="https://github.com/..." style="flex:1;padding:10px 14px;background:#FFFFFF;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-primary);outline:none;">
+          <button onclick="saveGithubUrl(${index})" class="btn-primary" style="padding:8px 16px;font-size:13px;">Save</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         ${proj.status !== 'completed' ? `
-          <button onclick="markProjectComplete(${index})" style="padding:12px;background:#059669;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;">✅ Mark Complete</button>
-        ` : `<div style="padding:12px;background:#D1FAE5;border-radius:10px;font-size:14px;font-weight:500;color:#059669;text-align:center;">✓ Completed!</div>`}
-        <button onclick="closeProjectDetail()" style="padding:12px;background:transparent;border:1px solid #E2E8F0;border-radius:10px;font-size:14px;cursor:pointer;">Close</button>
+          <button onclick="markProjectComplete(${index})" class="btn-action" style="padding:12px;font-size:14px;">✅ Mark Complete</button>
+        ` : `<div style="padding:12px;background:rgba(24,201,139,0.1);border:1px solid rgba(24,201,139,0.3);border-radius:10px;font-size:14px;font-weight:600;color:var(--success);text-align:center;">✓ Completed!</div>`}
+        <button onclick="closeProjectDetail()" class="btn-outline" style="padding:12px;font-size:14px;">Close</button>
       </div>
     </div>
   `;
