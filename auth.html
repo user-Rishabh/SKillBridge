@@ -12,12 +12,11 @@
   <!-- Auth JS after, with defer -->
   <script src="scripts/auth.js" defer></script>
 
-
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="styles/main.css">
@@ -25,37 +24,52 @@
   <script src="scripts/theme.js"></script>
 
   <style>
+    /* ─── SKILLBRIDGE WARM THEME DESIGN SYSTEM ─── */
     :root {
-      --ivory:        #FFF1E7;
-      --powder-blue:  #B5D2E6;
-      --navy:         #17283A;
-      --navy-soft:    #29445A;
-      --primary:      #6F9FBE;
-      --primary-dark: #4F7896;
+      --bg-primary: #FDF8F3;        /* warm cream background */
+      --bg-secondary: #FFFFFF;      /* cards, form panel */
+      --bg-tertiary: #F5EDE4;       /* subtle sections, hover states */
 
-      --fuchsia:      #6F9FBE;
-      --violet:       #4F7896;
-      --fuchsia-dim:  rgba(111, 159, 190, 0.12);
-      --fuchsia-glow: rgba(111, 159, 190, 0.25);
-      --border:       #E4E1DE;
-      --border-bright:#B5D2E6;
-      --bg-base:      #FFF9F5;
-      --bg-surface:   #FFFFFF;
-      --bg-card:      #FFFFFF;
-      --text-primary: #17283A;
-      --text-sec:     #536575;
-      --text-muted:   #82909B;
-      --emerald:      #5D9278;
+      --text-primary: #1A1512;      /* near-black headings */
+      --text-secondary: #6B5D52;    /* body text */
+      --text-muted: #A69A8D;        /* captions, placeholders */
+
+      --accent-primary: #E8946A;    /* peach/terracotta — primary CTAs */
+      --accent-hover: #D67D52;
+      --accent-soft: #F3D9C4;
+
+      --pill-green: #3EAB7C;
+      --pill-blue: #4A6FE5;
+      --pill-purple: #7C5CE0;
+      --pill-lime: #8FC93A;
+
+      --success: #7FA98A;
+      --warning: #D9A441;
+      --border: #E8DDD1;
+      --border-focus: rgba(232, 148, 106, 0.4);
+
+      --font-logo: 'Fredoka', 'Plus Jakarta Sans', sans-serif;
+      --font-heading: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --shadow-card: 0 4px 20px rgba(26, 21, 18, 0.05);
+      --shadow-elevated: 0 16px 36px rgba(26, 21, 18, 0.08);
+      --shadow-hover: 0 20px 40px rgba(26, 21, 18, 0.12);
     }
 
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     body {
-      font-family:'Inter',sans-serif;
+      font-family: var(--font-sans);
       overflow: hidden;
       height: 100vh;
-      background: var(--bg-base);
-      color: var(--text-primary);
+      background: var(--bg-primary);
+      color: var(--text-secondary);
     }
 
     .auth-layout {
@@ -64,11 +78,11 @@
       width: 100vw;
     }
 
-    /* ── LEFT PANEL ────────────────────────────────────────── */
+    /* ── LEFT PANEL (SHOWCASE) ───────────────────────────── */
     .left-panel {
-      flex: 1;
-      background: linear-gradient(135deg, #FFF1E7 0%, #FFF9F5 50%, #EEF6FB 100%);
-      padding: 48px;
+      flex: 1.15;
+      background: var(--bg-primary);
+      padding: 44px 48px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -77,70 +91,70 @@
       border-right: 1px solid var(--border);
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 960px) {
       .left-panel {
         display: none;
       }
     }
 
-    /* Background Orbs */
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .orb-1 {
-      top: -100px;
-      left: -100px;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(181, 210, 230, 0.35) 0%, transparent 70%);
-      animation: orbFloat 15s infinite alternate ease-in-out;
-    }
-
-    .orb-2 {
-      bottom: -100px;
-      right: -100px;
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(255, 241, 231, 0.7) 0%, transparent 70%);
-      animation: orbFloat 20s infinite alternate-reverse ease-in-out;
-    }
-
-    @keyframes orbFloat {
-      0% {
-        transform: scale(1) translate(0, 0);
-        opacity: 0.6;
-      }
-
-      100% {
-        transform: scale(1.2) translate(40px, 40px);
-        opacity: 0.9;
-      }
-    }
-
-    /* Dot Grid */
+    /* Faint Grid Texture Overlay */
     .dot-grid-overlay {
       position: absolute;
       inset: 0;
-      background-image: radial-gradient(circle, rgba(111, 159, 190, 0.08) 1px, transparent 1px);
-      background-size: 32px 32px;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.65;
       z-index: 1;
       pointer-events: none;
-      animation: gridShift 60s linear infinite;
     }
 
-    @keyframes gridShift {
-      from {
-        background-position: 0 0;
-      }
+    /* Ambient Soft Background Blobs */
+    .ambient-blob-container {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
 
-      to {
-        background-position: 100% 100%;
-      }
+    .ambient-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    .blob-1 {
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(243, 217, 196, 0.8) 0%, rgba(245, 237, 228, 0.3) 70%, transparent 100%);
+      top: -100px;
+      left: -80px;
+      animation: blobDrift1 22s ease-in-out infinite alternate;
+    }
+
+    .blob-2 {
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(232, 148, 106, 0.22) 0%, rgba(245, 237, 228, 0.45) 65%, transparent 100%);
+      bottom: -120px;
+      right: -80px;
+      animation: blobDrift2 25s ease-in-out infinite alternate;
+    }
+
+    @keyframes blobDrift1 {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(45px, 35px) scale(1.08); }
+      100% { transform: translate(-25px, 50px) scale(0.95); }
+    }
+
+    @keyframes blobDrift2 {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-50px, -35px) scale(1.1); }
+      100% { transform: translate(30px, -25px) scale(0.92); }
     }
 
     .panel-inner {
@@ -152,25 +166,35 @@
       justify-content: space-between;
     }
 
+    /* Brand Logo */
     .brand-logo {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--navy);
+      font-family: var(--font-logo);
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
       text-decoration: none;
+      letter-spacing: -0.02em;
+      display: inline-flex;
+      align-items: center;
+      transition: opacity 0.2s;
     }
 
     .brand-logo span {
-      color: var(--primary);
+      color: var(--accent-primary);
+    }
+
+    .brand-logo:hover {
+      opacity: 0.92;
     }
 
     .brand-tagline {
-      color: var(--text-sec);
+      color: var(--text-secondary);
       font-size: 0.9rem;
       margin-top: 4px;
+      font-weight: 500;
     }
 
-    /* Floating Cards */
+    /* Floating Cards Container */
     .floating-containers {
       position: absolute;
       inset: 0;
@@ -178,114 +202,183 @@
       z-index: 5;
     }
 
-    .f-card {
+    /* Floating Card Base */
+    .f-card, .skill-pill {
       position: absolute;
-      background: rgba(255, 255, 255, 0.95);
+      pointer-events: auto;
+      cursor: default;
+      will-change: transform;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .f-card:hover, .skill-pill:hover {
+      animation-play-state: paused !important;
+      transform: translateY(-4px) scale(1.02) !important;
+    }
+
+    /* 1. Placement Alert Card */
+    .card-placement {
+      top: 14%;
+      left: 6%;
+      width: 250px;
+      background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
+      border-left: 4px solid var(--success);
       border-radius: 16px;
-      padding: 16px;
-      width: 240px;
-      box-shadow: 0 10px 30px rgba(23, 40, 58, 0.08);
-      color: var(--navy);
+      padding: 16px 18px;
+      box-shadow: 0 10px 28px rgba(26, 21, 18, 0.06);
+      color: var(--text-primary);
+      animation: floatWobble1 5.8s ease-in-out infinite;
     }
 
-    .card-a {
-      top: 15%;
-      left: 10%;
-      border-left: 4px solid var(--primary);
-      animation: float-a 6s infinite ease-in-out;
-    }
-
-    .card-b {
-      top: 40%;
-      right: 5%;
-      animation: float-b 8s infinite ease-in-out;
-    }
-
-    .card-c {
-      bottom: 20%;
-      left: 8%;
-      animation: float-c 7s infinite ease-in-out;
-    }
-
-    .card-d {
-      top: 10%;
-      right: 15%;
-      width: auto;
-      animation: float-a 5s infinite ease-in-out;
-    }
-
-    @keyframes float-a {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-15px); }
-    }
-
-    @keyframes float-b {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-20px); }
-    }
-
-    @keyframes float-c {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-12px); }
+    .card-placement:hover {
+      box-shadow: 0 16px 36px rgba(127, 169, 138, 0.22);
     }
 
     .pulse-dot {
       width: 8px;
       height: 8px;
-      background: var(--primary);
+      background: var(--success);
       border-radius: 50%;
       display: inline-block;
       margin-right: 8px;
-      box-shadow: 0 0 10px rgba(111, 159, 190, 0.4);
-      animation: pulse 2s infinite;
+      box-shadow: 0 0 10px rgba(127, 169, 138, 0.6);
+      animation: pulseAnim 2.2s infinite;
     }
 
-    @keyframes pulse {
+    @keyframes pulseAnim {
       0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.5); opacity: 0.5; }
+      50% { transform: scale(1.4); opacity: 0.5; }
       100% { transform: scale(1); opacity: 1; }
     }
 
-    /* Skill Badges */
-    .skill-badge {
-      position: absolute;
-      padding: 6px 14px;
-      background: #FFFFFF;
-      border: 1px solid var(--border-bright);
-      border-radius: 100px;
-      color: var(--primary-dark);
-      font-size: 0.75rem;
-      font-weight: 600;
-      pointer-events: none;
-      z-index: 4;
-      box-shadow: 0 4px 12px rgba(23, 40, 58, 0.05);
+    /* 2. 3 New Project Matches Pill */
+    .card-project-match {
+      top: 15%;
+      right: 8%;
+      background: var(--pill-green);
+      color: #FFFFFF;
+      border-radius: 9999px;
+      padding: 10px 20px;
+      box-shadow: 0 8px 24px rgba(62, 171, 124, 0.28);
+      animation: floatWobble2 4.9s ease-in-out infinite;
     }
 
-    .sb-1 { top: 30%; left: 40%; animation: float-b 10s infinite; }
-    .sb-2 { top: 60%; right: 35%; animation: float-a 12s infinite; }
-    .sb-3 { bottom: 40%; left: 45%; animation: float-c 9s infinite; }
-    .sb-4 { top: 15%; left: 60%; animation: float-b 11s infinite; }
+    .card-project-match:hover {
+      box-shadow: 0 14px 30px rgba(62, 171, 124, 0.38);
+    }
 
-    /* Terminal */
+    /* 3. React.js Pill */
+    .pill-react {
+      bottom: 22%;
+      left: 7%;
+      background: var(--accent-soft);
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid rgba(232, 148, 106, 0.3);
+      border-radius: 9999px;
+      padding: 8px 18px;
+      box-shadow: 0 6px 18px rgba(232, 148, 106, 0.16);
+      animation: floatWobble3 6.4s ease-in-out infinite;
+    }
+
+    .pill-react:hover {
+      box-shadow: 0 12px 24px rgba(232, 148, 106, 0.28);
+    }
+
+    /* 4. Mentor Session Card */
+    .card-mentor {
+      bottom: 16%;
+      right: 7%;
+      width: 240px;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 10px 28px rgba(26, 21, 18, 0.06);
+      animation: floatWobble4 6.8s ease-in-out infinite;
+    }
+
+    .card-mentor:hover {
+      box-shadow: 0 16px 36px rgba(124, 92, 224, 0.18);
+    }
+
+    .mentor-avatar {
+      width: 34px;
+      height: 34px;
+      background: var(--pill-purple);
+      color: #FFFFFF;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+
+    /* Floating Wobble Keyframes (duration 4-7s, translateY 6-10px, rotation ±1-2deg) */
+    @keyframes floatWobble1 {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(1.2deg); }
+    }
+
+    @keyframes floatWobble2 {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(-1.5deg); }
+    }
+
+    @keyframes floatWobble3 {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(1.8deg); }
+    }
+
+    @keyframes floatWobble4 {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(-1.4deg); }
+    }
+
+    @keyframes floatWobbleTerm {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(0.6deg); }
+    }
+
+    /* Terminal Widget */
+    .terminal-container {
+      margin: auto 0;
+      display: flex;
+      justify-content: center;
+      z-index: 6;
+    }
+
     .terminal-widget {
       width: 100%;
       max-width: 440px;
-      background: #FFFFFF;
-      border: 1px solid var(--border);
-      border-radius: 12px;
+      background: #1A1512;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
       overflow: hidden;
-      margin: 0 auto;
-      box-shadow: 0 20px 50px rgba(23, 40, 58, 0.08);
+      box-shadow: 0 20px 50px rgba(26, 21, 18, 0.2);
+      animation: floatWobbleTerm 5.5s ease-in-out infinite;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .terminal-widget:hover {
+      animation-play-state: paused;
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 26px 60px rgba(26, 21, 18, 0.28);
     }
 
     .term-header {
-      background: #F7FAFC;
-      padding: 10px 16px;
+      background: #241E1A;
+      padding: 12px 18px;
       display: flex;
-      gap: 6px;
-      border-bottom: 1px solid var(--border);
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .term-dot {
@@ -294,127 +387,167 @@
       border-radius: 50%;
     }
 
+    .term-title {
+      margin-left: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      opacity: 0.8;
+    }
+
     .term-body {
-      padding: 20px;
-      font-family: 'JetBrains Mono', monospace;
+      padding: 22px;
+      font-family: var(--font-mono);
       font-size: 0.85rem;
-      color: var(--navy);
-      min-height: 180px;
+      color: #FDF8F3;
+      min-height: 175px;
+      line-height: 1.65;
     }
 
     .cursor-blink {
       display: inline-block;
       width: 8px;
-      height: 16px;
-      background: var(--primary);
+      height: 15px;
+      background: var(--accent-primary);
       margin-left: 4px;
-      animation: blink 1s step-end infinite;
+      animation: blinkCursor 1s step-end infinite;
       vertical-align: middle;
     }
 
-    @keyframes blink {
+    @keyframes blinkCursor {
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
     }
 
-    /* Stats */
+    /* Stats Row */
     .stats-row {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       justify-content: center;
-      margin-top: 24px;
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      width: fit-content;
+      margin: 0 auto;
+      box-shadow: 0 4px 16px rgba(26, 21, 18, 0.04);
     }
 
     .stat-item {
-      color: var(--navy);
-      font-size: 0.85rem;
-      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+
+    .stat-num {
+      color: var(--text-primary);
+      font-weight: 800;
+      font-family: var(--font-heading);
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-weight: 500;
     }
 
     .stat-sep {
-      width: 4px;
-      height: 4px;
-      background: var(--primary);
+      width: 5px;
+      height: 5px;
+      background: var(--accent-primary);
       border-radius: 50%;
     }
 
-    /* ── RIGHT PANEL ────────────────────────────────────────── */
+    /* ── RIGHT PANEL (AUTH FORM) ─────────────────────────── */
     .right-panel {
       flex: 1;
-      background: var(--bg-primary);
+      background: var(--bg-secondary);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 40px;
+      padding: 40px 32px;
       overflow-y: auto;
     }
 
     @media (max-width: 768px) {
       .right-panel {
-        flex: 1;
         width: 100%;
-        padding: 24px;
+        padding: 24px 20px;
       }
     }
 
     .form-container {
       width: 100%;
       max-width: 440px;
-      background: #FFFFFF;
-      padding: 36px;
-      border-radius: 18px;
+      background: var(--bg-secondary);
+      padding: 38px;
+      border-radius: 20px;
       border: 1px solid var(--border);
-      box-shadow: 0 10px 30px rgba(23, 40, 58, 0.05);
+      box-shadow: 0 12px 36px rgba(26, 21, 18, 0.04);
     }
 
     .welcome-text {
-      margin-bottom: 28px;
+      margin-bottom: 26px;
     }
 
     .welcome-text h1 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: var(--font-heading);
       font-size: 1.75rem;
       font-weight: 800;
-      color: var(--navy);
-      margin-bottom: 8px;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      letter-spacing: -0.025em;
     }
 
     .welcome-text p {
-      color: var(--text-sec);
+      color: var(--text-secondary);
       font-size: 0.95rem;
     }
 
     /* Tab Switcher */
     .tab-switcher {
       display: flex;
-      background: #EEF6FB;
-      border: 1px solid var(--border-blue);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
       padding: 4px;
       border-radius: 12px;
       margin-bottom: 24px;
+      position: relative;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 10px;
-      border-radius: 10px;
+      padding: 10px 16px;
+      border-radius: 9px;
       font-size: 0.9rem;
       font-weight: 600;
-      color: var(--text-sec);
+      color: var(--text-secondary);
       cursor: pointer;
       text-align: center;
-      transition: all 0.25s;
+      transition: all 0.2s ease;
+      position: relative;
+      user-select: none;
     }
 
     .tab-btn.active {
-      background: #FFFFFF;
-      color: var(--navy);
-      box-shadow: 0 2px 8px rgba(23, 40, 58, 0.08);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(26, 21, 18, 0.06);
       font-weight: 700;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 22px;
+      height: 2.5px;
+      background: var(--accent-primary);
+      border-radius: 2px;
     }
 
     /* Form Styles */
@@ -435,7 +568,7 @@
       display: block;
       font-size: 0.85rem;
       font-weight: 600;
-      color: var(--navy);
+      color: var(--text-primary);
       margin-bottom: 6px;
     }
 
@@ -443,7 +576,8 @@
       position: relative;
     }
 
-    .input-wrapper i {
+    .input-wrapper i,
+    .input-wrapper svg {
       position: absolute;
       left: 14px;
       top: 50%;
@@ -451,112 +585,146 @@
       color: var(--text-muted);
       width: 18px;
       height: 18px;
+      pointer-events: none;
     }
 
     input,
     select {
       width: 100%;
-      background: #FFFFFF;
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 12px 16px 12px 42px;
-      font-family: inherit;
-      font-size: 0.95rem;
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
       color: var(--text-primary);
       outline: none;
-      transition: all 0.2s;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="password"],
+    input[type="text"] {
+      padding-right: 44px;
+    }
+
+    /* Suppress browser native password reveal / clear buttons (Edge, Chrome, Safari) */
+    input::-ms-reveal,
+    input::-ms-clear {
+      display: none !important;
+      width: 0;
+      height: 0;
+    }
+
+    input::-webkit-contacts-auto-fill-button,
+    input::-webkit-credentials-auto-fill-button {
+      visibility: hidden;
+      display: none !important;
+      pointer-events: none;
+      position: absolute;
+      right: 0;
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
     }
 
     input:focus,
     select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(111, 159, 190, 0.15);
-      background: #FFFFFF;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(232, 148, 106, 0.18);
+      background: var(--bg-secondary);
     }
 
-    select option { background: #FFFFFF; color: var(--navy); }
+    select option {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
 
     .eye-toggle {
       position: absolute;
-      right: 14px;
+      right: 12px;
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-muted);
       cursor: pointer;
       background: none;
+      border: none;
       display: flex;
       align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
       padding: 0;
+      transition: color 0.2s;
+      z-index: 2;
+    }
+
+    .eye-toggle i,
+    .eye-toggle svg {
+      width: 18px;
+      height: 18px;
+      pointer-events: none;
     }
 
     .eye-toggle:hover {
-      color: var(--primary);
+      color: var(--accent-primary);
     }
 
-    /* Strength Bar */
-    .strength-meter {
-      height: 4px;
-      border-radius: 10px;
-      background: var(--border);
-      margin-top: 8px;
-      overflow: hidden;
-    }
-
-    .strength-bar {
-      height: 100%;
-      width: 0%;
-      transition: width 0.3s, background 0.3s;
-    }
-
-    .strength-text {
-      font-size: 10px;
+    .forgot-link {
+      font-size: 0.78rem;
+      color: var(--accent-primary);
       font-weight: 700;
-      text-transform: uppercase;
-      margin-top: 4px;
-      display: block;
+      text-decoration: none;
+      transition: color 0.2s;
     }
 
-    /* Button Styles */
+    .forgot-link:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+
+    /* Submit Buttons */
     .submit-btn {
       width: 100%;
       height: 48px;
-      background: var(--primary);
+      background: var(--accent-primary);
       color: #FFFFFF;
       border-radius: 10px;
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.98rem;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
       margin-top: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
       border: none;
+      box-shadow: 0 4px 14px rgba(232, 148, 106, 0.3);
     }
 
     .submit-btn:hover {
-      background: var(--primary-dark);
+      background: var(--accent-hover);
       color: #FFFFFF;
       transform: translateY(-1px);
-      box-shadow: 0 4px 14px rgba(79, 120, 150, 0.25);
+      box-shadow: 0 6px 18px rgba(214, 125, 82, 0.35);
     }
 
     .submit-btn:active {
-      transform: scale(0.98);
+      transform: scale(0.99);
     }
 
-    /* Auth Providers */
+    /* Dividers & OAuth */
     .divider {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin: 24px 0;
+      margin: 22px 0;
       color: var(--text-muted);
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
     }
 
     .divider::before,
@@ -583,29 +751,16 @@
       font-weight: 600;
       font-size: 0.9rem;
       cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .google-btn {
-      background: #FFFFFF;
+      transition: all 0.2s ease;
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
-      color: var(--navy);
+      color: var(--text-primary);
     }
 
-    .google-btn:hover {
-      background: var(--surface-blue);
-      border-color: var(--border-blue);
-    }
-
-    .github-btn {
-      background: #FFFFFF;
-      border: 1px solid var(--border);
-      color: var(--navy);
-    }
-
-    .github-btn:hover {
-      background: var(--surface-blue);
-      border-color: var(--border-blue);
+    .oauth-btn:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--border);
+      transform: translateY(-1px);
     }
 
     /* Checkbox */
@@ -613,25 +768,35 @@
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 18px;
     }
 
     .checkbox-group input {
-      width: 18px;
-      height: 18px;
+      width: 17px;
+      height: 17px;
       margin-top: 2px;
       cursor: pointer;
-      accent-color: var(--primary);
+      accent-color: var(--accent-primary);
       padding: 0;
     }
 
     .checkbox-group label {
-      font-size: 0.85rem;
-      color: var(--text-sec);
+      font-size: 0.82rem;
+      color: var(--text-secondary);
       line-height: 1.4;
     }
 
-    /* Messages */
+    .checkbox-group a {
+      color: var(--accent-primary);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .checkbox-group a:hover {
+      text-decoration: underline;
+    }
+
+    /* Feedback Messages */
     #auth-message {
       margin-top: 16px;
       min-height: 48px;
@@ -648,35 +813,36 @@
     }
 
     .msg.loading {
-      background: var(--fuchsia-dim);
-      color: var(--primary-dark);
-      border: 1px solid var(--border-bright);
+      background: var(--accent-soft);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
     }
 
     .msg.error {
-      background: #FAEEEE;
-      color: var(--danger);
-      border: 1px solid rgba(185, 108, 108, 0.3);
+      background: #FDF0ED;
+      color: #C2410C;
+      border: 1px solid rgba(194, 65, 12, 0.25);
     }
 
     .msg.success {
       background: #EDF6F1;
       color: var(--success);
-      border: 1px solid rgba(93, 146, 120, 0.3);
+      border: 1px solid rgba(127, 169, 138, 0.35);
     }
 
-    /* Custom scrollbar for college dropdown */
-    #college-dropdown::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    #college-dropdown::-webkit-scrollbar-track {
-      background: #F7FAFC;
-    }
-
-    #college-dropdown::-webkit-scrollbar-thumb {
-      background: var(--border-bright);
-      border-radius: 10px;
+    /* ── REDUCED MOTION SUPPORT ──────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .card-placement,
+      .card-project-match,
+      .pill-react,
+      .card-mentor,
+      .terminal-widget,
+      .ambient-blob,
+      .pulse-dot {
+        animation: none !important;
+        transform: none !important;
+        transition: none !important;
+      }
     }
   </style>
 </head>
@@ -694,110 +860,114 @@
       height: 38px;
       border-radius: 50%;
       border: 1px solid var(--border);
-      background: var(--bg-card);
+      background: var(--bg-secondary);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 200ms;
       color: var(--text-primary);"
-    onmouseover="this.style.background='var(--bg-card-hover)'"
-    onmouseout="this.style.background='var(--bg-card)'">
+    onmouseover="this.style.background='var(--bg-tertiary)'"
+    onmouseout="this.style.background='var(--bg-secondary)'"
+    aria-label="Toggle Theme">
   </button>
 
   <div class="auth-layout">
-    <!-- ── LEFT PANEL ────────────────────────────────────────── -->
+    <!-- ── LEFT SHOWCASE PANEL ───────────────────────────────── -->
     <div class="left-panel">
-      <!-- Background Effects -->
-      <div class="orb orb-1"></div>
-      <div class="orb orb-2"></div>
+      <!-- Faint Grid Texture -->
       <div class="dot-grid-overlay"></div>
 
-      <!-- Floating Elements -->
-      <div class="floating-containers">
-        <div class="f-card card-a">
-          <div style="display:flex; align-items:center; margin-bottom:8px;">
-            <div class="pulse-dot"></div>
-            <span style="font-weight:700; font-size:0.8rem; color:var(--emerald);">Placement Alert</span>
-          </div>
-          <p style="font-size:0.85rem; margin-bottom:4px;">Arjun just got placed at Google 🎉</p>
-          <p style="font-size:0.75rem; color:var(--slate-400);">SDE Role · ₹32 LPA</p>
-        </div>
-
-        <div class="f-card card-b">
-          <p style="font-weight:700; font-size:0.8rem; margin-bottom:12px;">📊 Your Progress</p>
-          <div style="font-size:0.7rem; color:var(--slate-300);">
-            <div style="margin-bottom:8px;">React.js <div
-                style="height:4px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:4px;">
-                <div style="width:80%; height:100%; background:var(--emerald); border-radius:10px;"></div>
-              </div>
-            </div>
-            <div style="margin-bottom:8px;">Python <div
-                style="height:4px; background:rgba(255,255,255,0.1); border-radius:10px; margin-top:4px;">
-                <div style="width:60%; height:100%; background:var(--emerald); border-radius:10px;"></div>
-              </div>
-            </div>
-            <p style="font-weight:600; color:#fff; margin-top:10px;">67% complete</p>
-          </div>
-        </div>
-
-        <div class="f-card card-c">
-          <p style="font-weight:700; font-size:0.8rem; margin-bottom:12px;">🤝 Mentor Session</p>
-          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-            <div
-              style="width:32px; height:32px; background:linear-gradient(135deg,#059669,#0F172A); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800;">
-              RK</div>
-            <div>
-              <p style="font-size:0.8rem; font-weight:700;">Rahul Kumar</p>
-              <p style="font-size:0.65rem; color:var(--slate-400);">Google SDE-2</p>
-            </div>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.7rem;">Tomorrow 3:00 PM</span>
-            <span style="font-size:0.7rem; color:var(--emerald); font-weight:700;">Join →</span>
-          </div>
-        </div>
-
-        <div class="f-card card-d" style="background:var(--emerald); border:none;">
-          <p style="font-weight:800; font-size:0.75rem; color:#fff;">🚀 3 new project matches!</p>
-        </div>
-
-        <div class="skill-badge sb-1">React.js</div>
-        <div class="skill-badge sb-2">Python</div>
-        <div class="skill-badge sb-3">System Design</div>
-        <div class="skill-badge sb-4">ML</div>
+      <!-- Ambient Background Blobs -->
+      <div class="ambient-blob-container">
+        <div class="ambient-blob blob-1"></div>
+        <div class="ambient-blob blob-2"></div>
       </div>
 
+      <!-- Floating Showcase Elements -->
+      <div class="floating-containers">
+        <!-- Placement Alert Card -->
+        <div class="f-card card-placement">
+          <div style="display:flex; align-items:center; margin-bottom:6px;">
+            <div class="pulse-dot"></div>
+            <span style="font-weight:700; font-size:0.8rem; color:var(--success);">Placement Alert</span>
+          </div>
+          <p style="font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:3px;">Arjun just got placed at Google 🎉</p>
+          <p style="font-size:0.75rem; color:var(--text-muted); font-weight:500;">SDE Role · ₹32 LPA</p>
+        </div>
+
+        <!-- 3 New Project Matches Pill -->
+        <div class="f-card card-project-match">
+          <p style="font-weight:700; font-size:0.78rem; letter-spacing:0.01em;">🚀 3 new project matches!</p>
+        </div>
+
+        <!-- React.js Skill Pill -->
+        <div class="skill-pill pill-react">
+          <span>React.js</span>
+        </div>
+
+        <!-- Mentor Session Card -->
+        <div class="f-card card-mentor">
+          <p style="font-weight:700; font-size:0.8rem; color:var(--text-primary); margin-bottom:10px;">🤝 Mentor Session</p>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <div class="mentor-avatar">RK</div>
+            <div>
+              <p style="font-size:0.82rem; font-weight:700; color:var(--text-primary);">Rahul Kumar</p>
+              <p style="font-size:0.7rem; color:var(--text-muted); font-weight:500;">Google SDE-2</p>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; pt: 4px; border-top: 1px solid var(--border); padding-top: 8px;">
+            <span style="font-size:0.72rem; color:var(--text-secondary); font-weight:500;">Tomorrow 3:00 PM</span>
+            <span style="font-size:0.75rem; color:var(--accent-primary); font-weight:700; cursor:pointer;">Join →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Panel Inner Content -->
       <div class="panel-inner">
         <div>
           <a href="index.html" class="brand-logo">Skill<span>Bridge</span></a>
           <p class="brand-tagline">India's AI Career Co-pilot</p>
         </div>
 
-        <div class="terminal-widget">
-          <div class="term-header">
-            <div class="term-dot" style="background:#FF5F56;"></div>
-            <div class="term-dot" style="background:#FFBD2E;"></div>
-            <div class="term-dot" style="background:#27C93F;"></div>
-          </div>
-          <div class="term-body" id="term-content">
-            <!-- Typewriter content will go here -->
+        <!-- Terminal Widget in Center -->
+        <div class="terminal-container">
+          <div class="terminal-widget">
+            <div class="term-header">
+              <div class="term-dot" style="background:#FF5F56;"></div>
+              <div class="term-dot" style="background:#FFBD2E;"></div>
+              <div class="term-dot" style="background:#27C93F;"></div>
+              <span class="term-title">bash ~ auth.sh</span>
+            </div>
+            <div class="term-body" id="term-content">
+              <!-- Typewriter content loaded via JS -->
+            </div>
           </div>
         </div>
 
+        <!-- Stats Row -->
         <div>
           <div class="stats-row">
-            <div class="stat-item">15L+ Students</div>
+            <div class="stat-item">
+              <span class="stat-num">15L+</span>
+              <span class="stat-label">Students</span>
+            </div>
             <div class="stat-sep"></div>
-            <div class="stat-item">500+ Companies</div>
+            <div class="stat-item">
+              <span class="stat-num">500+</span>
+              <span class="stat-label">Companies</span>
+            </div>
             <div class="stat-sep"></div>
-            <div class="stat-item">98% Placed</div>
+            <div class="stat-item">
+              <span class="stat-num">98%</span>
+              <span class="stat-label">Placed</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── RIGHT PANEL ────────────────────────────────────────── -->
+    <!-- ── RIGHT AUTH FORM PANEL ─────────────────────────────── -->
     <div class="right-panel">
       <div class="form-container">
         <div class="welcome-text">
@@ -805,6 +975,7 @@
           <p id="form-subtitle">Sign in to continue your journey</p>
         </div>
 
+        <!-- Tab Switcher -->
         <div class="tab-switcher">
           <div class="tab-btn active" id="tab-signin">Sign In</div>
           <div class="tab-btn" id="tab-signup">Sign Up</div>
@@ -820,14 +991,14 @@
             </div>
           </div>
           <div class="input-group">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <label>Password</label>
-              <a href="#" style="font-size:0.75rem; color:var(--emerald); font-weight:700;">Forgot Password?</a>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin-bottom:0;">Password</label>
+              <a href="#" class="forgot-link">Forgot Password?</a>
             </div>
             <div class="input-wrapper">
               <i data-lucide="lock"></i>
               <input type="password" id="signin-password" placeholder="••••••••" required>
-              <button type="button" class="eye-toggle"><i data-lucide="eye"></i></button>
+              <button type="button" class="eye-toggle" aria-label="Toggle password visibility"><i data-lucide="eye"></i></button>
             </div>
           </div>
 
@@ -857,7 +1028,7 @@
             <div class="input-wrapper">
               <i data-lucide="lock"></i>
               <input type="password" id="signup-password" placeholder="••••••••" required>
-              <button type="button" class="eye-toggle"><i data-lucide="eye"></i></button>
+              <button type="button" class="eye-toggle" aria-label="Toggle password visibility"><i data-lucide="eye"></i></button>
             </div>
           </div>
 
@@ -901,8 +1072,7 @@
 
           <div class="checkbox-group">
             <input type="checkbox" id="terms" required checked>
-            <label for="terms">I agree to the <a href="#" style="color:var(--emerald); font-weight:700;">Terms of
-                Service</a> & <a href="#" style="color:var(--emerald); font-weight:700;">Privacy Policy</a></label>
+            <label for="terms">I agree to the <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a></label>
           </div>
 
           <button type="submit" class="submit-btn" id="signup-submit" style="margin-top:24px;">
@@ -913,13 +1083,11 @@
         <div class="divider">or continue with</div>
 
         <div class="oauth-row">
-          <button class="oauth-btn google-btn" onclick="signInWithGoogle()" type="button"
-            style="cursor: pointer; z-index: 10; position: relative;">
-            <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" height="18" alt="G">
+          <button class="oauth-btn google-btn" onclick="signInWithGoogle()" type="button">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" height="18" alt="Google">
             <span>Google</span>
           </button>
-          <button class="oauth-btn github-btn" onclick="signInWithGitHub()" type="button"
-            style="cursor: pointer; z-index: 10; position: relative;">
+          <button class="oauth-btn github-btn" onclick="signInWithGitHub()" type="button">
             <i data-lucide="github" style="width:18px; height:18px;"></i>
             <span>GitHub</span>
           </button>
@@ -934,51 +1102,38 @@
   <script>
     lucide.createIcons();
 
-    // Tab switching — fix
+    // Tab switcher logic
     const tabSignIn = document.getElementById('tab-signin');
     const tabSignUp = document.getElementById('tab-signup');
     const formSignIn = document.getElementById('form-signin');
     const formSignUp = document.getElementById('form-signup');
+    const formTitle = document.getElementById('form-title');
+    const formSubtitle = document.getElementById('form-subtitle');
 
     function showSignIn() {
-      // Show sign in form
-      formSignIn.style.display = 'block';
-      formSignUp.style.display = 'none';
-      // Active tab styles
-      tabSignIn.style.background = '#fff';
-      tabSignIn.style.color = '#059669';
-      tabSignIn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+      formSignIn.classList.add('active');
+      formSignUp.classList.remove('active');
+      tabSignIn.classList.add('active');
+      tabSignUp.classList.remove('active');
 
-      tabSignUp.style.background = 'transparent';
-      tabSignUp.style.color = '#6B7280';
-      tabSignUp.style.boxShadow = 'none';
-
-      document.getElementById('form-title').textContent = "Welcome back 👋";
-      document.getElementById('form-subtitle').textContent = "Sign in to continue your journey";
+      formTitle.textContent = "Welcome back 👋";
+      formSubtitle.textContent = "Sign in to continue your journey";
     }
 
     function showSignUp() {
-      // Show sign up form
-      formSignIn.style.display = 'none';
-      formSignUp.style.display = 'block';
-      // Active tab styles
-      tabSignUp.style.background = '#fff';
-      tabSignUp.style.color = '#059669';
-      tabSignUp.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+      formSignIn.classList.remove('active');
+      formSignUp.classList.add('active');
+      tabSignUp.classList.add('active');
+      tabSignIn.classList.remove('active');
 
-      tabSignIn.style.background = 'transparent';
-      tabSignIn.style.color = '#6B7280';
-      tabSignIn.style.boxShadow = 'none';
-
-      document.getElementById('form-title').textContent = "Create Account 🚀";
-      document.getElementById('form-subtitle').textContent = "Join 15L+ students today";
+      formTitle.textContent = "Create Account 🚀";
+      formSubtitle.textContent = "Join 15L+ students today";
     }
 
-    // Attach click events
     tabSignIn.addEventListener('click', showSignIn);
     tabSignUp.addEventListener('click', showSignUp);
 
-    // Check URL param — if ?tab=signup show signup
+    // URL param tab check
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'signup') {
       showSignUp();
@@ -987,63 +1142,77 @@
     }
   </script>
 
-
-
   <script>
-    // Eye toggle
+    // Eye toggle for password fields
     document.querySelectorAll('.eye-toggle').forEach(btn => {
       btn.onclick = () => {
         const input = btn.previousElementSibling;
-        const icon = btn.querySelector('i');
         if (input.type === 'password') {
           input.type = 'text';
-          icon.setAttribute('data-lucide', 'eye-off');
+          btn.innerHTML = '<i data-lucide="eye-off"></i>';
         } else {
           input.type = 'password';
-          icon.setAttribute('data-lucide', 'eye');
+          btn.innerHTML = '<i data-lucide="eye"></i>';
         }
         lucide.createIcons();
       };
     });
 
-    // Terminal Typewriter
+    // Terminal Typewriter Effect
     const termBody = document.getElementById('term-content');
-    const lines = [
-      { text: "$ skillbridge auth --init", color: "var(--emerald)" },
-      { text: "> Loading dynamic career paths...", color: "#fff" },
-      { text: "> Syncing with 500+ hiring partners...", color: "#fff" },
-      { text: "> Connection secured. Ready to launch. ✓", color: "var(--emerald)" },
-      { text: "$ awaiting student credentials...", color: "#fff" }
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const termLines = [
+      { text: "$ skillbridge auth --init", color: "var(--accent-primary)", isCmd: true },
+      { text: "> Loading dynamic career paths...", color: "var(--accent-soft)", isCmd: false },
+      { text: "> Syncing with 500+ hiring partners...", color: "#E8DDD1", isCmd: false },
+      { text: "> Connection secured. Ready to launch. ✓", color: "var(--pill-green)", isCmd: false },
+      { text: "$ awaiting student credentials...", color: "#FFFFFF", isCmd: false }
     ];
 
-    let lineIdx = 0;
-    function typeLine() {
-      if (!termBody) return;
-      if (lineIdx >= lines.length) {
+    if (prefersReduced) {
+      if (termBody) {
+        termLines.forEach(l => {
+          const d = document.createElement('div');
+          d.style.color = l.color;
+          d.style.marginBottom = "6px";
+          d.textContent = l.text;
+          termBody.appendChild(d);
+        });
         termBody.innerHTML += '<span class="cursor-blink"></span>';
-        return;
       }
-      const div = document.createElement('div');
-      div.style.color = lines[lineIdx].color;
-      div.style.marginBottom = "8px";
-      termBody.appendChild(div);
-
-      let charIdx = 0;
-      const text = lines[lineIdx].text;
-
-      function typeChar() {
-        if (charIdx < text.length) {
-          div.textContent += text[charIdx];
-          charIdx++;
-          setTimeout(typeChar, 30);
-        } else {
-          lineIdx++;
-          setTimeout(typeLine, 600);
+    } else {
+      let lineIdx = 0;
+      function typeLine() {
+        if (!termBody) return;
+        if (lineIdx >= termLines.length) {
+          termBody.innerHTML += '<span class="cursor-blink"></span>';
+          return;
         }
+        const div = document.createElement('div');
+        div.style.color = termLines[lineIdx].color;
+        div.style.marginBottom = "6px";
+        termBody.appendChild(div);
+
+        let charIdx = 0;
+        const currentLine = termLines[lineIdx];
+        const text = currentLine.text;
+        const charDelay = currentLine.isCmd ? 45 : 22;
+
+        function typeChar() {
+          if (charIdx < text.length) {
+            div.textContent += text[charIdx];
+            charIdx++;
+            setTimeout(typeChar, charDelay);
+          } else {
+            lineIdx++;
+            setTimeout(typeLine, lineIdx === 1 ? 550 : 300);
+          }
+        }
+        typeChar();
       }
-      typeChar();
+      setTimeout(typeLine, 500);
     }
-    setTimeout(typeLine, 1000);
   </script>
 </body>
 
