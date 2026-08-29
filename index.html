@@ -314,9 +314,9 @@
       color: var(--accent-primary) !important;
     }
 
-    /* ═══════════════════════════════════ HERO SECTION (Oversized Editorial) */
+    /* ═══════════════════════════════════ HERO SECTION (Clean, Decluttered, Editorial) */
     .hero {
-      padding: 125px 0 50px !important;
+      padding: 130px 0 60px !important;
       background: transparent !important;
       position: relative;
       z-index: 1;
@@ -324,8 +324,8 @@
 
     .hero-inner {
       display: grid;
-      grid-template-columns: 1.18fr 0.92fr;
-      gap: 44px;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 40px;
       align-items: center;
       position: relative;
       z-index: 1;
@@ -333,9 +333,10 @@
 
     .hero-text-wrap {
       position: relative;
+      padding-top: 14px;
     }
 
-    /* Nomu-Style Floating Pill Tags */
+    /* Nomu-Style Floating Pill Tags (EXACTLY 2 Pills Total, No Collision, Left Column Only) */
     .hero-floating-pills {
       position: absolute;
       inset: 0;
@@ -349,7 +350,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 13px;
+      padding: 6px 14px;
       border-radius: 100px;
       font-size: 0.76rem;
       font-weight: 800;
@@ -366,73 +367,42 @@
       z-index: 10;
     }
 
+    /* Pill 1: Top-Right of Left Column (Clear of AI badge) */
     .tag-green {
       background: var(--pill-green);
-      top: -20px;
-      right: 30px;
-      transform: rotate(-6deg);
-      animation: floatTag1 4.5s ease-in-out infinite alternate;
+      top: -24px;
+      right: 28px;
+      transform: rotate(-4deg);
+      animation: floatTag1 4.8s ease-in-out infinite alternate;
     }
-    .tag-blue {
-      background: var(--pill-blue);
-      top: -12px;
-      left: 175px;
-      transform: rotate(4deg);
-      animation: floatTag2 5.2s ease-in-out infinite alternate;
-    }
+
+    /* Pill 2: Bottom-Right of Left Column (Clear of CTAs) */
     .tag-purple {
       background: var(--pill-purple);
-      bottom: 120px;
-      left: -20px;
-      transform: rotate(5deg);
-      animation: floatTag3 4.8s ease-in-out infinite alternate;
-    }
-    .tag-lime {
-      background: var(--pill-lime);
-      color: #1A1512;
-      top: 55%;
-      right: -25px;
-      transform: rotate(-4deg);
-      animation: floatTag4 5.5s ease-in-out infinite alternate;
-    }
-    .tag-green-2 {
-      background: var(--pill-green);
-      bottom: 60px;
-      right: 40px;
-      transform: rotate(3deg);
-      animation: floatTag5 5.0s ease-in-out infinite alternate;
+      bottom: 2px;
+      right: 12px;
+      transform: rotate(-3deg);
+      animation: floatTag3 5.0s ease-in-out infinite alternate;
     }
 
     @keyframes floatTag1 {
-      0%   { transform: rotate(-6deg) translateY(0px); }
-      100% { transform: rotate(-4deg) translateY(-8px); }
-    }
-    @keyframes floatTag2 {
-      0%   { transform: rotate(4deg) translateY(0px); }
-      100% { transform: rotate(2deg) translateY(-8px); }
-    }
-    @keyframes floatTag3 {
-      0%   { transform: rotate(5deg) translateY(0px); }
-      100% { transform: rotate(7deg) translateY(-9px); }
-    }
-    @keyframes floatTag4 {
       0%   { transform: rotate(-4deg) translateY(0px); }
       100% { transform: rotate(-2deg) translateY(-7px); }
     }
-    @keyframes floatTag5 {
-      0%   { transform: rotate(3deg) translateY(0px); }
-      100% { transform: rotate(5deg) translateY(-8px); }
+    @keyframes floatTag3 {
+      0%   { transform: rotate(-3deg) translateY(0px); }
+      100% { transform: rotate(-1deg) translateY(-6px); }
     }
 
     /* Oversized Headline with Solid Rounded Dark Pill */
     .hero-heading {
-      font-size: clamp(38px, 5.4vw, 68px);
+      font-size: clamp(34px, 4.8vw, 60px);
       font-weight: 850;
-      line-height: 1.05;
-      letter-spacing: -0.045em;
+      line-height: 1.12;
+      letter-spacing: -0.04em;
       color: var(--text-primary);
-      margin: 16px 0 18px;
-      max-width: 660px;
+      margin: 16px 0 24px;
+      max-width: 620px;
       position: relative;
       z-index: 1;
     }
@@ -440,29 +410,33 @@
     .headline-pill {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       background: var(--text-primary);
       color: #FFFFFF;
-      padding: 3px 20px 5px;
+      padding: 6px 28px 8px;
       border-radius: 50px;
-      box-shadow: 0 6px 20px rgba(26, 21, 18, 0.25);
-      font-size: 0.88em;
+      box-shadow: 0 8px 24px rgba(26, 21, 18, 0.22);
+      font-size: clamp(26px, 3.6vw, 44px);
+      font-weight: 800;
       white-space: nowrap;
-      position: relative;
+      max-width: 100%;
+      box-sizing: border-box;
+      margin-top: 8px;
+      letter-spacing: -0.02em;
       vertical-align: middle;
     }
     .headline-pill .sparkle-icon {
       color: var(--accent-primary);
       font-size: 0.75em;
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
     .hero-sub {
-      font-size: 1.08rem;
+      font-size: 1.05rem;
       color: var(--text-secondary);
-      line-height: 1.6;
-      margin-bottom: 22px;
-      max-width: 520px;
+      line-height: 1.65;
+      margin-bottom: 26px;
+      max-width: 500px;
     }
 
     .hero-ctas {
@@ -470,7 +444,9 @@
       gap: 14px;
       align-items: center;
       flex-wrap: wrap;
-      margin-bottom: 14px;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 3;
     }
 
     /* Playful Rotating Micro-Copy */
@@ -481,7 +457,7 @@
       font-size: 0.78rem;
       color: var(--text-muted);
       font-weight: 500;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
       min-height: 22px;
       transition: opacity 0.25s ease, transform 0.25s ease;
     }
@@ -502,31 +478,35 @@
 
     .hero-trust {
       display: flex;
-      gap: 18px;
+      gap: 20px;
       color: var(--text-muted);
       font-size: 0.82rem;
       font-weight: 500;
     }
 
-    /* Dashboard Preview Card Ambient Floating Motion */
+    /* Dashboard Preview Card Ambient Floating Motion (Right Column - Fully Contained, No Top Clipping) */
     .hero-card-wrap {
       perspective: 1000px;
       position: relative;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 0 0 auto;
+      padding-top: 22px; /* Clear breathing room so +8% badge is not cut off */
     }
 
     .hero-weekly-badge {
       position: absolute;
-      top: -12px;
-      left: 18px;
-      z-index: 10;
+      top: 0;
+      left: 20px;
+      z-index: 5;
       background: var(--bg-secondary);
       color: var(--success);
       border: 1px solid rgba(127, 169, 138, 0.45);
       font-size: 0.74rem;
       font-weight: 700;
-      padding: 4px 12px;
+      padding: 5px 14px;
       border-radius: 100px;
-      box-shadow: 0 2px 10px rgba(26, 21, 18, 0.06);
+      box-shadow: 0 4px 12px rgba(26, 21, 18, 0.07);
     }
 
     .hero-dashboard-card {
@@ -538,6 +518,8 @@
       transform: perspective(1000px) rotateY(-4deg) rotateX(2deg);
       animation: heroCardFloat 3.8s ease-in-out infinite alternate;
       transition: box-shadow 0.3s ease;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     @keyframes heroCardFloat {
@@ -1512,9 +1494,10 @@
     }
 
     /* Mobile Media Queries */
-    @media (max-width: 900px) {
+    @media (max-width: 960px) {
       .hero-inner { grid-template-columns: 1fr; gap: 40px; }
       .hero-floating-pills { display: none; }
+      .hero-card-wrap { max-width: 100%; margin: 0 auto; padding-top: 20px; }
       .stats-strip-grid { grid-template-columns: repeat(2, 1fr); }
       .steps-row { grid-template-columns: repeat(2, 1fr); }
       .features-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1572,24 +1555,21 @@
     </div>
   </nav>
 
-  <!-- ═══════════════════════════════════ HERO (Editorial Bold + Nomu Colorful Sticker Pills) -->
+  <!-- ═══════════════════════════════════ HERO (Editorial Bold + 2 Cleanly Placed Nomu Pills) -->
   <section class="hero" id="hero">
     <div class="container">
       <div class="hero-inner">
         <!-- Left Column -->
         <div class="hero-text-wrap" data-reveal>
-          <!-- Nomu-Style Floating Pill Tags (Vibrant Colors on Neutral Foundation) -->
+          <!-- Nomu-Style Floating Pill Tags (EXACTLY 2 Pills, Generous Clearance, Zero Overlap) -->
           <div class="hero-floating-pills" aria-hidden="true">
             <span class="float-tag tag-green">🎯 personalized roadmap</span>
-            <span class="float-tag tag-blue">📊 job readiness score</span>
-            <span class="float-tag tag-purple">🤖 AI-powered</span>
-            <span class="float-tag tag-lime">⚡ daily tasks</span>
-            <span class="float-tag tag-green-2">✅ verified skills</span>
+            <span class="float-tag tag-purple">✅ verified skills</span>
           </div>
 
           <div class="pill-accent">✦ AI-Powered Career Navigation System</div>
 
-          <!-- Oversized Headline with Solid Dark Headline Chip -->
+          <!-- Oversized Headline with Solid Dark Headline Chip (Fully Contained with Generous Padding) -->
           <h1 class="hero-heading" id="hero-heading">
             Know exactly what to learn.<br>
             <span class="headline-pill"><span class="sparkle-icon">✦</span> Get hired on autopilot <span class="sparkle-icon">✳</span></span>
@@ -1617,7 +1597,7 @@
           </div>
         </div>
 
-        <!-- Right Column: Elevated 3D Dashboard Card on Cream (Floating Ambient Animation) -->
+        <!-- Right Column: Elevated 3D Dashboard Card on Cream (Fully Contained with Top Clearance) -->
         <div class="hero-card-wrap" data-reveal data-delay="150">
           <div class="hero-weekly-badge">↑ +8% this week</div>
           <div class="hero-dashboard-card float-card">
