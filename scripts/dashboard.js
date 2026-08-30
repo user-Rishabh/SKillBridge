@@ -18,6 +18,7 @@ try {
   ENV_CONFIG = window.ENV_CONFIG || {};
 }
 
+var supabase;
 const SUPABASE_URL = ENV_CONFIG.SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = ENV_CONFIG.SUPABASE_ANON_KEY || '';
 const OPENROUTER_KEY = ENV_CONFIG.OPENROUTER_KEY || '';
@@ -75,91 +76,96 @@ const conversation = [
 
 console.log('🚀 SkillBridge Dashboard JS Loading...');
 
-document.addEventListener('DOMContentLoaded',
-  async () => {
-    // 1. Supabase FIRST
-    initSupabase();
-    if (!supabase) return;
-
-    // 2. Theme
-    initTheme();
-    
-    // 3. Check auth
-    try {
-      const { data: { session } } = 
-        await supabase.auth.getSession();
-      
-      if (!session) {
-        window.location.href = 'auth.html';
-        return;
-      }
-      
-      currentUserId = session.user.id;
-      
-      // 4. Get profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      
-      console.log('Profile loaded:', profile);
-      
-      // 5. Init everything
-      initInteractions();
-      initTabs();
-      
-      if (profile?.onboarding_completed) {
-        // Hide onboarding, show dashboard
-        const overlay = document.getElementById(
-          'onboarding-overlay'
-        );
-        if (overlay) overlay.style.display = 'none';
-        await initDashboard(profile);
-      } else {
-        // Show onboarding
-        showOnboarding(profile);
-      }
-    } catch(err) {
-      console.error('Init error:', err);
-      window.location.href = 'auth.html';
-    }
+async function initializeSkillBridgeApp() {
+  console.log('🚀 SkillBridge App Initializing...');
+  // 1. Supabase FIRST
+  initSupabase();
+  if (!supabase) {
+    console.warn('Supabase not ready yet, retrying in 150ms...');
+    setTimeout(initializeSkillBridgeApp, 150);
+    return;
   }
-);
+
+  // 2. Theme
+  initTheme();
+
+  // 3. Check auth
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = 'auth.html';
+      return;
+    }
+
+    currentUserId = session.user.id;
+    window.currentUserId = session.user.id;
+
+    // 4. Get profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+
+    console.log('Profile loaded:', profile);
+
+    // Update UI greeting and domain immediately
+    if (typeof updateProfileUI === 'function') {
+      updateProfileUI(profile || {}, session.user.email || '');
+    }
+
+    // 5. Init interactions & tabs
+    initInteractions();
+    initTabs();
+
+    if (profile?.onboarding_completed) {
+      // Hide onboarding, show dashboard
+      const overlay = document.getElementById('onboarding-overlay');
+      if (overlay) overlay.style.display = 'none';
+      if (typeof initDashboard === 'function') {
+        await initDashboard(profile);
+      }
+      if (typeof loadDashboardStats === 'function') {
+        await loadDashboardStats();
+      }
+    } else {
+      // Show onboarding
+      showOnboarding(profile);
+    }
+  } catch (err) {
+    console.error('Init error:', err);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeSkillBridgeApp);
+} else {
+  initializeSkillBridgeApp();
+}
 
 function initSupabase() {
   try {
-    const lib = window.supabase 
-      || window.supabasejs
-      || window.Supabase;
-    if (!lib || !lib.createClient) {
-      console.error('Supabase lib not found');
-      document.body.innerHTML = `
-        <div style="display:flex;align-items:center;
-          justify-content:center;min-height:100vh;
-          font-family:sans-serif;background:#0F172A;">
-          <div style="text-align:center;color:white;">
-            <h2>⚠️ Connection Error</h2>
-            <p style="color:#94A3B8;margin:12px 0;">
-              Failed to load. Please refresh.
-            </p>
-            <button onclick="location.reload()"
-              style="background:#059669;color:white;
-              border:none;padding:10px 24px;
-              border-radius:8px;cursor:pointer;
-              font-size:14px;">
-              🔄 Refresh
-            </button>
-          </div>
-        </div>`;
+    if (window.supabase && typeof window.supabase.from === 'function') {
+      supabase = window.supabase;
       return;
     }
-    supabase = lib.createClient(
-      SUPABASE_URL, 
+    const lib = window.supabasejs
+      || window.Supabase
+      || (window.supabase && window.supabase.createClient ? window.supabase : null);
+    if (!lib || !lib.createClient) {
+      console.error('Supabase lib not found');
+      return;
+    }
+    const client = lib.createClient(
+      SUPABASE_URL,
       SUPABASE_ANON_KEY
     );
-    console.log('✅ Supabase ready');
-  } catch(err) {
+    supabase = client;
+    window.supabase = client;
+    window.supabaseClient = client;
+    console.log('✅ Supabase client initialized and bound to window');
+  } catch (err) {
     console.error('Supabase init error:', err);
   }
 }
@@ -299,7 +305,7 @@ async function finishOnboarding() {
 
   if (error) {
     console.warn('❌ Full profile upsert failed (likely missing columns), trying defensive fallback update...', error);
-    
+
     // Fallback: only update core columns we are confident exist in any version of profiles
     const fallbackResult = await supabase.from('profiles').update({
       goal: onboardingData.goal,
@@ -521,6 +527,8 @@ const QUICK_TEST_QUESTIONS = {
   ]
 };
 
+
+
 async function loadQuickTestTab() {
   if (!supabase || !currentUserId) return;
 
@@ -725,7 +733,7 @@ function prevQuestion() {
 async function nextQuestion() {
   const index = window.qtCurrentIndex;
   const answers = window.qtAnswers;
-  
+
   if (answers[index] === null) {
     showToast("Please select an answer to continue.", "info");
     return;
@@ -830,7 +838,7 @@ async function finishQuickTest() {
     document.getElementById('qt-success-score').textContent = `${pctScore}%`;
     document.getElementById('qt-success-gap').textContent = weakSkill;
     document.getElementById('qt-success-view').style.display = 'block';
-    
+
     // Proactively refresh other tabs
     loadDashboardStats();
   }, 2200);
@@ -840,7 +848,7 @@ async function adaptRoadmapForWeakSkill(weakSkill) {
   try {
     const { data: profile } = await supabase.from('profiles').select('roadmap_data').eq('id', currentUserId).single();
     if (!profile || !profile.roadmap_data) return;
-    
+
     const roadmap = profile.roadmap_data;
     if (!roadmap.phases || roadmap.phases.length === 0) return;
 
@@ -875,13 +883,13 @@ async function adaptRoadmapForWeakSkill(weakSkill) {
     if (activePhaseIndex !== -1) {
       const activePhase = roadmap.phases[activePhaseIndex];
       const tasksList = activePhase.tasks || [];
-      
+
       const completedTasks = tasksList.filter(t => completedTaskTitles.has(t.title));
       const uncompletedTasks = tasksList.filter(t => !completedTaskTitles.has(t.title));
-      
+
       const matchingUncompleted = uncompletedTasks.filter(t => isMatchingTask(t.title));
       const otherUncompleted = uncompletedTasks.filter(t => !isMatchingTask(t.title));
-      
+
       if (matchingUncompleted.length > 0) {
         // Reorder tasks inside this phase
         activePhase.tasks = [...completedTasks, ...matchingUncompleted, ...otherUncompleted];
@@ -952,7 +960,7 @@ window.startRecommendedLearning = startRecommendedLearning;
 function filterTasks(status) {
   const cards = document.querySelectorAll('.task-card-item');
   const buttons = document.querySelectorAll('.task-filter-btn');
-  
+
   buttons.forEach(btn => {
     if (btn.id === `filter-${status}`) {
       btn.style.background = '#059669';
@@ -1302,13 +1310,13 @@ async function markTaskFromNotes(taskId) {
   try {
     const modal = document.getElementById('course-viewer-modal');
     if (modal) modal.remove();
-    
+
     // Call existing task completion logic
     await completeTask(taskId, true);
-    
+
     // Show toast
     showToast("Task marked as completed! Roadmap updated.", "success");
-    
+
     // Reload dashboard stats and roadmap UI
     await loadDashboardStats();
     if (typeof loadRoadmapTab === 'function') loadRoadmapTab();
@@ -1320,7 +1328,7 @@ window.markTaskFromNotes = markTaskFromNotes;
 
 function getLocalCourseNotes(title) {
   const t = title.toLowerCase();
-  
+
   if (t.includes("swot")) {
     return `
       <h2>Introduction to Personal SWOT Analysis</h2>
@@ -1344,7 +1352,7 @@ function getLocalCourseNotes(title) {
       <p>Once you outline your SWOT matrix, translate it into action: use your strengths to capture opportunities, mitigate weaknesses, and prepare safeguards against industry threats.</p>
     `;
   }
-  
+
   if (t.includes("api") || t.includes("fetch")) {
     return `
       <h2>REST APIs & Async Fetching</h2>
@@ -1610,7 +1618,7 @@ async function showQuizResults(taskId, score, total, taskTitle, phase) {
   const { data: profile } = await supabase.from('profiles').select('xp, level').eq('id', session.user.id).single();
   const newXP = (profile?.xp || 0) + xpEarned; const newLevel = Math.floor(newXP / 100) + 1;
   await supabase.from('profiles').update({ xp: newXP, level: newLevel }).eq('id', session.user.id);
-  
+
   // Notification for Quiz completion
   await addNotification(
     pct >= 80 ? '🎉 Quiz Passed!' : '👍 Quiz Attempted',
@@ -1624,9 +1632,9 @@ async function showQuizResults(taskId, score, total, taskTitle, phase) {
 
   if (pct >= 80) await completeTask(taskId, false);
   const modal = document.getElementById('quiz-modal'); if (!modal) return;
-  
+
   modal.style.cssText = `position:fixed;inset:0;background:rgba(5,1,13,0.95);backdrop-filter:blur(25px);z-index:10000;display:flex;flex-direction:column;overflow-y:auto;font-family:'Inter',sans-serif;color:#FFFFFF;animation:viewerFadeIn 0.4s ease-out both;`;
-  
+
   modal.innerHTML = `
     <style>
       .quiz-results-container {
@@ -1759,7 +1767,7 @@ async function showQuizResults(taskId, score, total, taskTitle, phase) {
   const notesPrompt = `Generate a comprehensive, high-fidelity study note for a student learning about the topic "${taskTitle}". 
   Provide clear headings: "Core Concepts", "Implementation Details", and "Common Pitfalls". 
   Format it beautifully in clean, readable HTML paragraphs, code blocks, lists, and bold text. Keep it focused and clear. Do not wrap in markdown quotes.`;
-  
+
   callAI(notesPrompt, 800).then(notesContent => {
     const notesArea = document.getElementById('quiz-results-notes');
     if (notesArea) {
@@ -1940,7 +1948,7 @@ function switchResumeSection(sectionId, btnEl) {
   document.querySelectorAll('.resume-section-form').forEach(f => f.style.display = 'none');
   const target = document.getElementById(`resume-editor-${sectionId}`);
   if (target) target.style.display = 'block';
-  
+
   document.querySelectorAll('.resume-nav-btn').forEach(b => b.classList.remove('active'));
   const activeBtn = btnEl || (window.event && (window.event.currentTarget || window.event.target)) || document.querySelector(`.resume-nav-btn[data-section="${sectionId}"]`);
   if (activeBtn && activeBtn.classList) {
@@ -2034,12 +2042,12 @@ function updateResumePreview() {
       <div style="margin-bottom:16px;">
         <h3 style="font-size:12.5px;font-weight:800;color:var(--accent-hover, #D67D52);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1.5px solid var(--border, #E8DDD1);padding-bottom:4px;margin:0 0 8px 0;">Work Experience</h3>
         ${expCards.map(card => {
-          const inputs = card.querySelectorAll('input, textarea');
-          const company = inputs[0]?.value || 'Company / Organization';
-          const role = inputs[1]?.value || 'Role / Position';
-          const years = inputs[2]?.value || '2023 - Present';
-          const desc = inputs[3]?.value || '';
-          return `
+    const inputs = card.querySelectorAll('input, textarea');
+    const company = inputs[0]?.value || 'Company / Organization';
+    const role = inputs[1]?.value || 'Role / Position';
+    const years = inputs[2]?.value || '2023 - Present';
+    const desc = inputs[3]?.value || '';
+    return `
             <div style="margin-bottom:10px;">
               <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--text-primary, #1A1512);">
                 <span>${role} — <span style="font-weight:600;color:var(--text-secondary, #5C4D42);">${company}</span></span>
@@ -2048,7 +2056,7 @@ function updateResumePreview() {
               ${desc ? `<p style="font-size:11.5px;color:var(--text-secondary, #5C4D42);margin:3px 0 0 0;line-height:1.4;">${desc}</p>` : ''}
             </div>
           `;
-        }).join('')}
+  }).join('')}
       </div>
     ` : ''}
 
@@ -2056,16 +2064,16 @@ function updateResumePreview() {
       <div style="margin-bottom:16px;">
         <h3 style="font-size:12.5px;font-weight:800;color:var(--accent-hover, #D67D52);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1.5px solid var(--border, #E8DDD1);padding-bottom:4px;margin:0 0 8px 0;">Key Projects</h3>
         ${projCards.map(card => {
-          const inputs = card.querySelectorAll('input, textarea');
-          const title = inputs[0]?.value || 'Project Title';
-          const desc = inputs[1]?.value || '';
-          return `
+    const inputs = card.querySelectorAll('input, textarea');
+    const title = inputs[0]?.value || 'Project Title';
+    const desc = inputs[1]?.value || '';
+    return `
             <div style="margin-bottom:10px;">
               <div style="font-size:12px;font-weight:700;color:var(--text-primary, #1A1512);">🚀 ${title}</div>
               ${desc ? `<p style="font-size:11.5px;color:var(--text-secondary, #5C4D42);margin:3px 0 0 0;line-height:1.4;">${desc}</p>` : ''}
             </div>
           `;
-        }).join('')}
+  }).join('')}
       </div>
     ` : ''}
 
@@ -2073,11 +2081,11 @@ function updateResumePreview() {
       <div style="margin-bottom:12px;">
         <h3 style="font-size:12.5px;font-weight:800;color:var(--accent-hover, #D67D52);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1.5px solid var(--border, #E8DDD1);padding-bottom:4px;margin:0 0 8px 0;">Education</h3>
         ${eduCards.map(card => {
-          const inputs = card.querySelectorAll('input');
-          const school = inputs[0]?.value || 'University / Institution';
-          const degree = inputs[1]?.value || 'Degree / Stream';
-          const year = inputs[2]?.value || 'Graduation Year';
-          return `
+    const inputs = card.querySelectorAll('input');
+    const school = inputs[0]?.value || 'University / Institution';
+    const degree = inputs[1]?.value || 'Degree / Stream';
+    const year = inputs[2]?.value || 'Graduation Year';
+    return `
             <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
               <div>
                 <strong style="color:var(--text-primary, #1A1512);">${degree}</strong>
@@ -2086,7 +2094,7 @@ function updateResumePreview() {
               <span style="color:var(--text-muted, #8C7C6F);font-size:11.5px;font-weight:600;">${year}</span>
             </div>
           `;
-        }).join('')}
+  }).join('')}
       </div>
     ` : ''}
   `;
@@ -2114,8 +2122,8 @@ async function loadResumeTab() {
           if (locEl && !locEl.value) locEl.value = 'Mumbai, India';
           if (sumEl && !sumEl.value) sumEl.value = `Driven and ambitious ${goalText} with strong foundational problem-solving abilities and practical hands-on project experience.`;
           if (skillsEl && !skillsEl.value) {
-            skillsEl.value = goalText.toLowerCase().includes('data') 
-              ? 'Python, SQL, Machine Learning, Pandas, Scikit-Learn, Git' 
+            skillsEl.value = goalText.toLowerCase().includes('data')
+              ? 'Python, SQL, Machine Learning, Pandas, Scikit-Learn, Git'
               : 'JavaScript, React, Node.js, HTML5, CSS3, REST APIs, Git';
           }
           const eduList = document.getElementById('education-list');
@@ -2215,36 +2223,11 @@ window.downloadResumePDF = downloadResumePDF;
 window.generateAIResume = generateAIResume;
 window.exportJSONResume = exportJSONResume;
 
-function getGoalText(goalField) {
-  if (!goalField) return '';
-  try {
-    const parsed = JSON.parse(goalField);
-    if (parsed && typeof parsed === 'object' && 'goal' in parsed) {
-      return parsed.goal || '';
-    }
-  } catch (e) {}
-  return goalField;
-}
-
-function getProfileCollege(p) {
-  let college = '';
-  let branch = '';
-  if (!p || !p.goal) return { college, branch };
-  try {
-    const parsed = JSON.parse(p.goal);
-    if (parsed && typeof parsed === 'object') {
-      college = parsed.college_name || '';
-      branch = parsed.branch || '';
-    }
-  } catch (e) {}
-  return { college, branch };
-}
-
 async function saveProfile() {
   const goalValue = document.getElementById('edit-dreamjob')?.value || '';
   const collegeValue = document.getElementById('edit-college-name')?.value || '';
   const branchValue = document.getElementById('edit-branch')?.value || '';
-  
+
   // Serialize college and branch inside the goal field
   const serializedGoal = JSON.stringify({
     goal: goalValue,
@@ -2286,37 +2269,104 @@ async function completeTask(taskId, refresh = true) {
 
 // ── Common Logic (Unified callAI defined above) ───────────────
 
-function updateProfileUI(p, email) {
-  const name = p.full_name || email.split('@')[0];
-  currentUserName = name;
-  setText('user-display-name', name);
-  setText('greeting-name', name.split(' ')[0]);
-  setText('greeting-text', `Welcome back, ${name.split(' ')[0]} 👋`);
-  
-  const goalText = getGoalText(p.goal);
-  const { college, branch } = getProfileCollege(p);
+function updateProfileUI(p, email = '') {
+  try {
+    p = p || {};
+    let emailStr = typeof email === 'string' ? email : '';
+    let name = p.full_name || (emailStr && emailStr.includes('@') ? emailStr.split('@')[0] : '') || 'Student';
+    currentUserName = name;
 
-  setText('greeting-sub', goalText ? `Path: ${goalText}` : 'Select a goal to start');
-  setText('profile-initials', name.substring(0, 1).toUpperCase());
-  setText('profile-name', name);
-  setText('profile-goal', goalText || 'Set your goal');
-  setText('profile-college', (college || '') + (branch ? ' · ' + branch : ''));
-  const avatar = document.getElementById('profile-avatar'); if (avatar) avatar.textContent = name.substring(0, 1).toUpperCase();
-  
-  // Set edit form input values so they are visible and editable
-  const editNameEl = document.getElementById('edit-name');
-  if (editNameEl) editNameEl.value = p.full_name || '';
-  const editCollegeEl = document.getElementById('edit-college-name');
-  if (editCollegeEl) editCollegeEl.value = college || '';
-  const editBranchEl = document.getElementById('edit-branch');
-  if (editBranchEl) editBranchEl.value = branch || 'Computer Science';
-  const editDreamjobEl = document.getElementById('edit-dreamjob');
-  if (editDreamjobEl) editDreamjobEl.value = goalText || '';
+    const firstName = name.trim().split(' ')[0] || 'Student';
+    setText('user-display-name', name);
+    setText('greeting-name', firstName);
+    setText('greeting-text', `Welcome back, ${firstName} 👋`);
+
+    const goalText = typeof getGoalText === 'function' ? getGoalText(p.goal) : (p.goal || '');
+    const { college, branch } = typeof getProfileCollege === 'function' ? getProfileCollege(p) : { college: '', branch: '' };
+
+    setText('greeting-sub', goalText ? `Path: ${goalText}` : 'Track your career milestones and job readiness');
+    setText('profile-initials', name.substring(0, 1).toUpperCase() || 'S');
+    setText('profile-name', name);
+    setText('profile-goal', goalText || 'Software Development');
+    setText('profile-college', (college || '') + (branch ? ' · ' + branch : ''));
+
+    // Update Career Track Domain & Specialization cards
+    const trackInfo = typeof getCareerTrackFromGoal === 'function' ? getCareerTrackFromGoal(p.goal || goalText) : { track: 'Software Development', spec: goalText || 'Frontend Development' };
+    setText('cc-hero-track', trackInfo.track);
+    setText('cc-hero-spec', trackInfo.spec || goalText || trackInfo.track);
+
+    const avatar = document.getElementById('profile-avatar');
+    if (avatar) avatar.textContent = name.substring(0, 1).toUpperCase() || 'S';
+
+    // Set edit form input values so they are visible and editable
+    const editNameEl = document.getElementById('edit-name');
+    if (editNameEl) editNameEl.value = p.full_name || '';
+    const editCollegeEl = document.getElementById('edit-college-name');
+    if (editCollegeEl) editCollegeEl.value = college || '';
+    const editBranchEl = document.getElementById('edit-branch');
+    if (editBranchEl) editBranchEl.value = branch || 'Computer Science';
+    const editDreamjobEl = document.getElementById('edit-dreamjob');
+    if (editDreamjobEl) editDreamjobEl.value = goalText || '';
+  } catch (e) {
+    console.error("Error in updateProfileUI:", e);
+    setText('greeting-text', 'Welcome back 👋');
+    setText('greeting-sub', 'Track your career milestones and job readiness');
+  }
 }
+
+function getGoalText(goalField) {
+  if (!goalField) return '';
+  try { const parsed = JSON.parse(goalField); if (parsed && typeof parsed === 'object' && 'goal' in parsed) return parsed.goal || ''; } catch (e) { } return goalField;
+}
+function getProfileCollege(p) { let college = '', branch = ''; if (!p || !p.goal) return { college, branch }; try { const parsed = JSON.parse(p.goal); if (parsed && typeof parsed === 'object') { college = parsed.college_name || ''; branch = parsed.branch || ''; } } catch (e) { } return { college, branch }; }
+
+function getCareerTrackFromGoal(goal) {
+  if (!goal) return { track: "Software Development", spec: "Frontend Development" };
+  let trueGoalText = goal;
+  if (typeof goal === 'string' && goal.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(goal);
+      if (parsed && typeof parsed === 'object' && 'goal' in parsed) {
+        trueGoalText = parsed.goal || "";
+      }
+    } catch (e) { }
+  } else if (typeof goal === 'object' && goal !== null) {
+    trueGoalText = goal.goal || "";
+  }
+  const g = String(trueGoalText).toLowerCase();
+  if (g.includes("ui") || g.includes("ux") || g.includes("design") || g.includes("product designer") || g.includes("researcher")) {
+    return { track: "UI/UX & Design", spec: trueGoalText || "Product Design" };
+  }
+  if (g.includes("frontend") || g.includes("backend") || g.includes("full stack") || g.includes("fullstack") || g.includes("software") || g.includes("mobile") || g.includes("web dev") || g.includes("developer")) {
+    return { track: "Software Development", spec: trueGoalText || "Full Stack Developer" };
+  }
+  if (g.includes("ai") || g.includes("machine learning") || g.includes("ml") || g.includes("data") || g.includes("science") || g.includes("analyst")) {
+    if (g.includes("business") || g.includes("product")) {
+      return { track: "Product & Business", spec: trueGoalText || "Business Analyst" };
+    }
+    return { track: "AI & Data", spec: trueGoalText || "Data Scientist" };
+  }
+  if (g.includes("devops") || g.includes("cloud") || g.includes("sre") || g.includes("platform") || g.includes("infrastructure")) {
+    return { track: "Cloud & DevOps", spec: trueGoalText || "DevOps Engineer" };
+  }
+  if (g.includes("cyber") || g.includes("security") || g.includes("soc") || g.includes("appsec") || g.includes("infosec")) {
+    return { track: "Cybersecurity", spec: trueGoalText || "Cybersecurity Analyst" };
+  }
+  if (g.includes("product manager") || g.includes("pm") || g.includes("project manager")) {
+    return { track: "Product & Business", spec: trueGoalText || "Product Manager" };
+  }
+  return { track: "Software Development", spec: trueGoalText || "Software Development" };
+}
+
+
+
+
+
+
 
 async function loadDashboardStats() {
   if (!supabase || !currentUserId) return;
-  
+
   // 1. Fetch data from Supabase
   const [profileRes, tasksRes, projectsRes, placementRes] = await Promise.all([
     supabase.from('profiles').select('goal, level, xp, roadmap_data').eq('id', currentUserId).single(),
@@ -2345,12 +2395,12 @@ async function loadDashboardStats() {
   const completedTasks = roadmapTasks.filter(t => t.status === 'completed').length;
   const totalTasks = roadmapTasks.length || 1;
   const careerProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-  
+
   const completedProjects = dbProjects.filter(p => p.status === 'completed').length;
-  
+
   // XP & Level
   const currentLevel = profile?.level || 1;
-  
+
   // Placement/Interview progress calculations
   let resumeUploaded = false;
   let r1Passed = false;
@@ -2364,7 +2414,7 @@ async function loadDashboardStats() {
     r2Passed = placementProgress.r2;
     r3Passed = placementProgress.r3;
   }
-  
+
   // Fallback to check DB attempts if not loaded in memory
   if (placementAttempts.length > 0) {
     placementAttempts.forEach(att => {
@@ -2380,25 +2430,25 @@ async function loadDashboardStats() {
   // 3. Update Career Track Hero
   const goal = profile?.goal || "Frontend Developer";
   const { track, spec } = getCareerTrackFromGoal(goal);
-  
+
   setText('cc-hero-track', track);
   setText('cc-hero-spec', spec);
   setText('cc-hero-level', `Level ${currentLevel}`);
   setText('cc-hero-skills', `${completedTasks} Skills Mastered`);
   setText('cc-hero-projects', `${completedProjects} Project${completedProjects !== 1 ? 's' : ''} Completed`);
-  
+
   // Find current active phase based on tasks
   let activePhaseName = "Phase 1 • Orientation";
   let activePhaseTasks = [];
   let activePhaseIndex = 0;
-  
+
   if (roadmap && roadmap.phases && roadmap.phases.length > 0) {
     let foundActive = false;
     for (let idx = 0; idx < roadmap.phases.length; idx++) {
       const phase = roadmap.phases[idx];
       const phaseTasks = dbTasks.filter(t => t.roadmap_phase === (phase.phase || phase.name));
       const phaseCompletedCount = phaseTasks.filter(t => t.status === 'completed').length;
-      
+
       if (phaseTasks.length > 0 && phaseCompletedCount < phaseTasks.length && !foundActive) {
         activePhaseName = phase.phase || phase.name || `Phase ${idx + 1}`;
         activePhaseTasks = phaseTasks;
@@ -2413,10 +2463,10 @@ async function loadDashboardStats() {
       activePhaseTasks = dbTasks.filter(t => t.roadmap_phase === (lastPhase.phase || lastPhase.name));
     }
   }
-  
+
   setText('cc-hero-phase', activePhaseName);
   setText('cc-hero-progress-label', `${careerProgress}% Career Progress`);
-  
+
   const heroBar = document.getElementById('cc-hero-progress-bar');
   if (heroBar) heroBar.style.width = `${careerProgress}%`;
 
@@ -2424,12 +2474,12 @@ async function loadDashboardStats() {
   const skillsScore = careerProgress;
   const projectsScore = Math.min(100, Math.round((completedProjects / 3) * 100));
   const resumeScore = resumeUploaded ? 90 : 20;
-  
+
   let interviewScore = 15; // baseline
   if (r1Passed) interviewScore += 25;
   if (r2Passed) interviewScore += 25;
   if (r3Passed) interviewScore += 35;
-  
+
   const readinessScore = Math.round((skillsScore + projectsScore + resumeScore + interviewScore) / 4);
 
   // Update Career Readiness elements in DOM
@@ -2439,19 +2489,19 @@ async function loadDashboardStats() {
     const offset = 440 - (440 * readinessScore) / 100;
     fillCircle.style.strokeDashoffset = offset;
   }
-  
+
   setText('cc-readiness-skills-val', `${skillsScore}%`);
   const skillsBar = document.getElementById('cc-readiness-skills-bar');
   if (skillsBar) skillsBar.style.width = `${skillsScore}%`;
-  
+
   setText('cc-readiness-projects-val', `${projectsScore}%`);
   const projectsBar = document.getElementById('cc-readiness-projects-bar');
   if (projectsBar) projectsBar.style.width = `${projectsScore}%`;
-  
+
   setText('cc-readiness-resume-val', `${resumeScore}%`);
   const resumeBar = document.getElementById('cc-readiness-resume-bar');
   if (resumeBar) resumeBar.style.width = `${resumeScore}%`;
-  
+
   setText('cc-readiness-interview-val', `${interviewScore}%`);
   const interviewBar = document.getElementById('cc-readiness-interview-bar');
   if (interviewBar) interviewBar.style.width = `${interviewScore}%`;
@@ -2464,7 +2514,7 @@ async function loadDashboardStats() {
     { name: 'resume', val: resumeScore, msg: "Focus on uploading and analyzing your resume in the Placement section." },
     { name: 'interview', val: interviewScore, msg: "Focus on mock interviews and technical preparation next." }
   ];
-  
+
   scores.sort((a, b) => a.val - b.val);
   if (scores[0].val < 80) {
     diagnosticMsg = `${scores[0].msg}`;
@@ -2480,13 +2530,13 @@ async function loadDashboardStats() {
     const phaseCompleted = phaseTasks.filter(t => t.status === 'completed').length;
     const phaseTotal = phaseTasks.length || 1;
     const milestonePct = Math.round((phaseCompleted / phaseTotal) * 100);
-    
+
     setText('cc-milestone-title', `Complete ${activePhase.phase || activePhase.name}`);
     setText('cc-milestone-requirements', `${phaseCompleted} / ${phaseTotal} phase requirements completed`);
-    
+
     const milestoneBar = document.getElementById('cc-milestone-progress-bar');
     if (milestoneBar) milestoneBar.style.width = `${milestonePct}%`;
-    
+
     const xpReward = 150 + activePhaseIndex * 50;
     setText('cc-milestone-reward', `REWARD: +${xpReward} XP`);
   } else {
@@ -2535,13 +2585,13 @@ function initTabs() {
     if (typeof r2IsListening !== 'undefined' && r2IsListening && r2Recognition) {
       r2Recognition.stop();
     }
-    document.querySelectorAll('[id^="tab-"]').forEach(sec => { 
-      sec.style.display = 'none'; 
+    document.querySelectorAll('[id^="tab-"]').forEach(sec => {
+      sec.style.display = 'none';
       sec.classList.remove('tab-pane-enter');
     });
     const target = document.getElementById('tab-' + tabName);
-    if (target) { 
-      target.style.display = 'block'; 
+    if (target) {
+      target.style.display = 'block';
       // Force reflow to trigger animation restart
       void target.offsetWidth;
       target.classList.add('tab-pane-enter');
@@ -2567,12 +2617,12 @@ async function loadRoadmapTab() {
   if (!supabase || !currentUserId) return;
   const status = document.getElementById('roadmap-gen-status');
   const display = document.getElementById('full-roadmap-display');
-  
+
   if (status) status.style.display = 'none';
   if (display) display.style.display = 'none';
 
   const { data: profile } = await supabase.from('profiles').select('roadmap_data').eq('id', currentUserId).single();
-  
+
   if (profile && profile.roadmap_data) {
     await renderFullRoadmap(profile.roadmap_data);
     if (display) display.style.display = 'block';
@@ -2622,7 +2672,7 @@ function showToast(msg, type = 'success') {
       console.warn('Native notification failed:', e);
     }
   }
-  
+
   // Find or create toast container
   let container = document.getElementById('toast-container');
   if (!container) {
@@ -3061,6 +3111,7 @@ async function initPlacementTab() {
 
   updatePlacementDashboardStats(attempts);
   updatePlacementProgress();
+  triggerPlacementEntranceAnimation();
 
   // Check resume status
   if (typeof checkResumeStatusOnSetup === 'function') {
@@ -3080,20 +3131,87 @@ async function initPlacementTab() {
         localStorage.removeItem('r3_active_session');
         localStorage.removeItem('r3_session_id');
       }
-    } catch(e) {
+    } catch (e) {
       localStorage.removeItem('r3_active_session');
     }
   }
 }
 
+function animateNumberCountUp(el, targetVal, durationMs = 1000, suffix = '%') {
+  if (!el) return;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) {
+    el.textContent = `${targetVal}${suffix}`;
+    return;
+  }
+  const startTime = performance.now();
+  const startVal = 0;
+  function update(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / durationMs, 1);
+    // ease-out cubic
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(startVal + (targetVal - startVal) * ease);
+    el.textContent = `${current}${suffix}`;
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+  requestAnimationFrame(update);
+}
+
+function triggerPlacementEntranceAnimation() {
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) return;
+
+  const statCards = document.querySelectorAll('.placement-stat-card');
+  statCards.forEach((card) => {
+    card.classList.remove('animated-entry');
+    void card.offsetWidth; // force reflow
+    card.classList.add('animated-entry');
+  });
+
+  const stepCircles = document.querySelectorAll('.placement-step-circle');
+  stepCircles.forEach((circle) => {
+    circle.classList.remove('pop-in');
+    void circle.offsetWidth; // force reflow
+    circle.classList.add('pop-in');
+  });
+}
+
 function updatePlacementDashboardStats(attempts) {
+  const readinessStat = document.getElementById('placement-readiness-stat');
+  const ringFill = document.getElementById('placement-ring-fill');
+  const roundsStat = document.getElementById('placement-rounds-stat');
+  const stageStat = document.getElementById('placement-stage-stat');
+  const stageSub = document.getElementById('placement-stage-sub');
+  const bestScoreEl = document.getElementById('placement-best-score');
+  const lastDateEl = document.getElementById('placement-last-date');
+  const ringSpark = document.getElementById('placement-ring-spark');
+
+  const circumference = 150.796; // 2 * PI * 24
+
   if (!attempts || attempts.length === 0) {
-    document.getElementById('placement-readiness-stat').textContent = 'Not Assessed';
-    document.getElementById('placement-readiness-stat').style.color = 'var(--text-muted)';
-    document.getElementById('placement-rounds-stat').textContent = '0 / 3';
-    document.getElementById('placement-stage-stat').textContent = 'Round 1';
-    document.getElementById('placement-best-score').textContent = 'N/A';
-    document.getElementById('placement-last-date').textContent = 'Never';
+    if (readinessStat) {
+      readinessStat.textContent = 'Not Assessed';
+      readinessStat.style.color = 'var(--text-muted)';
+    }
+    if (ringFill) ringFill.style.strokeDashoffset = circumference;
+    if (ringSpark) ringSpark.style.display = 'none';
+    if (roundsStat) roundsStat.textContent = '0 / 3';
+    if (stageStat) {
+      stageStat.textContent = 'Round 1';
+      stageStat.style.color = 'var(--accent-primary)';
+    }
+    if (stageSub) stageSub.textContent = 'In Progress';
+    if (bestScoreEl) {
+      bestScoreEl.textContent = 'N/A';
+      bestScoreEl.style.color = 'var(--text-muted)';
+    }
+    if (lastDateEl) {
+      lastDateEl.textContent = 'Never';
+      lastDateEl.style.color = 'var(--text-muted)';
+    }
     return;
   }
 
@@ -3124,11 +3242,30 @@ function updatePlacementDashboardStats(attempts) {
   const scoresToAverage = Object.values(bestScores).filter(s => s !== null);
   if (scoresToAverage.length > 0) {
     const avg = Math.round(scoresToAverage.reduce((a, b) => a + b, 0) / scoresToAverage.length);
-    document.getElementById('placement-readiness-stat').textContent = `${avg}%`;
-    document.getElementById('placement-readiness-stat').style.color = 'var(--emerald)';
+    if (readinessStat) {
+      readinessStat.style.color = 'var(--text-primary)';
+      animateNumberCountUp(readinessStat, avg, 1000, '%');
+    }
+    if (ringFill) {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const targetOffset = circumference * (1 - avg / 100);
+      if (prefersReduced) {
+        ringFill.style.strokeDashoffset = targetOffset;
+      } else {
+        ringFill.style.strokeDashoffset = circumference;
+        setTimeout(() => {
+          ringFill.style.strokeDashoffset = targetOffset;
+        }, 50);
+      }
+    }
+    if (ringSpark) ringSpark.style.display = 'inline';
   } else {
-    document.getElementById('placement-readiness-stat').textContent = 'Not Assessed';
-    document.getElementById('placement-readiness-stat').style.color = 'var(--text-muted)';
+    if (readinessStat) {
+      readinessStat.textContent = 'Not Assessed';
+      readinessStat.style.color = 'var(--text-muted)';
+    }
+    if (ringFill) ringFill.style.strokeDashoffset = circumference;
+    if (ringSpark) ringSpark.style.display = 'none';
   }
 
   const passedRounds = new Set();
@@ -3149,9 +3286,22 @@ function updatePlacementDashboardStats(attempts) {
   } else {
     currentStage = 'Placement Ready!';
   }
-  document.getElementById('placement-stage-stat').textContent = currentStage;
+  if (stageStat) {
+    if (currentStage === 'Placement Ready!') {
+      stageStat.style.color = 'var(--pill-green)';
+      stageStat.textContent = 'Placement Ready! 🎉';
+      if (stageSub) stageSub.textContent = 'All 3 Rounds Cleared';
+    } else {
+      stageStat.style.color = 'var(--accent-primary)';
+      stageStat.textContent = currentStage;
+      if (stageSub) stageSub.textContent = 'In Progress';
+    }
+  }
 
-  document.getElementById('placement-best-score').textContent = `${bestScore}%`;
+  if (bestScoreEl) {
+    bestScoreEl.textContent = bestScore > 0 ? `${bestScore}%` : 'N/A';
+    bestScoreEl.style.color = bestScore > 0 ? 'var(--text-primary)' : 'var(--text-muted)';
+  }
   document.getElementById('placement-last-date').textContent = lastAttemptDate || 'Never';
 }
 
@@ -3339,7 +3489,7 @@ ${resumeSample}`;
       </div>
     </div>
   `;
-  
+
   placementProgress.resume = true;
   updatePlacementProgress();
 }
@@ -3372,7 +3522,7 @@ async function startRound1Test() {
   const { data: profile } = await supabase.from('profiles').select('goal, session_history').eq('id', currentUserId).single();
   const goal = profile?.goal || '';
   const { track } = getCareerTrackFromGoal(goal);
-  
+
   // Map track to category key
   let category = 'software';
   if (track === "UI/UX & Design") {
@@ -3382,7 +3532,7 @@ async function startRound1Test() {
   }
 
   const allAptitude = PLACEMENT_QUESTIONS.aptitude;
-  
+
   // Select 5 Aptitude questions (shuffle and take all 5)
   const selectedApt = [...allAptitude].sort(() => 0.5 - Math.random()).slice(0, 5);
 
@@ -3397,7 +3547,7 @@ async function startRound1Test() {
 
   // Filter technical questions and prioritize weak skill
   const techPool = PLACEMENT_QUESTIONS[category] || PLACEMENT_QUESTIONS.software;
-  
+
   const selectedTech = [...techPool].sort((a, b) => {
     const aMatch = weakSkill && (a.explanation.toLowerCase().includes(weakSkill.toLowerCase()) || a.question.toLowerCase().includes(weakSkill.toLowerCase()));
     const bMatch = weakSkill && (b.explanation.toLowerCase().includes(weakSkill.toLowerCase()) || b.question.toLowerCase().includes(weakSkill.toLowerCase()));
@@ -3440,7 +3590,7 @@ function renderRound1(test) {
     <button onclick="submitRound1()" id="submit-r1-btn" style="width:100%;padding:14px;background:var(--grad-brand);color:white;border:none;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;box-shadow:var(--shadow-fuchsia);transition:all 200ms;">Submit Answers</button>
   </div>`;
   area.innerHTML = html;
-  
+
   // Start Timer
   clearInterval(r1TimerInterval);
   r1TimeLeft = 30 * 60;
@@ -3454,9 +3604,9 @@ function renderRound1(test) {
       if (r1TimeLeft < 300) tEl.style.color = 'var(--rose)';
     }
     if (r1TimeLeft <= 0) {
-       clearInterval(r1TimerInterval);
-       showToast('Time is up! Auto-submitting...', 'warning');
-       submitRound1();
+      clearInterval(r1TimerInterval);
+      showToast('Time is up! Auto-submitting...', 'warning');
+      submitRound1();
     }
   }, 1000);
 }
@@ -3501,7 +3651,7 @@ async function submitRound1() {
       } else {
         const areaName = isAptitude ? 'Aptitude Reasoning' : 'Core Technology';
         if (!weakAreas.includes(areaName)) weakAreas.push(areaName);
-        
+
         explanationsHTML += `
           <div style="margin-bottom: 14px; padding: 12px; background: rgba(244,63,94,0.05); border-left: 3px solid var(--rose); border-radius: 6px; font-size:12px;">
             <strong>Q${i + 1}: ${m.question}</strong><br>
@@ -3541,7 +3691,7 @@ async function submitRound1() {
   document.getElementById('r1-test-area').style.display = 'none';
   const res = document.getElementById('r1-result');
   res.style.display = 'block';
-  
+
   res.innerHTML = `
     <div style="padding:24px;background:var(--bg-card);border-radius:16px;border:1px solid ${passed ? 'var(--emerald)' : 'var(--rose)'};box-shadow:var(--shadow-card);">
       <div style="text-align:center;margin-bottom:20px;">
@@ -3572,10 +3722,10 @@ async function submitRound1() {
       ` : ''}
       
       <div style="display:flex; gap:12px;">
-        ${passed 
-          ? `<button onclick="scrollToRound('step-r2')" style="flex:1;padding:12px;background:var(--emerald);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Proceed to Round 2 →</button>`
-          : `<button onclick="retryRound1()" style="flex:1;padding:12px;background:var(--rose);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Retry Round 1</button>`
-        }
+        ${passed
+      ? `<button onclick="scrollToRound('step-r2')" style="flex:1;padding:12px;background:var(--emerald);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Proceed to Round 2 →</button>`
+      : `<button onclick="retryRound1()" style="flex:1;padding:12px;background:var(--rose);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Retry Round 1</button>`
+    }
       </div>
     </div>
   `;
@@ -3602,7 +3752,7 @@ let currentR2Lang = 'javascript';
 function startRound2Coding() {
   document.getElementById('start-r2-btn').style.display = 'none';
   document.getElementById('r2-coding-area').style.display = 'grid';
-  
+
   // Set default problem
   const probSelect = document.getElementById('r2-problem-select');
   if (probSelect) {
@@ -3613,18 +3763,18 @@ function startRound2Coding() {
 function changeCodingProblem(probId) {
   const problem = CODING_PROBLEMS.find(p => p.id === probId);
   if (!problem) return;
-  
+
   currentR2Problem = problem;
-  
+
   document.getElementById('r2-problem-title').textContent = problem.title + ' (' + problem.difficulty + ')';
   document.getElementById('r2-problem-desc').textContent = problem.description;
   document.getElementById('r2-problem-examples').textContent = problem.examples;
   document.getElementById('r2-problem-constraints').textContent = problem.constraints;
-  
+
   // Reset console output
   document.getElementById('r2-console-panel').style.display = 'none';
   document.getElementById('r2-console-output').textContent = '';
-  
+
   // Load starter code
   changeCodingLanguage(currentR2Lang);
 }
@@ -3632,7 +3782,7 @@ function changeCodingProblem(probId) {
 function changeCodingLanguage(lang) {
   currentR2Lang = lang;
   if (!currentR2Problem) return;
-  
+
   const starter = currentR2Problem.starterCodes[lang] || '';
   document.getElementById('r2-code-editor').value = starter;
 }
@@ -3641,7 +3791,7 @@ function changeCodingLanguage(lang) {
 function runJavaScriptLocally(code, problem) {
   let passedCount = 0;
   let outputLog = "";
-  
+
   try {
     let wrapperBody = "";
     if (problem.id === "two_sum") {
@@ -3651,7 +3801,7 @@ function runJavaScriptLocally(code, problem) {
     } else if (problem.id === "fizz_buzz") {
       wrapperBody = `${code}\nreturn fizzBuzz(n);`;
     }
-    
+
     problem.testCases.forEach((tc, idx) => {
       let testFn;
       if (problem.id === "two_sum") {
@@ -3661,16 +3811,16 @@ function runJavaScriptLocally(code, problem) {
       } else if (problem.id === "fizz_buzz") {
         testFn = new Function("n", wrapperBody);
       }
-      
+
       const inputArgs = eval(`[${tc.input}]`);
-      
+
       let startTime = performance.now();
       const userResult = testFn(...inputArgs);
       let duration = (performance.now() - startTime).toFixed(2);
-      
+
       const expectedJSON = JSON.stringify(eval(tc.output));
       const userJSON = JSON.stringify(userResult);
-      
+
       if (expectedJSON === userJSON) {
         passedCount++;
         outputLog += `✅ Test Case ${idx + 1}: Passed (${duration}ms)\n   Input: ${tc.input}\n   Output: ${userJSON}\n\n`;
@@ -3681,7 +3831,7 @@ function runJavaScriptLocally(code, problem) {
   } catch (e) {
     outputLog = `🚨 Execution/Syntax Error:\n${e.stack || e.message}`;
   }
-  
+
   return {
     testCasesPassed: passedCount,
     totalTestCases: problem.testCases.length,
@@ -3693,14 +3843,14 @@ async function runCodingTestCases() {
   const consolePanel = document.getElementById('r2-console-panel');
   const consoleStatus = document.getElementById('r2-console-status');
   const consoleOutput = document.getElementById('r2-console-output');
-  
+
   consolePanel.style.display = 'block';
   consoleStatus.textContent = 'Running...';
   consoleStatus.style.color = 'var(--amber)';
   consoleOutput.textContent = 'Executing test cases...';
-  
+
   const code = document.getElementById('r2-code-editor').value;
-  
+
   if (currentR2Lang === 'javascript') {
     const res = runJavaScriptLocally(code, currentR2Problem);
     consoleStatus.textContent = res.testCasesPassed === res.totalTestCases ? 'SUCCESS' : 'FAILED';
@@ -3713,7 +3863,7 @@ Language: ${currentR2Lang}
 Code to execute:
 ${code}
 Test cases to check:
-${currentR2Problem.testCases.map((tc, idx) => `Case ${idx+1}: Input: ${tc.input}, Expected Output: ${tc.output}`).join('\n')}
+${currentR2Problem.testCases.map((tc, idx) => `Case ${idx + 1}: Input: ${tc.input}, Expected Output: ${tc.output}`).join('\n')}
 
 Simulate execution of this code against the test cases exactly. Make sure to check for logical bugs, syntax/compilation issues, or runtime exceptions.
 Return ONLY valid JSON format:
@@ -3722,14 +3872,14 @@ Return ONLY valid JSON format:
   "totalTestCases": ${currentR2Problem.testCases.length},
   "executionOutput": "<detailed trace of each test case and any print outputs/errors>"
 }`;
-    
+
     try {
       const res = await callAI(prompt);
       const parsed = JSON.parse(res.match(/\{[\s\S]*\}/)[0]);
       consoleStatus.textContent = parsed.testCasesPassed === parsed.totalTestCases ? 'SUCCESS' : 'FAILED';
       consoleStatus.style.color = parsed.testCasesPassed === parsed.totalTestCases ? 'var(--emerald)' : 'var(--rose)';
       consoleOutput.textContent = parsed.executionOutput;
-    } catch(e) {
+    } catch (e) {
       consoleStatus.textContent = 'ERROR';
       consoleStatus.style.color = 'var(--rose)';
       consoleOutput.textContent = 'Compilation simulation failed. Please check your syntax and try again.';
@@ -3742,16 +3892,16 @@ async function submitCodingChallenge() {
   const consolePanel = document.getElementById('r2-console-panel');
   const consoleStatus = document.getElementById('r2-console-status');
   const consoleOutput = document.getElementById('r2-console-output');
-  
+
   consolePanel.style.display = 'block';
   consoleStatus.textContent = 'Evaluating Submission...';
   consoleStatus.style.color = 'var(--amber)';
   consoleOutput.textContent = 'Submitting code, executing all tests, and generating qualitative review...';
-  
+
   let testCasesPassed = 0;
   let totalTestCases = currentR2Problem.testCases.length;
   let traceOutput = "";
-  
+
   if (currentR2Lang === 'javascript') {
     const localRes = runJavaScriptLocally(code, currentR2Problem);
     testCasesPassed = localRes.testCasesPassed;
@@ -3763,7 +3913,7 @@ Language: ${currentR2Lang}
 Code to execute:
 ${code}
 Test cases to check:
-${currentR2Problem.testCases.map((tc, idx) => `Case ${idx+1}: Input: ${tc.input}, Expected Output: ${tc.output}`).join('\n')}
+${currentR2Problem.testCases.map((tc, idx) => `Case ${idx + 1}: Input: ${tc.input}, Expected Output: ${tc.output}`).join('\n')}
 
 Simulate execution of this code against the test cases exactly. Make sure to check for logical bugs, syntax/compilation issues, or runtime exceptions.
 Return ONLY valid JSON format:
@@ -3772,13 +3922,13 @@ Return ONLY valid JSON format:
   "totalTestCases": ${currentR2Problem.testCases.length},
   "executionOutput": "<detailed trace of each test case and any print outputs/errors>"
 }`;
-    
+
     try {
       const resRun = await callAI(promptRun);
       const parsedRun = JSON.parse(resRun.match(/\{[\s\S]*\}/)[0]);
       testCasesPassed = parsedRun.testCasesPassed || 0;
       traceOutput = parsedRun.executionOutput || "";
-    } catch(e) {
+    } catch (e) {
       testCasesPassed = 0;
       traceOutput = "Compilation/Execution simulation error.";
     }
@@ -3786,7 +3936,7 @@ Return ONLY valid JSON format:
 
   const score = Math.round((testCasesPassed / totalTestCases) * 100);
   const passed = score >= 70;
-  
+
   consoleStatus.textContent = passed ? 'PASSED' : 'FAILED';
   consoleStatus.style.color = passed ? 'var(--emerald)' : 'var(--rose)';
   consoleOutput.textContent = traceOutput;
@@ -3828,7 +3978,7 @@ Return ONLY valid JSON:
     const resReview = await callAI(promptReview);
     const parsedReview = JSON.parse(resReview.match(/\{[\s\S]*\}/)[0]);
     review = { ...review, ...parsedReview };
-  } catch(e) {
+  } catch (e) {
     console.log("Qualitative review fallback");
   }
 
@@ -3887,10 +4037,10 @@ Return ONLY valid JSON:
       </div>
 
       <div style="display:flex; gap:12px;">
-        ${passed 
-          ? `<button onclick="scrollToRound('step-r3')" style="flex:1;padding:12px;background:var(--emerald);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Proceed to Round 3 Interview →</button>`
-          : `<button onclick="retryRound2()" style="flex:1;padding:12px;background:var(--rose);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Retry Round 2</button>`
-        }
+        ${passed
+      ? `<button onclick="scrollToRound('step-r3')" style="flex:1;padding:12px;background:var(--emerald);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Proceed to Round 3 Interview →</button>`
+      : `<button onclick="retryRound2()" style="flex:1;padding:12px;background:var(--rose);color:white;border:none;border-radius:10px;font-weight:600;cursor:pointer;">Retry Round 2</button>`
+    }
       </div>
     </div>
   `;
@@ -3965,12 +4115,12 @@ function r3Speak(text) {
       const utt = new SpeechSynthesisUtterance(text);
       const voices = window.speechSynthesis.getVoices();
       const voice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||
-                    voices.find(v => v.lang.startsWith('en')) || voices[0];
+        voices.find(v => v.lang.startsWith('en')) || voices[0];
       if (voice) utt.voice = voice;
       utt.rate = 0.92; utt.pitch = 1.0;
-      utt.onstart  = () => r3SetState('ASKING');
-      utt.onend    = () => { resolve(); };
-      utt.onerror  = () => { resolve(); };
+      utt.onstart = () => r3SetState('ASKING');
+      utt.onend = () => { resolve(); };
+      utt.onerror = () => { resolve(); };
       window.speechSynthesis.speak(utt);
     };
     if (window.speechSynthesis.getVoices().length === 0) {
@@ -3996,7 +4146,7 @@ function r3SetState(state) {
 
   const [color, icon, label] = map[state] || map.READY;
   statusEl.innerHTML = `<span style="color:${color};margin-right:6px;">${icon}</span><span style="font-size:13px;color:var(--text-secondary);font-weight:500;">${label}</span>`;
-  
+
   const voiceContainer = document.getElementById('voice-input-container');
   const keyboardContainer = document.getElementById('keyboard-input-container');
   const micPulse = document.getElementById('mic-pulse-indicator');
@@ -4029,9 +4179,9 @@ function r3AddMsg(role, text) {
   if (c.firstElementChild?.textContent.includes('Waiting to start') || c.firstElementChild?.textContent.includes('conversation will appear')) c.innerHTML = '';
   const isAI = role === 'ai';
   const d = document.createElement('div');
-  d.style.cssText = `display:flex;flex-direction:column;align-items:${isAI?'flex-start':'flex-end'};margin-bottom:12px;`;
-  d.innerHTML = `<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;">${isAI?'🤖 ATLAS AI':'👤 YOU'}</div>
-    <div style="background:${isAI?'var(--bg-card)':'rgba(0,229,255,0.12)'};color:var(--text-primary);padding:10px 14px;border-radius:12px;${isAI?'border-top-left-radius:2px;border:1px solid var(--border);':'border-top-right-radius:2px;border:1px solid var(--emerald);'}font-size:13px;max-width:88%;line-height:1.6;">${text}</div>`;
+  d.style.cssText = `display:flex;flex-direction:column;align-items:${isAI ? 'flex-start' : 'flex-end'};margin-bottom:12px;`;
+  d.innerHTML = `<div style="font-size:10px;color:var(--text-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;">${isAI ? '🤖 ATLAS AI' : '👤 YOU'}</div>
+    <div style="background:${isAI ? 'var(--bg-card)' : 'rgba(0,229,255,0.12)'};color:var(--text-primary);padding:10px 14px;border-radius:12px;${isAI ? 'border-top-left-radius:2px;border:1px solid var(--border);' : 'border-top-right-radius:2px;border:1px solid var(--emerald);'}font-size:13px;max-width:88%;line-height:1.6;">${text}</div>`;
   c.appendChild(d);
   c.scrollTop = c.scrollHeight;
 }
@@ -4212,7 +4362,7 @@ async function startVideoInterview() {
       r3ActiveStream = stream;
       r3VideoTrack = stream.getVideoTracks()[0];
       r3AudioTrack = stream.getAudioTracks()[0];
-    } catch(e) {
+    } catch (e) {
       showToast("Camera or Microphone permission denied.", "error");
       return;
     }
@@ -4260,7 +4410,7 @@ async function r3NextQuestion() {
 
   r3QuestionCount++;
   document.getElementById('r3-q-num').textContent = r3QuestionCount;
-  
+
   if (r3QuestionCount > R3_MAX_QUESTIONS) {
     await r3Finish();
     return;
@@ -4284,7 +4434,7 @@ async function r3NextQuestion() {
   };
 
   const currentStage = stageMap[r3QuestionCount];
-  
+
   // Fetch previous answer score to check depth
   let previousScoreNotice = "";
   if (r3Evaluations.length > 0) {
@@ -4318,17 +4468,17 @@ async function r3NextQuestion() {
   4. Do NOT output stage markers, greetings, question numbers, metadata, or side notes. Output ONLY the question itself.`;
 
   r3SetState('PROCESSING');
-  
+
   const question = await callAI(prompt, 600) || "Could you describe one of your key projects and the core technologies you used?";
-  
+
   r3ChatHistory.push({ role: 'ai', text: question });
-  
+
   // Update display
   const textEl = document.getElementById('ai-q-display-text');
   if (textEl) textEl.textContent = question;
-  
+
   r3AddMsg('ai', question);
-  
+
   r3SetState('ASKING');
   await r3Speak(question);
 
@@ -4347,7 +4497,7 @@ function r3Listen() {
     return;
   }
 
-  if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
+  if (r3Recognition) { try { r3Recognition.abort(); } catch (e) { } }
   r3Recognition = new SR();
   r3Recognition.continuous = false;
   r3Recognition.interimResults = true;
@@ -4365,11 +4515,11 @@ function r3Listen() {
       else interim += e.results[i][0].transcript;
     }
     if (liveTextEl) liveTextEl.textContent = finalText || interim || 'Listening...';
-    
+
     if (silTimer) clearTimeout(silTimer);
     if (finalText.trim()) {
       silTimer = setTimeout(() => {
-        try { r3Recognition.stop(); } catch(err){}
+        try { r3Recognition.stop(); } catch (err) { }
       }, 2000);
     }
   };
@@ -4397,7 +4547,7 @@ function r3Listen() {
       document.getElementById('mic-pulse-indicator').style.display = 'none';
     }
     if (!r3InterviewActive) return;
-    
+
     if (e.error === 'no-speech') {
       r3SetState('LISTENING');
       if (liveTextEl) liveTextEl.textContent = "No speech detected. Please speak clearly, or click Keyboard Fallback to type.";
@@ -4410,7 +4560,7 @@ function r3Listen() {
   };
 
   r3IsListening = true;
-  try { r3Recognition.start(); } catch(e) {}
+  try { r3Recognition.start(); } catch (e) { }
 }
 
 async function submitAnswer(answerText) {
@@ -4530,7 +4680,7 @@ function startCameraAnalysis() {
   const canvas = document.getElementById('hidden-cv-canvas');
   if (!video || !canvas) return;
   const ctx = canvas.getContext('2d');
-  
+
   r3PresenceStats = {
     framesChecked: 0,
     framesPresent: 0,
@@ -4576,10 +4726,10 @@ function startCameraAnalysis() {
         for (let x = 0; x < w; x++) {
           const idx = (y * w + x) * 4;
           const r = data[idx];
-          const g = data[idx+1];
-          const b = data[idx+2];
-          
-          const brightness = 0.299*r + 0.587*g + 0.114*b;
+          const g = data[idx + 1];
+          const b = data[idx + 2];
+
+          const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
           brightnessSum += brightness;
           currentPixels.push(brightness);
 
@@ -4604,7 +4754,7 @@ function startCameraAnalysis() {
         }
       } else {
         r3PresenceStats.framesPresent++;
-        
+
         if (r3BaseCentroidY === null) {
           r3BaseCentroidY = avgYCentroid;
           logIntegrityEvent("Posture baseline calibrated");
@@ -4665,7 +4815,7 @@ function logIntegrityEvent(msg) {
   const timestamp = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const eventLogEl = document.getElementById('integrity-events-log');
   if (!eventLogEl) return;
-  
+
   if (eventLogEl.firstElementChild?.textContent.includes('No alerts detected')) {
     eventLogEl.innerHTML = '';
   }
@@ -4774,9 +4924,9 @@ async function resumeInterviewSession(saved) {
       r3ChatHistory.forEach(msg => {
         const isAI = msg.role === 'ai';
         const div = document.createElement('div');
-        div.style.cssText = `display:flex; flex-direction:column; align-items:${isAI?'flex-start':'flex-end'}; margin-bottom:12px;`;
-        div.innerHTML = `<div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:.05em;">${isAI?'🤖 ATLAS AI':'👤 YOU'}</div>
-          <div style="background:${isAI?'var(--bg-card)':'rgba(0,229,255,0.12)'}; color:var(--text-primary); padding:10px 14px; border-radius:12px; ${isAI?'border-top-left-radius:2px; border:1px solid var(--border);':'border-top-right-radius:2px; border:1px solid var(--emerald);'} font-size:13px; max-width:88%; line-height:1.6;">${msg.text}</div>`;
+        div.style.cssText = `display:flex; flex-direction:column; align-items:${isAI ? 'flex-start' : 'flex-end'}; margin-bottom:12px;`;
+        div.innerHTML = `<div style="font-size:10px; color:var(--text-muted); margin-bottom:3px; text-transform:uppercase; letter-spacing:.05em;">${isAI ? '🤖 ATLAS AI' : '👤 YOU'}</div>
+          <div style="background:${isAI ? 'var(--bg-card)' : 'rgba(0,229,255,0.12)'}; color:var(--text-primary); padding:10px 14px; border-radius:12px; ${isAI ? 'border-top-left-radius:2px; border:1px solid var(--border);' : 'border-top-right-radius:2px; border:1px solid var(--emerald);'} font-size:13px; max-width:88%; line-height:1.6;">${msg.text}</div>`;
         logEl.appendChild(div);
       });
       logEl.scrollTop = logEl.scrollHeight;
@@ -4785,7 +4935,7 @@ async function resumeInterviewSession(saved) {
     r3SetState('READY');
     await r3NextQuestion();
 
-  } catch(err) {
+  } catch (err) {
     console.error("Resuming media access failed:", err);
     showToast("Failed to reconnect camera/microphone. Starting fresh.", "error");
     localStorage.removeItem('r3_active_session');
@@ -4837,11 +4987,11 @@ async function runResumeVerification() {
 
 async function r3Finish() {
   r3InterviewActive = false;
-  if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
+  if (r3Recognition) { try { r3Recognition.abort(); } catch (e) { } }
   clearInterval(r3CanvasInterval);
 
   r3SetState('FINAL_EVALUATION');
-  
+
   const textEl = document.getElementById('ai-q-display-text');
   if (textEl) textEl.textContent = 'Generating final performance report...';
 
@@ -4931,12 +5081,12 @@ async function r3Finish() {
         feedbackAdvice = parsed.feedbackAdvice || feedbackAdvice;
       }
     }
-  } catch(err) {
+  } catch (err) {
     console.warn("AI final evaluation generation failed, using defaults:", err);
   }
 
   const hireColor = hire === 'Strong Hire' ? 'var(--emerald)' : hire === 'Hire' ? 'var(--amber)' : 'var(--rose)';
-  
+
   const res = document.getElementById('r3-result');
   res.style.display = 'block';
   res.innerHTML = `
@@ -4989,15 +5139,15 @@ async function r3Finish() {
         <h4 style="font-size:12px; color:var(--amber); text-transform:uppercase; letter-spacing:.05em; margin:0 0 12px 0;">Resume Claim Verification</h4>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px; color:var(--text-secondary);">
           ${verificationList.map(v => {
-            let badgeColor = 'var(--rose)';
-            let badgeIcon = '⚠';
-            if (v.status === 'Demonstrated') { badgeColor = 'var(--emerald)'; badgeIcon = '✓'; }
-            else if (v.status === 'Partially demonstrated') { badgeColor = 'var(--amber)'; badgeIcon = '~'; }
-            return `<div style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
+    let badgeColor = 'var(--rose)';
+    let badgeIcon = '⚠';
+    if (v.status === 'Demonstrated') { badgeColor = 'var(--emerald)'; badgeIcon = '✓'; }
+    else if (v.status === 'Partially demonstrated') { badgeColor = 'var(--amber)'; badgeIcon = '~'; }
+    return `<div style="display:flex; align-items:center; justify-content:space-between; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.03);">
               <span>${v.skill}</span>
               <span style="color:${badgeColor}; font-weight:600; font-size:12px;">${badgeIcon} ${v.status}</span>
             </div>`;
-          }).join('')}
+  }).join('')}
         </div>
       </div>
 
@@ -5014,16 +5164,16 @@ async function r3Finish() {
             <div style="font-size:11px; color:var(--amber); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px;">📈 Improve (Actionable)</div>
             <ul style="padding-left:16px; font-size:13px; color:var(--text-secondary); line-height:1.7; list-style-type:none;">
               ${weaknesses.map(w => {
-                let actionLink = '';
-                if (w.topic.toLowerCase().includes('sql') || w.topic.toLowerCase().includes('database')) {
-                  actionLink = `<a href="#" onclick="window.switchTab('tasks'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Practice SQL in Tasks</a>`;
-                } else if (w.topic.toLowerCase().includes('communication') || w.topic.toLowerCase().includes('hr') || w.topic.toLowerCase().includes('behavioral')) {
-                  actionLink = `<a href="#" onclick="window.switchTab('placement'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Practice Interview in Placement</a>`;
-                } else {
-                  actionLink = `<a href="#" onclick="window.switchTab('roadmap'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Review Skill in Roadmap</a>`;
-                }
-                return `<li style="margin-bottom:8px;">⚠ <strong>${w.topic}</strong>: ${w.feedback} ${actionLink}</li>`;
-              }).join('')}
+    let actionLink = '';
+    if (w.topic.toLowerCase().includes('sql') || w.topic.toLowerCase().includes('database')) {
+      actionLink = `<a href="#" onclick="window.switchTab('tasks'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Practice SQL in Tasks</a>`;
+    } else if (w.topic.toLowerCase().includes('communication') || w.topic.toLowerCase().includes('hr') || w.topic.toLowerCase().includes('behavioral')) {
+      actionLink = `<a href="#" onclick="window.switchTab('placement'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Practice Interview in Placement</a>`;
+    } else {
+      actionLink = `<a href="#" onclick="window.switchTab('roadmap'); return false;" style="color:var(--emerald); text-decoration:underline; font-weight:600; margin-left:6px;">Review Skill in Roadmap</a>`;
+    }
+    return `<li style="margin-bottom:8px;">⚠ <strong>${w.topic}</strong>: ${w.feedback} ${actionLink}</li>`;
+  }).join('')}
             </ul>
           </div>
         </div>
@@ -5085,7 +5235,7 @@ async function saveDetailedInterviewData(session_id, overall_score, content_scor
             skill: r3PersonalizedContext?.skills[i % r3PersonalizedContext.skills.length] || 'General'
           });
 
-          const nextMsg = r3ChatHistory[i+1];
+          const nextMsg = r3ChatHistory[i + 1];
           if (nextMsg && nextMsg.role === 'user') {
             const a_id = crypto.randomUUID();
             await supabase.from('interview_answers').insert({
@@ -5135,7 +5285,7 @@ async function saveDetailedInterviewData(session_id, overall_score, content_scor
     }
   } catch (err) {
     console.warn("Structured tables failed (using placement_attempts details fallback):", err);
-    
+
     // Save inside placement_attempts.details
     const r3Details = {
       companyType: selectedCompanyType,
@@ -5172,7 +5322,7 @@ async function savePlacementAttempt(round, score, passed, details = null) {
 
 async function endVideoInterview() {
   r3InterviewActive = false;
-  if (r3Recognition) { try { r3Recognition.abort(); } catch(e) {} }
+  if (r3Recognition) { try { r3Recognition.abort(); } catch (e) { } }
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   clearInterval(r3CanvasInterval);
   if (r3ActiveStream) {
@@ -5188,7 +5338,7 @@ function toggleCameraTrack() {
   const videoTrack = r3ActiveStream.getVideoTracks()[0];
   if (!videoTrack) return;
   videoTrack.enabled = !videoTrack.enabled;
-  
+
   const camBtn = document.getElementById('r3-cam-btn');
   if (camBtn) {
     camBtn.textContent = `📷 Camera: ${videoTrack.enabled ? 'ON' : 'OFF'}`;
@@ -5209,7 +5359,7 @@ function toggleMicTrack() {
   const audioTrack = r3ActiveStream.getAudioTracks()[0];
   if (!audioTrack) return;
   audioTrack.enabled = !audioTrack.enabled;
-  
+
   const micBtn = document.getElementById('r3-mic-btn');
   if (micBtn) {
     micBtn.textContent = `🎤 Mic: ${audioTrack.enabled ? 'ON' : 'OFF'}`;
@@ -5218,7 +5368,7 @@ function toggleMicTrack() {
   }
 
   if (!audioTrack.enabled && r3Recognition && r3IsListening) {
-    try { r3Recognition.abort(); } catch(e){}
+    try { r3Recognition.abort(); } catch (e) { }
     r3IsListening = false;
     if (document.getElementById('mic-pulse-indicator')) {
       document.getElementById('mic-pulse-indicator').style.display = 'none';
@@ -5230,9 +5380,6 @@ function toggleMicTrack() {
   logIntegrityEvent(`Microphone toggled ${audioTrack.enabled ? 'ON' : 'OFF'}`);
 }
 
-
-
-// ── Helpers ──────────────────────────────
 async function geminiCall(prompt) {
   try {
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`, {
@@ -5244,23 +5391,103 @@ async function geminiCall(prompt) {
     return data.candidates[0].content.parts[0].text;
   } catch (e) { return null; }
 }
-
 function updatePlacementProgress() {
-  const { resume, r1, r2, r3 } = placementProgress;
+  const { resume, r1, r2, r3, r1Score, r2Score, r3Score } = placementProgress;
 
-  // Update line
+  // 1. Calculate and update progress line width
   let width = 0;
   if (resume) width = 25;
   if (r1) width = 50;
   if (r2) width = 75;
   if (r3) width = 100;
-  document.getElementById('progress-line').style.width = width + '%';
+  const progressLine = document.getElementById('progress-line');
+  if (progressLine) {
+    progressLine.style.width = width + '%';
+  }
 
-  // Update circles
-  if (resume) document.getElementById('step-resume-circle').style.background = '#059669', document.getElementById('step-resume-circle').style.color = 'white';
-  if (r1) document.getElementById('step-r1-circle').style.background = '#059669', document.getElementById('step-r1-circle').style.color = 'white';
-  if (r2) document.getElementById('step-r2-circle').style.background = '#059669', document.getElementById('step-r2-circle').style.color = 'white';
-  if (r3) document.getElementById('step-r3-circle').style.background = '#059669', document.getElementById('step-r3-circle').style.color = 'white';
+  // 2. Identify active next-up step
+  let activeStep = 'resume';
+  if (resume && !r1) activeStep = 'r1';
+  else if (resume && r1 && !r2) activeStep = 'r2';
+  else if (resume && r1 && r2 && !r3) activeStep = 'r3';
+  else if (resume && r1 && r2 && r3) activeStep = 'completed';
+
+  function setCircleState(circleId, isCompleted, isActive) {
+    const el = document.getElementById(circleId);
+    if (!el) return;
+    el.classList.remove('completed', 'active');
+    el.style.background = '';
+    el.style.color = '';
+    el.style.borderColor = '';
+    if (isCompleted) {
+      el.classList.add('completed');
+    } else if (isActive) {
+      el.classList.add('active');
+    }
+  }
+
+  setCircleState('step-resume-circle', resume, activeStep === 'resume');
+  setCircleState('step-r1-circle', r1, activeStep === 'r1');
+  setCircleState('step-r2-circle', r2, activeStep === 'r2');
+  setCircleState('step-r3-circle', r3, activeStep === 'r3');
+
+  // Sub-captions update
+  const resumeSub = document.getElementById('step-resume-sub');
+  if (resumeSub) {
+    if (resume) {
+      resumeSub.textContent = 'Uploaded ✅';
+      resumeSub.classList.add('highlight');
+    } else {
+      resumeSub.textContent = activeStep === 'resume' ? 'Next Up 🎯' : 'Always Open';
+      resumeSub.classList.remove('highlight');
+    }
+  }
+
+  const r1Sub = document.getElementById('step-r1-sub');
+  if (r1Sub) {
+    if (r1) {
+      r1Sub.textContent = (r1Score > 0 ? `${r1Score}% Score` : 'Passed') + ' ✅';
+      r1Sub.classList.add('highlight');
+    } else {
+      r1Sub.textContent = activeStep === 'r1' ? 'Next Up 🎯' : 'Aptitude & MCQs';
+      r1Sub.classList.remove('highlight');
+    }
+  }
+
+  const r2Sub = document.getElementById('step-r2-sub');
+  if (r2Sub) {
+    if (r2) {
+      r2Sub.textContent = (r2Score > 0 ? `${r2Score}% Score` : 'Passed') + ' ✅';
+      r2Sub.classList.add('highlight');
+    } else {
+      r2Sub.textContent = activeStep === 'r2' ? 'Next Up 🎯' : 'Coding Challenge';
+      r2Sub.classList.remove('highlight');
+    }
+  }
+
+  const r3Sub = document.getElementById('step-r3-sub');
+  if (r3Sub) {
+    if (r3) {
+      r3Sub.textContent = (r3Score > 0 ? `${r3Score}% Score` : 'Passed') + ' ✅';
+      r3Sub.classList.add('highlight');
+    } else {
+      r3Sub.textContent = activeStep === 'r3' ? 'Next Up 🎯' : 'AI Mock Interview';
+      r3Sub.classList.remove('highlight');
+    }
+  }
+
+  const journeyStatus = document.getElementById('placement-journey-status');
+  if (journeyStatus) {
+    if (r3) {
+      journeyStatus.textContent = 'All Milestones Cleared 🎉';
+      journeyStatus.style.background = 'rgba(62,171,124,0.18)';
+      journeyStatus.style.color = 'var(--pill-green)';
+    } else {
+      journeyStatus.textContent = 'Active Milestone';
+      journeyStatus.style.background = 'rgba(62,171,124,0.12)';
+      journeyStatus.style.color = 'var(--pill-green)';
+    }
+  }
 
   // Unlock sections
   const sec2 = document.getElementById('section-round2');
@@ -5300,7 +5527,7 @@ function scrollToRound(id) {
   const targetId = id === 'step-resume' ? 'section-resume' :
     id === 'step-r1' ? 'section-round1' :
       id === 'step-r2' ? 'section-round2' : 'section-round3';
-      
+
   // Lock logic
   if (id === 'step-r1' && !placementProgress.resume) return showToast('Please upload your resume first!', 'warning');
   if (id === 'step-r2' && !placementProgress.r1) return showToast('Complete Round 1 first!', 'warning');
@@ -5338,7 +5565,7 @@ async function generateFinalReport() {
   doc.setFontSize(22);
   doc.setTextColor(0, 150, 105);
   doc.text("SkillBridge Placement Readiness Report", 20, 30);
-  
+
   doc.setFontSize(11);
   doc.setTextColor(100, 100, 100);
   doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 20, 38);
@@ -5350,12 +5577,12 @@ async function generateFinalReport() {
   doc.setTextColor(40, 40, 40);
   doc.text(`Candidate Name: ${currentUserName || 'Student'}`, 20, 52);
   doc.text(`Target Track: ${r3PersonalizedContext?.targetRole || selectedCompanyType}`, 20, 60);
-  
+
   doc.line(20, 66, 190, 66);
 
   doc.setFontSize(15);
   doc.text("Job Readiness Index Performance", 20, 78);
-  
+
   doc.setFontSize(12);
   doc.text(`- Round 1 (Aptitude & Technical MCQ): ${placementProgress.r1Score ? placementProgress.r1Score + '%' : 'Not Assessed'}`, 25, 88);
   doc.text(`- Round 2 (Coding & DSA Challenge): ${placementProgress.r2Score ? placementProgress.r2Score + '%' : 'Not Assessed'}`, 25, 98);

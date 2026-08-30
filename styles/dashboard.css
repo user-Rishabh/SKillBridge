@@ -1052,3 +1052,355 @@ input:focus, textarea:focus, select:focus, .form-input:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-soft);
 }
+
+/* ══════════════════════════════════════════════════════════════
+   PLACEMENT PREPARATION — NOMU-STYLE UX & MOTION SYSTEM
+   ══════════════════════════════════════════════════════════════ */
+
+.placement-stats-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .placement-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .placement-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.placement-stat-card {
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.placement-stat-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 20px rgba(26, 21, 18, 0.06);
+}
+
+.placement-stat-card.featured {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  border-color: var(--border-strong);
+}
+
+.placement-stat-card.animated-entry {
+  animation: placementCardFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.placement-stat-card:nth-child(1).animated-entry { animation-delay: 0ms; }
+.placement-stat-card:nth-child(2).animated-entry { animation-delay: 80ms; }
+.placement-stat-card:nth-child(3).animated-entry { animation-delay: 160ms; }
+.placement-stat-card:nth-child(4).animated-entry { animation-delay: 240ms; }
+
+@keyframes placementCardFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.placement-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.placement-readiness-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.placement-headline-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+  font-family: var(--font-heading);
+}
+
+.placement-ring-container {
+  width: 54px;
+  height: 54px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.placement-ring-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.placement-ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 5;
+}
+
+.placement-ring-fill {
+  fill: none;
+  stroke: var(--pill-green);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 150.796;
+  stroke-dashoffset: 150.796;
+  transition: stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.placement-ring-spark {
+  position: absolute;
+  font-size: 13px;
+  color: var(--pill-green);
+  line-height: 1;
+  font-weight: 800;
+}
+
+/* ── Stepper Journey (Centerpiece) ── */
+.placement-stepper-card {
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.placement-stepper-track-wrap {
+  position: relative;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+.placement-stepper-line-bg {
+  position: absolute;
+  top: 22px;
+  left: 12.5%;
+  right: 12.5%;
+  height: 3px;
+  background: var(--border);
+  border-radius: 99px;
+  z-index: 0;
+}
+
+.placement-stepper-line-fill {
+  height: 100%;
+  background: var(--pill-green);
+  border-radius: 99px;
+  width: 0%;
+  transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.placement-stepper-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.placement-step-item {
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.placement-step-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-strong);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin: 0 auto 8px;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+  user-select: none;
+}
+
+.placement-step-item:hover .placement-step-circle {
+  transform: scale(1.08);
+}
+
+.placement-step-circle.completed {
+  background: var(--pill-green) !important;
+  border-color: var(--pill-green) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 12px rgba(62, 171, 124, 0.28);
+}
+
+.placement-step-circle.active {
+  background: var(--bg-secondary) !important;
+  border-color: var(--pill-green) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 0 0 4px rgba(62, 171, 124, 0.22);
+  animation: nomuActiveStepPulse 2s ease-in-out infinite;
+}
+
+@keyframes nomuActiveStepPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(62, 171, 124, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(62, 171, 124, 0.38);
+  }
+}
+
+.placement-step-circle.pop-in {
+  animation: stepPopIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+.placement-step-item:nth-child(1) .placement-step-circle.pop-in { animation-delay: 100ms; }
+.placement-step-item:nth-child(2) .placement-step-circle.pop-in { animation-delay: 200ms; }
+.placement-step-item:nth-child(3) .placement-step-circle.pop-in { animation-delay: 300ms; }
+.placement-step-item:nth-child(4) .placement-step-circle.pop-in { animation-delay: 400ms; }
+
+@keyframes stepPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.placement-step-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  transition: color 0.2s;
+}
+
+.placement-step-caption {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.placement-step-caption.highlight {
+  color: var(--pill-green);
+  font-weight: 700;
+}
+
+/* ── Resume Manager Dropzone ── */
+.resume-manager-badge {
+  background: var(--success-light);
+  color: #1B6344;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid rgba(127, 169, 138, 0.35);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.resume-dropzone-box {
+  border: 2px dashed var(--accent-primary);
+  border-radius: 14px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--bg-tertiary);
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.resume-dropzone-box:hover, .resume-dropzone-box.dragover {
+  background: var(--accent-soft);
+  border-style: solid;
+  border-color: var(--accent-primary);
+  box-shadow: 0 6px 20px rgba(232, 148, 106, 0.15);
+}
+
+.resume-dropzone-box:hover .resume-dropzone-icon,
+.resume-dropzone-box.dragover .resume-dropzone-icon {
+  animation: paperclipWiggle 0.35s ease-in-out;
+}
+
+.resume-dropzone-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--accent-primary);
+  font-size: 24px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  transition: transform 0.2s;
+}
+
+@keyframes paperclipWiggle {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.15) rotate(-8deg); }
+  50% { transform: scale(1.2) rotate(6deg); }
+  75% { transform: scale(1.1) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* ── Interactive Elements & Hover Dynamics ── */
+.placement-card {
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .placement-stat-card,
+  .placement-stat-card.animated-entry,
+  .placement-step-circle.pop-in,
+  .placement-ring-fill,
+  .placement-stepper-line-fill {
+    animation: none !important;
+    transition: none !important;
+  }
+  .placement-step-circle.active {
+    animation: none !important;
+    box-shadow: 0 0 0 3px rgba(62, 171, 124, 0.3) !important;
+  }
+}
+

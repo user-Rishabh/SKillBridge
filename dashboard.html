@@ -27,7 +27,7 @@
     <!-- 2. Dashboard Features & Engines -->
     <script src="scripts/dashboard_features.js" defer></script>
     <!-- 3. Dashboard Core Script -->
-    <script src="scripts/dashboard.js?v=1.0.6" defer></script>
+    <script src="scripts/dashboard.js?v=1.1.0" defer></script>
 
 
 
@@ -215,7 +215,7 @@
                   Welcome back 👋
                 </h2>
                 <p id="greeting-sub" class="welcome-subtitle">
-                  Loading your progress...
+                  Track your career milestones and job readiness
                 </p>
               </div>
 
@@ -1517,110 +1517,142 @@
 
   <!-- Header -->
   <div style="margin-bottom:24px;">
-    <h2 style="font-size:20px;font-weight:700;color:var(--navy);margin-bottom:4px;">
+    <h2 style="font-size:22px;font-weight:800;color:var(--text-primary);margin-bottom:4px;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;">
       💼 Placement Preparation
     </h2>
-    <p style="font-size:13px;color:var(--text-secondary);">
-      Simulate a real placement process and identify what you need to improve before interviews.
+    <p style="font-size:13.5px;color:var(--text-secondary);margin:0;">
+      Simulate a real-world placement process and track your hiring milestones before interviews.
     </p>
   </div>
 
   <!-- Placement Stats Dashboard -->
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom:24px;">
-    <div class="cc-card" style="padding:16px; display:flex; flex-direction:column; justify-content:center;">
-      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Placement Readiness</div>
-      <div id="placement-readiness-stat" style="font-size:22px; font-weight:800; color:var(--primary);">Not Assessed</div>
+  <div class="placement-stats-grid">
+    <!-- 1. Placement Readiness (Headline Metric - Featured Card) -->
+    <div class="placement-stat-card featured" id="stat-card-readiness">
+      <div class="placement-stat-label">Placement Readiness</div>
+      <div class="placement-readiness-row">
+        <div>
+          <div id="placement-readiness-stat" class="placement-headline-val">Not Assessed</div>
+          <div id="placement-readiness-sub" style="font-size:11.5px; color:var(--text-secondary); margin-top:2px; font-weight:500;">
+            Benchmark target: 85%+
+          </div>
+        </div>
+        <div class="placement-ring-container" aria-hidden="true">
+          <svg class="placement-ring-svg" viewBox="0 0 60 60">
+            <circle class="placement-ring-bg" cx="30" cy="30" r="24" />
+            <circle id="placement-ring-fill" class="placement-ring-fill" cx="30" cy="30" r="24" />
+          </svg>
+          <span class="placement-ring-spark" id="placement-ring-spark">✧</span>
+        </div>
+      </div>
     </div>
-    <div class="cc-card" style="padding:16px; display:flex; flex-direction:column; justify-content:center;">
-      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Rounds Completed</div>
-      <div id="placement-rounds-stat" style="font-size:22px; font-weight:800; color:var(--navy);">0 / 3</div>
+
+    <!-- 2. Rounds Completed -->
+    <div class="placement-stat-card" id="stat-card-rounds">
+      <div class="placement-stat-label">Rounds Completed</div>
+      <div id="placement-rounds-stat" style="font-size:24px; font-weight:800; color:var(--text-primary); margin-top:2px;">0 / 3</div>
+      <div style="font-size:11.5px; color:var(--text-secondary); margin-top:4px; font-weight:500;">Resume + 3 Rounds</div>
     </div>
-    <div class="cc-card" style="padding:16px; display:flex; flex-direction:column; justify-content:center;">
-      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Current Stage</div>
-      <div id="placement-stage-stat" style="font-size:18px; font-weight:700; color:var(--primary-dark);">Round 1</div>
+
+    <!-- 3. Current Stage -->
+    <div class="placement-stat-card" id="stat-card-stage">
+      <div class="placement-stat-label">Current Stage</div>
+      <div id="placement-stage-stat" style="font-size:18px; font-weight:800; color:var(--accent-primary); margin-top:2px; transition:color 0.2s;">Round 1</div>
+      <div id="placement-stage-sub" style="font-size:11.5px; color:var(--text-secondary); margin-top:4px; font-weight:500;">In Progress</div>
     </div>
-    <div class="cc-card" style="padding:16px; display:flex; flex-direction:column; justify-content:center;">
-      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Best / Last Attempt</div>
-      <div style="font-size:12px; font-weight:600; color:var(--navy); line-height:1.4;">
-        Best: <span id="placement-best-score">N/A</span><br>
-        Date: <span id="placement-last-date" style="color:var(--text-muted);">Never</span>
+
+    <!-- 4. Best / Last Attempt -->
+    <div class="placement-stat-card" id="stat-card-attempt">
+      <div class="placement-stat-label">Best / Last Attempt</div>
+      <div style="font-size:12.5px; font-weight:600; line-height:1.5; margin-top:2px;">
+        <span style="color:var(--text-secondary);">Best:</span> <span id="placement-best-score" style="font-weight:800; color:var(--text-primary);">N/A</span><br>
+        <span style="color:var(--text-secondary);">Date:</span> <span id="placement-last-date" style="color:var(--text-muted); font-weight:500;">Never</span>
       </div>
     </div>
   </div>
 
-  <!-- Round progress tracker -->
-  <div class="cc-card" style="padding:20px;margin-bottom:24px;">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;">
+  <!-- Stepper Journey (Centerpiece) -->
+  <div class="placement-stepper-card cc-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em;">
+        Your Placement Journey
+      </div>
+      <span id="placement-journey-status" class="cc-badge" style="background:rgba(62,171,124,0.12); color:var(--pill-green); font-size:11px; font-weight:700;">
+        Active Milestone
+      </span>
+    </div>
 
-      <!-- Connecting line -->
-      <div style="position:absolute;top:20px;left:12.5%;right:12.5%;height:2px;background:var(--border);z-index:0;">
-        <div id="progress-line" style="height:100%;background:var(--primary);width:0%;transition:width 600ms ease;">
-        </div>
+    <div class="placement-stepper-track-wrap">
+      <!-- Background Connecting Line -->
+      <div class="placement-stepper-line-bg">
+        <div id="progress-line" class="placement-stepper-line-fill"></div>
       </div>
 
-      <div style="text-align:center;position:relative;z-index:1;">
-        <div id="step-resume-circle" style="width:40px;height:40px;border-radius:50%;background:#FFFFFF;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px;cursor:pointer;transition:all 300ms;"
-          onclick="scrollToRound('step-resume')">
-          📄
+      <!-- Steps Grid -->
+      <div class="placement-stepper-grid">
+        <!-- Step: Resume -->
+        <div class="placement-step-item" onclick="scrollToRound('step-resume')" title="Resume Manager">
+          <div id="step-resume-circle" class="placement-step-circle">
+            📄
+          </div>
+          <div class="placement-step-title" id="step-resume-label">Resume</div>
+          <div class="placement-step-caption" id="step-resume-sub">Always Open</div>
         </div>
-        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);" id="step-resume-label">
-          Resume
+
+        <!-- Step: Round 1 -->
+        <div class="placement-step-item" onclick="scrollToRound('step-r1')" title="Round 1: MCQs">
+          <div id="step-r1-circle" class="placement-step-circle">
+            📝
+          </div>
+          <div class="placement-step-title" id="step-r1-label">Round 1</div>
+          <div class="placement-step-caption" id="step-r1-sub">Aptitude & MCQs</div>
         </div>
-      </div>
-      <div style="text-align:center;position:relative;z-index:1;">
-        <div id="step-r1-circle" style="width:40px;height:40px;border-radius:50%;background:#FFFFFF;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px;cursor:pointer;transition:all 300ms;"
-          onclick="scrollToRound('step-r1')">
-          📝
+
+        <!-- Step: Round 2 -->
+        <div class="placement-step-item" onclick="scrollToRound('step-r2')" title="Round 2: Coding & DSA">
+          <div id="step-r2-circle" class="placement-step-circle">
+            💻
+          </div>
+          <div class="placement-step-title" id="step-r2-label">Round 2</div>
+          <div class="placement-step-caption" id="step-r2-sub">Coding Challenge</div>
         </div>
-        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);" id="step-r1-label">
-          Round 1
-        </div>
-      </div>
-      <div style="text-align:center;position:relative;z-index:1;">
-        <div id="step-r2-circle" style="width:40px;height:40px;border-radius:50%;background:#FFFFFF;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px;cursor:pointer;transition:all 300ms;"
-          onclick="scrollToRound('step-r2')">
-          💻
-        </div>
-        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);" id="step-r2-label">
-          Round 2
-        </div>
-      </div>
-      <div style="text-align:center;position:relative;z-index:1;">
-        <div id="step-r3-circle" style="width:40px;height:40px;border-radius:50%;background:#FFFFFF;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;margin:0 auto 8px;cursor:pointer;transition:all 300ms;"
-          onclick="scrollToRound('step-r3')">
-          🎥
-        </div>
-        <div style="font-size:12px;font-weight:600;color:var(--text-secondary);" id="step-r3-label">
-          Round 3
+
+        <!-- Step: Round 3 -->
+        <div class="placement-step-item" onclick="scrollToRound('step-r3')" title="Round 3: AI Interview">
+          <div id="step-r3-circle" class="placement-step-circle">
+            🎥
+          </div>
+          <div class="placement-step-title" id="step-r3-label">Round 3</div>
+          <div class="placement-step-caption" id="step-r3-sub">AI Mock Interview</div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ═══════════ RESUME SECTION ═══════════ -->
-  <div id="section-resume" class="placement-card cc-card" style="display:block;margin-bottom:24px;">
+  <div id="section-resume" class="placement-card cc-card" style="display:block;margin-bottom:24px;padding:24px;">
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
       <div>
-        <h3 style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:2px;">
+        <h3 style="font-size:16px;font-weight:800;color:var(--text-primary);margin:0 0 4px 0;display:flex;align-items:center;gap:8px;">
           📄 Resume Manager
         </h3>
-        <p style="font-size:13px;color:var(--text-secondary);">
-          Upload, analyze, and improve your resume
+        <p style="font-size:13px;color:var(--text-secondary);margin:0;">
+          Upload, analyze, and optimize your resume for automated ATS screening
         </p>
       </div>
-      <span class="cc-badge badge-green">Always Available</span>
+      <span class="resume-manager-badge">Always Available</span>
     </div>
 
     <!-- Upload zone -->
-    <div id="resume-dropzone" style="border:2px dashed var(--accent-primary);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:all 200ms;margin-bottom:16px;background:var(--bg-tertiary);"
+    <div id="resume-dropzone" class="resume-dropzone-box"
       onclick="document.getElementById('resume-file-input').click()"
-      ondragover="event.preventDefault();this.style.borderColor='var(--accent-hover)';this.style.background='var(--accent-soft)'"
-      ondragleave="this.style.borderColor='var(--accent-primary)';this.style.background='var(--bg-tertiary)'"
+      ondragover="event.preventDefault();this.classList.add('dragover');"
+      ondragleave="this.classList.remove('dragover');"
       ondrop="handleResumeDrop(event)">
       <div id="dropzone-content">
-        <div style="font-size:36px;margin-bottom:8px;">📎</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">
+        <div class="resume-dropzone-icon">📎</div>
+        <div style="font-size:14.5px;font-weight:700;color:var(--text-primary);margin-bottom:4px;">
           Drop your resume here or click to upload
         </div>
         <div style="font-size:12px;color:var(--text-secondary);">
@@ -1645,7 +1677,7 @@
   </div>
 
   <!-- ═══════════ ROUND 1 ═══════════════ -->
-  <div id="section-round1" class="placement-card cc-card" style="display:none;margin-bottom:24px;">
+  <div id="section-round1" class="placement-card cc-card" style="display:none;margin-bottom:24px;padding:24px;">
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <div>
@@ -1710,7 +1742,7 @@
   </div>
 
   <!-- ═══════════ ROUND 2 ═══════════════ -->
-  <div id="section-round2" class="placement-card cc-card" style="display:none; opacity:0.5; pointer-events:none; margin-bottom:24px;">
+  <div id="section-round2" class="placement-card cc-card" style="display:none; opacity:0.5; pointer-events:none; margin-bottom:24px; padding:24px;">
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <div>
