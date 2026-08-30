@@ -330,26 +330,29 @@ async function generateRoadmapWithAI() {
   console.log('Level:', onboardingData.currentLevel);
 
   hideTyping();
-  addMessage('🧠 Perfect! I have everything I need.<br><br>Building your personalized roadmap...<br>⏳ This takes about 15 seconds');
+  addMessage('🧠 Perfect! I have everything I need.<br><br>Building your personalized technical roadmap...<br>⏳ This takes about 15 seconds');
   showTyping();
 
   const inputArea = document.getElementById('chat-input-area');
   if (inputArea) inputArea.style.display = 'none';
 
-  const prompt = `You are a career expert.
-Create a strictly sequential learning roadmap for an Indian student.
-Goal: ${onboardingData.goal || 'Software Developer'}
+  const userGoal = onboardingData.goal || 'Data Scientist';
+  const prompt = `You are a Principal Software Engineer and Data Science Director.
+Create a strictly sequential, technical learning roadmap for a student.
+Goal: ${userGoal}
 Level: ${onboardingData.currentLevel || 'Beginner'}
 Skills: ${onboardingData.skills || 'None'}
-Time: ${onboardingData.timeline || '1 hour/day'}
-
-Return ONLY this exact JSON structure:
-{"title":"${onboardingData.goal} Roadmap","totalWeeks":16,"jobReadinessTarget":"4 months","phases":[{"phase":"Phase 1 Name","weeks":"Week 1-4","skills":["skill1","skill2","skill3"],"project":"project idea","status":"current","tasks":[{"title":"Task Title","difficulty":"Easy","resource":"URL"}]}]}
+Time: ${onboardingData.timeline || '1-2 Hours'}
 
 CRITICAL RULES:
-1. Tasks must be in logical order (basics first).
-2. Each phase must contain exactly 3-4 tasks.
-3. Tasks must be highly relevant to ${onboardingData.goal}.
+1. ONLY technical, domain-specific programming, algorithmic, mathematical, and engineering milestones.
+2. ABSOLUTELY NO generic orientation, soft-skill, SWOT analysis, or generic goal-setting tasks.
+3. If the goal is Data Scientist / AI / ML, tasks MUST focus on Python, Statistics & Probability, NumPy/Pandas, SQL for Analytics, Exploratory Data Analysis, Scikit-Learn Machine Learning, PyTorch Deep Learning, and MLOps deployment.
+4. Each phase must contain exactly 4 technical tasks with real documentation URLs and 1 practical capstone project.
+
+Return ONLY this exact JSON structure:
+{"title":"${userGoal} Roadmap","totalWeeks":16,"jobReadinessTarget":"4 months","phases":[{"phase":"Phase 1 • Topic","name":"Phase 1 • Topic","description":"Phase description","weeks":"Week 1-4","skills":["Skill1","Skill2","Skill3","Skill4"],"project":"Project Name","status":"current","tasks":[{"title":"Task Title","difficulty":"Easy","resource":"https://developer.mozilla.org"}]}]}
+
 Return ONLY the JSON. No explanation.`;
 
   try {
@@ -390,8 +393,8 @@ Return ONLY the JSON. No explanation.`;
   } catch (error) {
     console.error('Roadmap error:', error);
     hideTyping();
-    addMessage('⚠️ I had some trouble with the AI, but I\'ve created a standard roadmap for you to get started! You can customize it later.');
-    const fallback = getSmartFallback(onboardingData.goal || 'Software Developer');
+    addMessage('⚠️ I had some trouble with the AI, but I\'ve created a standard technical roadmap for you to get started! You can customize it later.');
+    const fallback = getDomainRoadmapTemplate(userGoal);
     await saveAndShowRoadmap(fallback);
   }
 }
@@ -1008,6 +1011,23 @@ async function recalculateStats(userId) {
 }
 
 // ── FIX 3: AI QUIZ + XP SYSTEM ──────────────────────────────
+function closeTaskDetailModal(callback) {
+  const modal = document.getElementById('task-detail-modal');
+  if (!modal) {
+    if (typeof callback === 'function') callback();
+    return;
+  }
+  modal.style.animation = 'taskModalBackdropOut 200ms ease-out forwards';
+  const card = modal.querySelector('.task-modal-card');
+  if (card) {
+    card.style.animation = 'taskModalCardOut 200ms ease-out forwards';
+  }
+  setTimeout(() => {
+    modal.remove();
+    if (typeof callback === 'function') callback();
+  }, 200);
+}
+
 async function openTaskDetail(taskId) {
   let task = window.allTasks?.find(t => t.id === taskId);
   if (!task) {
@@ -1018,256 +1038,265 @@ async function openTaskDetail(taskId) {
     window.allTasks.push(task);
   }
 
+  // Remove any existing instance
+  const existing = document.getElementById('task-detail-modal');
+  if (existing) existing.remove();
+
   const modal = document.createElement('div');
   modal.id = 'task-detail-modal';
-  modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;`;
+  modal.className = 'task-modal-overlay';
+  modal.style.cssText = `position:fixed;inset:0;background:rgba(26,21,18,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;animation:taskModalBackdropIn 200ms ease-out forwards;`;
 
-  const diffColor = { 'Easy': '#10B981', 'Medium': '#F59E0B', 'Hard': '#EF4444' }[task.difficulty] || '#94A3B8';
+  const diffText = (task.difficulty || 'Easy').toUpperCase();
+  const xpValue = task.difficulty === 'Hard' ? 50 : task.difficulty === 'Medium' ? 30 : 15;
 
   modal.innerHTML = `
-    <div style="
-      background:white;
+    <div class="task-modal-card" style="
+      background:var(--bg-secondary, #FFFFFF);
+      border:1.5px solid var(--border-strong, #D9C9B8);
       border-radius:24px;
       padding:32px;
       max-width:560px;width:100%;
-      box-shadow:0 24px 60px rgba(0,0,0,0.2);
+      box-shadow:0 24px 60px rgba(26, 21, 18, 0.15);
       max-height:90vh;
       overflow-y:auto;
+      position:relative;
+      animation:taskModalCardIn 200ms ease-out forwards;
     ">
-      <div style="display:flex;justify-content:space-between;margin-bottom:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
         <div>
-          <span style="font-size:11px;padding:4px 12px;border-radius:12px;background:${diffColor}15;color:${diffColor};font-weight:700;text-transform:uppercase;">
-            ${task.difficulty}
+          <span class="task-modal-diff-badge" style="font-size:11px;padding:4px 12px;border-radius:12px;background:var(--accent-soft, #F3D9C4);color:var(--accent-hover, #D67D52);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:inline-block;">
+            ${diffText}
           </span>
-          <h3 style="margin-top:12px;font-size:22px;font-weight:700;color:#0F172A;line-height:1.3;">
+          <h3 class="task-modal-title" style="margin-top:12px;margin-bottom:0;font-size:22px;font-weight:700;color:var(--text-primary, #1A1512);line-height:1.3;">
             ${task.title}
           </h3>
         </div>
-        <button onclick="document.getElementById('task-detail-modal').remove()" 
-          style="background:#F1F5F9;border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#64748B;transition:all 200ms;"
-          onmouseover="this.style.background='#E2E8F0';this.style.color='#0F172A'"
+        <button onclick="closeTaskDetailModal()" class="task-modal-close-btn"
+          style="background:var(--bg-tertiary, #F5EDE4);border:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary, #6B5D52);font-size:14px;font-weight:700;transition:all 200ms;flex-shrink:0;margin-left:12px;"
+          onmouseover="this.style.background='var(--border, #E8DDD1)';this.style.color='var(--text-primary, #1A1512)';this.style.transform='scale(1.05)'"
+          onmouseout="this.style.background='var(--bg-tertiary, #F5EDE4)';this.style.color='var(--text-secondary, #6B5D52)';this.style.transform='scale(1)'"
+          title="Close"
         >✕</button>
       </div>
 
-      <div style="font-size:14px;color:#64748B;margin-bottom:24px;display:flex;align-items:center;gap:8px;">
-        <span style="background:#F1F5F9;padding:4px 10px;border-radius:8px;">📍 ${task.roadmap_phase}</span>
+      <div style="font-size:14px;margin-bottom:24px;display:flex;align-items:center;gap:8px;">
+        <span class="task-modal-phase-tag" style="background:var(--bg-tertiary, #F5EDE4);color:var(--text-secondary, #6B5D52);font-size:13px;font-weight:600;padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;">📍 ${task.roadmap_phase || 'Foundation Building'}</span>
       </div>
 
       <div style="margin-bottom:24px;">
-        <div style="font-size:12px;font-weight:700;color:#94A3B8;text-transform:uppercase;margin-bottom:12px;">Learning Resources</div>
+        <div class="task-modal-section-label" style="font-size:12px;font-weight:700;color:var(--text-muted, #A69A8D);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Learning Resources</div>
         
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <!-- Link 1: Documentation -->
-          <a href="${task.resource_link || 'https://developer.mozilla.org'}" target="_blank" 
-            style="display:flex;flex-direction:column;gap:8px;padding:16px;background:#F8FAFC;border-radius:16px;text-decoration:none;border:1px solid #E2E8F0;transition:all 200ms;"
-            onmouseover="this.style.borderColor='#059669';this.style.background='#F0FDF4'"
-            onmouseout="this.style.borderColor='#E2E8F0';this.style.background='#F8FAFC'"
+          <a href="${task.resource_link || 'https://developer.mozilla.org'}" target="_blank" class="task-modal-doc-card"
+            style="display:flex;flex-direction:column;gap:8px;padding:16px;background:var(--bg-secondary, #FFFFFF);border-radius:16px;text-decoration:none;border:1.5px solid var(--border, #E8DDD1);transition:all 200ms;"
+            onmouseover="this.style.borderColor='var(--accent-primary, #E8946A)';this.style.background='var(--bg-primary, #FDF8F3)';this.style.transform='translateY(-2px)'"
+            onmouseout="this.style.borderColor='var(--border, #E8DDD1)';this.style.background='var(--bg-secondary, #FFFFFF)';this.style.transform='translateY(0)'"
           >
             <span style="font-size:20px;">🌐</span>
             <div>
-              <div style="font-weight:700;font-size:13px;color:#0F172A;">Official Docs</div>
-              <div style="font-size:11px;color:#64748B;">External tutorial</div>
+              <div style="font-weight:700;font-size:13px;color:var(--text-primary, #1A1512);">Official Docs</div>
+              <div style="font-size:11px;color:var(--text-secondary, #6B5D52);">External tutorial</div>
             </div>
           </a>
 
           <!-- Link 2: AI Study Hub -->
-          <button onclick="document.getElementById('task-detail-modal').remove(); generateCourseNotes('${task.id}', '${task.title.replace(/'/g, "\\'")}')"
-            style="display:flex;flex-direction:column;gap:8px;padding:16px;background:#F0FDF4;border-radius:16px;border:1px solid #059669;cursor:pointer;text-align:left;transition:all 200ms;"
-            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(5,150,105,0.1)'"
-            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'"
+          <button onclick="closeTaskDetailModal(() => generateCourseNotes('${task.id}', '${task.title.replace(/'/g, "\\'")}'))" class="task-modal-study-card"
+            style="display:flex;flex-direction:column;gap:8px;padding:16px;background:var(--accent-soft, #F3D9C4);border-radius:16px;border:2px solid var(--accent-primary, #E8946A);cursor:pointer;text-align:left;transition:all 200ms;"
+            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 14px rgba(232,148,106,0.25)';this.style.borderColor='var(--accent-hover, #D67D52)'"
+            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';this.style.borderColor='var(--accent-primary, #E8946A)'"
           >
             <span style="font-size:20px;">📖</span>
             <div>
-              <div style="font-weight:700;font-size:13px;color:#065F46;">Study Hub</div>
-              <div style="font-size:11px;color:#059669;">Docs & Video Guide</div>
+              <div style="font-weight:700;font-size:13px;color:var(--text-primary, #1A1512);">Study Hub</div>
+              <div style="font-size:11px;color:var(--accent-hover, #D67D52);font-weight:600;">Docs & Video Guide</div>
             </div>
           </button>
         </div>
       </div>
 
       <!-- Notes Preview Area -->
-      <div id="course-notes-container" style="display:none;margin-bottom:24px;padding:16px;background:#F8FAFC;border-radius:16px;border:1px solid #E2E8F0;font-size:14px;color:#334155;line-height:1.6;">
+      <div id="course-notes-container" style="display:none;margin-bottom:24px;padding:16px;background:var(--bg-primary, #FDF8F3);border-radius:16px;border:1.5px solid var(--border, #E8DDD1);font-size:14px;color:var(--text-secondary, #6B5D52);line-height:1.6;">
         <div id="notes-content"></div>
       </div>
 
-      <div style="background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border-radius:16px;padding:20px;margin-bottom:28px;">
+      <div class="task-modal-banner" style="background:var(--accent-soft, #F3D9C4);border-radius:16px;padding:20px;margin-bottom:28px;border:1px solid var(--border, #E8DDD1);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
-            <div style="font-size:14px;font-weight:700;color:#065F46;">Skill Assessment</div>
-            <div style="font-size:12px;color:#047857;margin-top:2px;">Must score 80% to unlock next step</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-primary, #1A1512);">Skill Assessment</div>
+            <div style="font-size:12px;color:var(--text-secondary, #6B5D52);margin-top:2px;">Must score 80% to unlock next step</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:24px;font-weight:800;color:#059669;">+${task.difficulty === 'Hard' ? 50 : task.difficulty === 'Medium' ? 30 : 15} XP</div>
+            <div style="font-size:24px;font-weight:800;color:var(--accent-hover, #D67D52);">+${xpValue} XP</div>
           </div>
         </div>
       </div>
 
-      <button onclick="document.getElementById('task-detail-modal').remove();startQuiz('${task.id}','${task.title.replace(/'/g, "\\'")}','${task.roadmap_phase || ''}')" 
-        style="width:100%;background:#059669;color:white;border:none;padding:16px;border-radius:16px;font-size:15px;font-weight:700;cursor:pointer;transition:all 200ms;box-shadow: 0 4px 12px rgba(5,150,105,0.25);"
-        onmouseover="this.style.background='#047857';this.style.transform='translateY(-2px)'"
-        onmouseout="this.style.background='#059669';this.style.transform='translateY(0)'"
+      <button onclick="closeTaskDetailModal(() => startQuiz('${task.id}','${task.title.replace(/'/g, "\\'")}','${task.roadmap_phase || ''}'))" class="task-modal-cta-btn"
+        style="width:100%;background:var(--accent-primary, #E8946A);color:#FFFFFF;border:none;padding:16px;border-radius:16px;font-size:15px;font-weight:700;cursor:pointer;transition:all 200ms;box-shadow:0 4px 12px rgba(232,148,106,0.25);"
+        onmouseover="this.style.background='var(--accent-hover, #D67D52)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(232,148,106,0.35)'"
+        onmouseout="this.style.background='var(--accent-primary, #E8946A)';this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(232,148,106,0.25)'"
       >🎯 Begin Assessment</button>
     </div>
   `;
+
+  modal.onclick = (e) => {
+    if (e.target === modal) closeTaskDetailModal();
+  };
+
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeTaskDetailModal();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+
   document.body.appendChild(modal);
 }
 
+function closeCourseViewerModal(callback) {
+  const modal = document.getElementById('course-viewer-modal');
+  if (!modal) {
+    if (typeof callback === 'function') callback();
+    return;
+  }
+  modal.style.animation = 'viewerFadeOut 200ms ease-out forwards';
+  setTimeout(() => {
+    modal.remove();
+    if (typeof callback === 'function') callback();
+  }, 200);
+}
+window.closeCourseViewerModal = closeCourseViewerModal;
+
 async function generateCourseNotes(taskId, title) {
-  // Create a dedicated high-fidelity popup for course notes
+  // Remove any existing viewer modal instance
+  const existing = document.getElementById('course-viewer-modal');
+  if (existing) existing.remove();
+
+  // Create high-fidelity warm cream/peach popup for course notes
   const viewer = document.createElement('div');
   viewer.id = 'course-viewer-modal';
-  viewer.style.cssText = `position:fixed;inset:0;background:rgba(5,1,13,0.95);backdrop-filter:blur(20px);z-index:10000;display:flex;flex-direction:column;padding:0;overflow-y:auto;font-family:'Inter',sans-serif;color:#FFFFFF;animation:viewerFadeIn 0.4s ease-out both;`;
+  viewer.className = 'viewer-modal-overlay';
+  viewer.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background-color: var(--bg-primary, #FDF8F3);
+    background-image:
+      linear-gradient(rgba(232, 221, 209, 0.45) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232, 221, 209, 0.45) 1px, transparent 1px);
+    background-size: 48px 48px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow-y: auto;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    color: var(--text-primary, #1A1512);
+    animation: viewerFadeIn 0.3s ease-out both;
+  `;
 
   viewer.innerHTML = `
-    <style>
-      @keyframes viewerFadeIn {
-        from { opacity: 0; transform: scale(0.98) translateY(10px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-      }
-      @keyframes shimmerDark {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-      }
-      .shimmer-dark {
-        background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%);
-        background-size: 200% 100%;
-        animation: shimmerDark 1.5s infinite;
-      }
-      .viewer-card {
-        background: rgba(12, 5, 31, 0.65);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 24px;
-        padding: 36px;
-        backdrop-filter: blur(12px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-      }
-      .viewer-markdown h1, .viewer-markdown h2, .viewer-markdown h3 {
-        color: #FFFFFF;
-        margin-top: 1.8rem;
-        margin-bottom: 1rem;
-        font-weight: 700;
-      }
-      .viewer-markdown h1 { font-size: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; color: var(--navy); }
-      .viewer-markdown h2 { font-size: 1.5rem; color: var(--primary-dark); }
-      .viewer-markdown h3 { font-size: 1.2rem; color: var(--navy); }
-      .viewer-markdown p {
-        color: var(--text-secondary);
-        line-height: 1.75;
-        margin-bottom: 1.2rem;
-      }
-      .viewer-markdown code {
-        background: var(--surface-blue);
-        padding: 3px 6px;
-        border-radius: 6px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.9em;
-        color: var(--primary-dark);
-      }
-      .viewer-markdown pre {
-        background: var(--surface-blue);
-        border: 1px solid var(--border-blue);
-        padding: 20px;
-        border-radius: 12px;
-        overflow-x: auto;
-        margin-bottom: 1.5rem;
-      }
-      .viewer-markdown pre code {
-        background: none;
-        padding: 0;
-        color: var(--navy);
-        font-size: 0.88rem;
-      }
-      .viewer-markdown ul, .viewer-markdown ol {
-        margin-bottom: 1.2rem;
-        padding-left: 24px;
-        color: var(--text-secondary);
-      }
-      .viewer-markdown li {
-        margin-bottom: 0.5rem;
-      }
-      .viewer-markdown blockquote {
-        border-left: 4px solid var(--primary);
-        background: var(--surface-blue);
-        padding: 12px 20px;
-        margin: 1.5rem 0;
-        border-radius: 0 8px 8px 0;
-        color: #E2E8F0;
-      }
-    </style>
-
-    <nav style="padding:20px 40px;background:rgba(12, 5, 31, 0.85);border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);">
+    <nav class="viewer-nav" style="padding:16px 40px;background:var(--bg-secondary, #FFFFFF);border-bottom:1.5px solid var(--border, #E8DDD1);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(26, 21, 18, 0.04);">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div style="background:var(--fuchsia);color:white;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 0 12px rgba(217,70,239,0.4);">SB</div>
+        <div style="background:var(--accent-primary, #E8946A);color:#FFFFFF;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;box-shadow:0 2px 8px rgba(232,148,106,0.3);">SB</div>
         <div>
-          <div style="font-size:12px;color:#94A3B8;font-weight:600;">COURSE CONTENT</div>
-          <div style="font-size:16px;color:#FFFFFF;font-weight:700;">${title}</div>
+          <div style="font-size:11px;color:var(--text-muted, #A69A8D);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">COURSE CONTENT</div>
+          <div style="font-size:16px;color:var(--text-primary, #1A1512);font-weight:700;">${title}</div>
         </div>
       </div>
-      <button onclick="document.getElementById('course-viewer-modal').remove()" 
-        style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:8px 20px;border-radius:12px;font-weight:700;color:#FFFFFF;cursor:pointer;transition:all 200ms;"
-        onmouseover="this.style.background='var(--fuchsia)';this.style.borderColor='var(--fuchsia)';"
-        onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='rgba(255,255,255,0.1)';"
+      <button onclick="closeCourseViewerModal()" 
+        style="background:var(--bg-tertiary, #F5EDE4);border:1.5px solid var(--border, #E8DDD1);padding:8px 18px;border-radius:10px;font-weight:700;font-size:13px;color:var(--text-primary, #1A1512);cursor:pointer;transition:all 200ms;"
+        onmouseover="this.style.background='var(--border, #E8DDD1)';this.style.borderColor='var(--border-strong, #D9C9B8)';this.style.transform='translateY(-1px)';"
+        onmouseout="this.style.background='var(--bg-tertiary, #F5EDE4)';this.style.borderColor='var(--border, #E8DDD1)';this.style.transform='translateY(0)';"
       >Close Viewer</button>
     </nav>
 
-    <div style="max-width:1000px;margin:0 auto;width:100%;padding:60px 20px;display:grid;grid-template-columns:1.5fr 1fr;gap:40px;">
+    <div style="max-width:1050px;margin:0 auto;width:100%;padding:40px 20px;display:grid;grid-template-columns:1.55fr 1fr;gap:32px;align-items:start;box-sizing:border-box;">
       <!-- Left: Notes Content -->
       <div id="viewer-content">
-        <div class="viewer-card" style="text-align:center;padding:100px 0;">
-          <div class="shimmer-dark" style="height:30px;width:60%;margin:0 auto 20px;border-radius:8px;"></div>
-          <div class="shimmer-dark" style="height:20px;width:40%;margin:0 auto 40px;border-radius:8px;"></div>
-          <p style="color:var(--fuchsia);font-weight:600;font-size:18px;">✨ Our AI is drafting your comprehensive study notes...</p>
+        <div class="viewer-card" style="text-align:center;padding:80px 20px;">
+          <div class="shimmer-light" style="height:28px;width:60%;margin:0 auto 16px;border-radius:8px;"></div>
+          <div class="shimmer-light" style="height:18px;width:40%;margin:0 auto 32px;border-radius:8px;"></div>
+          <p style="color:var(--accent-hover, #D67D52);font-weight:700;font-size:16px;margin:0;">✨ Our AI is drafting your comprehensive study notes...</p>
         </div>
       </div>
 
       <!-- Right: Video & Resources -->
-      <div style="display:flex;flex-direction:column;gap:32px;">
+      <div style="display:flex;flex-direction:column;gap:24px;">
+        <!-- Card 1: Video Masterclass -->
         <div class="viewer-card" style="padding:24px;">
-          <h4 style="margin-bottom:16px;font-size:14px;color:#FFFFFF;display:flex;align-items:center;gap:8px;">🎥 Video Masterclass</h4>
-          <div id="viewer-video" style="aspect-ratio:16/9;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#94A3B8;font-size:12px;">
+          <h4 style="margin:0 0 16px 0;font-size:14px;font-weight:700;color:var(--text-primary, #1A1512);display:flex;align-items:center;gap:8px;">
+            <span style="color:var(--accent-primary, #E8946A);font-size:18px;">🎥</span> Video Masterclass
+          </h4>
+          <div id="viewer-video" style="aspect-ratio:16/9;background:var(--bg-tertiary, #F5EDE4);border:1.5px solid var(--border, #E8DDD1);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--text-muted, #A69A8D);font-size:13px;font-weight:600;">
             Searching for best tutorial...
           </div>
         </div>
 
-        <div style="background:linear-gradient(135deg,rgba(217, 70, 239, 0.15),rgba(124, 58, 237, 0.15));border:1px solid rgba(217, 70, 239, 0.3);border-radius:24px;padding:24px;color:white;margin-bottom:20px;">
-          <h4 style="margin-bottom:12px;font-size:14px;color:#FDA4AF;">🚀 Quick Challenge</h4>
-          <p style="font-size:15px;margin-bottom:20px;color:#E2E8F0;">Master this topic to earn +30 XP and unlock the next phase of your roadmap.</p>
-          <button onclick="document.getElementById('course-viewer-modal').remove()" 
-            style="width:100%;background:var(--fuchsia);color:white;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(217,70,239,0.3);transition:all 200ms;"
-            onmouseover="this.style.transform='translateY(-2px)';"
-            onmouseout="this.style.transform='translateY(0)';"
+        <!-- Card 2: Quick Challenge -->
+        <div style="background:var(--accent-soft, #F3D9C4);border:1.5px solid var(--accent-primary, #E8946A);border-radius:20px;padding:24px;box-shadow:0 6px 20px rgba(232,148,106,0.12);">
+          <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:700;color:var(--accent-hover, #D67D52);display:flex;align-items:center;gap:6px;">🚀 Quick Challenge</h4>
+          <p style="font-size:14px;line-height:1.55;margin:0 0 20px 0;color:var(--text-primary, #1A1512);font-weight:500;">Master this topic to earn +30 XP and unlock the next phase of your roadmap.</p>
+          <button onclick="closeCourseViewerModal()" 
+            style="width:100%;background:var(--accent-primary, #E8946A);color:#FFFFFF;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(232,148,106,0.25);transition:all 200ms;"
+            onmouseover="this.style.background='var(--accent-hover, #D67D52)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(232,148,106,0.35)';"
+            onmouseout="this.style.background='var(--accent-primary, #E8946A)';this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(232,148,106,0.25)';"
           >Return to Dashboard</button>
         </div>
 
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:24px;color:white;">
-          <h4 style="margin-bottom:12px;font-size:14px;color:var(--emerald);display:flex;align-items:center;gap:8px;">✓ TASK COMPLETION</h4>
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+        <!-- Card 3: Task Completion -->
+        <div class="viewer-card" style="padding:24px;">
+          <h4 style="margin:0 0 10px 0;font-size:13px;font-weight:700;color:var(--text-primary, #1A1512);display:flex;align-items:center;gap:8px;letter-spacing:0.5px;">
+            <span style="color:var(--success, #7FA98A);font-weight:800;font-size:15px;">✓</span> TASK COMPLETION
+          </h4>
+          <p style="font-size:13px;line-height:1.55;color:var(--text-secondary, #6B5D52);margin:0 0 18px 0;">
             Finished studying this topic and the video masterclass? Mark it as complete to advance your roadmap progress.
           </p>
           <button onclick="markTaskFromNotes('${taskId}')" 
-            style="width:100%;background:var(--emerald);color:white;border:none;padding:14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 4px 15px rgba(16,185,129,0.25);transition:all 200ms;"
-            onmouseover="this.style.transform='translateY(-2px)';"
-            onmouseout="this.style.transform='translateY(0)';"
+            style="width:100%;background:var(--accent-primary, #E8946A);color:#FFFFFF;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 12px rgba(232,148,106,0.25);transition:all 200ms;"
+            onmouseover="this.style.background='var(--accent-hover, #D67D52)';this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(232,148,106,0.35)';"
+            onmouseout="this.style.background='var(--accent-primary, #E8946A)';this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(232,148,106,0.25)';"
           >Mark as Complete ✓</button>
         </div>
       </div>
     </div>
   `;
+
+  // Escape key handler
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeCourseViewerModal();
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+
   document.body.appendChild(viewer);
 
   // 1. Load Video (YouTube)
+  const videoArea = document.getElementById('viewer-video');
   searchYouTube(title).then(videos => {
-    const videoArea = document.getElementById('viewer-video');
     if (videos && videos.length > 0) {
-      videoArea.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videos[0].id.videoId}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
+      videoArea.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videos[0].id.videoId}" frameborder="0" allowfullscreen style="border:none;width:100%;height:100%;"></iframe>`;
     } else {
       const fallbackUrl = getFallbackVideoUrl(title);
-      videoArea.innerHTML = `<iframe width="100%" height="100%" src="${fallbackUrl}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
+      videoArea.innerHTML = `<iframe width="100%" height="100%" src="${fallbackUrl}" frameborder="0" allowfullscreen style="border:none;width:100%;height:100%;"></iframe>`;
     }
   }).catch(() => {
-    const videoArea = document.getElementById('viewer-video');
     const fallbackUrl = getFallbackVideoUrl(title);
-    videoArea.innerHTML = `<iframe width="100%" height="100%" src="${fallbackUrl}" frameborder="0" allowfullscreen style="border:none;"></iframe>`;
+    if (fallbackUrl) {
+      videoArea.innerHTML = `<iframe width="100%" height="100%" src="${fallbackUrl}" frameborder="0" allowfullscreen style="border:none;width:100%;height:100%;"></iframe>`;
+    } else {
+      videoArea.innerHTML = `
+        <div style="text-align:center;padding:20px;background:var(--bg-tertiary, #F5EDE4);width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;">
+          <div style="font-size:22px;margin-bottom:6px;">▶️</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary, #1A1512);margin-bottom:3px;">Video tutorial unavailable</div>
+          <div style="font-size:11.5px;color:var(--text-secondary, #6B5D52);">Explore the study guide on the left.</div>
+        </div>
+      `;
+    }
   });
 
   // 2. Generate Notes
@@ -1279,7 +1308,7 @@ async function generateCourseNotes(taskId, title) {
   - 3 Complex Code Examples with explanations
   - A summary "Cheat Sheet" at the end.
   
-  Format in semantic HTML. Use Inter font style. Return ONLY the content.`;
+  Format in semantic HTML. Use clear headings (h2, h3), lists, and paragraphs. Return ONLY the content.`;
 
   const result = await callAI(prompt, 1200);
   const contentArea = document.getElementById('viewer-content');
@@ -1287,7 +1316,7 @@ async function generateCourseNotes(taskId, title) {
     const cleanHTML = result.replace(/```html|```/g, '').trim();
     contentArea.innerHTML = `
       <div class="viewer-card viewer-markdown">
-        <h1 style="font-size:32px;font-weight:800;color:#FFFFFF;margin-bottom:32px;border:none;">${title}</h1>
+        <h1 style="font-size:28px;font-weight:800;color:var(--text-primary, #1A1512);margin-top:0;margin-bottom:24px;border-bottom:1.5px solid var(--border, #E8DDD1);padding-bottom:16px;line-height:1.3;">${title}</h1>
         ${cleanHTML}
       </div>
     `;
@@ -1296,10 +1325,10 @@ async function generateCourseNotes(taskId, title) {
     const localHTML = getLocalCourseNotes(title);
     contentArea.innerHTML = `
       <div class="viewer-card viewer-markdown">
-        <h1 style="font-size:32px;font-weight:800;color:#FFFFFF;margin-bottom:32px;border:none;">${title}</h1>
+        <h1 style="font-size:28px;font-weight:800;color:var(--text-primary, #1A1512);margin-top:0;margin-bottom:24px;border-bottom:1.5px solid var(--border, #E8DDD1);padding-bottom:16px;line-height:1.3;">${title}</h1>
         ${localHTML}
-        <div style="margin-top: 24px; padding: 12px; background: rgba(0, 229, 255, 0.05); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 8px; font-size: 12px; color: var(--emerald);">
-          💡 Local study guide loaded. AI notes generator is currently busy.
+        <div style="margin-top:24px;padding:14px 16px;background:var(--accent-soft, #F3D9C4);border:1px solid var(--accent-primary, #E8946A);border-radius:10px;font-size:12.5px;color:var(--accent-hover, #D67D52);font-weight:600;display:flex;align-items:center;gap:8px;">
+          <span>💡</span> Local study guide loaded. AI notes generator is currently busy.
         </div>
       </div>
     `;
@@ -1308,8 +1337,7 @@ async function generateCourseNotes(taskId, title) {
 
 async function markTaskFromNotes(taskId) {
   try {
-    const modal = document.getElementById('course-viewer-modal');
-    if (modal) modal.remove();
+    closeCourseViewerModal();
 
     // Call existing task completion logic
     await completeTask(taskId, true);
@@ -1411,13 +1439,165 @@ function getLocalCourseNotes(title) {
     `;
   }
 
+  if (t.includes("python") || t.includes("oop") || t.includes("data structure")) {
+    return `
+      <h2>Python for Data Science & OOP</h2>
+      <p>Python is the premier language for Data Science and Machine Learning due to its clear syntax, rich ecosystem of scientific packages, and flexible object-oriented capabilities.</p>
+      
+      <h3>1. Core Data Structures</h3>
+      <ul>
+        <li><strong>Lists:</strong> Ordered, mutable collections: <code>[1, 2, 'data', 4.5]</code>.</li>
+        <li><strong>Dictionaries:</strong> Key-value hash maps with O(1) lookup time: <code>{'metric': 'accuracy', 'score': 0.94}</code>.</li>
+        <li><strong>Sets:</strong> Unordered collections of unique elements with set operations (union, intersection).</li>
+        <li><strong>Tuples:</strong> Immutable sequences used for fixed data structures and function return values.</li>
+      </ul>
+      
+      <h3>2. Object-Oriented Programming (OOP) in Data Pipelines</h3>
+      <pre><code>class DataTransformer:
+    def __init__(self, scaler_type='standard'):
+        self.scaler_type = scaler_type
+        self.mean_ = None
+        
+    def fit_transform(self, X):
+        self.mean_ = sum(X) / len(X)
+        return [(x - self.mean_) for x in X]</code></pre>
+      
+      <h3>3. List Comprehensions & Generator Expressions</h3>
+      <p>Concise idioms to filter and transform feature columns efficiently without explicit for loops:</p>
+      <pre><code>scaled_features = [x * 2 for x in raw_data if x is not None]</code></pre>
+    `;
+  }
+
+  if (t.includes("statistic") || t.includes("probability") || t.includes("hypothesis") || t.includes("distribution")) {
+    return `
+      <h2>Applied Statistics & Probability Distributions</h2>
+      <p>Statistical theory provides the foundation for data validation, A/B testing, exploratory data analysis, and predictive model inference.</p>
+      
+      <h3>1. Descriptive vs Inferential Statistics</h3>
+      <ul>
+        <li><strong>Descriptive:</strong> Summarizes central tendency (Mean, Median, Mode) and dispersion (Variance, Standard Deviation, IQR).</li>
+        <li><strong>Inferential:</strong> Draws conclusions about population parameters from sample data using confidence intervals and hypothesis testing.</li>
+      </ul>
+      
+      <h3>2. Common Probability Distributions</h3>
+      <ul>
+        <li><strong>Gaussian (Normal):</strong> Bell-shaped curve defined by mean $\\mu$ and variance $\\sigma^2$ (governed by the Central Limit Theorem).</li>
+        <li><strong>Binomial Distribution:</strong> Models the number of successes in $n$ independent Bernoulli trials.</li>
+        <li><strong>Poisson Distribution:</strong> Models the probability of a given number of events happening in a fixed interval of time/space.</li>
+      </ul>
+      
+      <h3>3. Hypothesis Testing (p-values & Significance)</h3>
+      <p>Formulate Null ($H_0$) and Alternative ($H_1$) hypotheses. When $p < \\alpha$ (typically $0.05$), we reject the null hypothesis in favor of statistical significance.</p>
+    `;
+  }
+
+  if (t.includes("sql") || t.includes("database") || t.includes("join") || t.includes("aggregation")) {
+    return `
+      <h2>SQL for Data Analysis & Analytics Engineering</h2>
+      <p>SQL is the standard language for querying, transforming, and extracting structured tabular data from relational databases and cloud data warehouses.</p>
+      
+      <h3>1. Joins & Aggregations</h3>
+      <pre><code>SELECT 
+    d.department_name,
+    COUNT(e.emp_id) AS total_employees,
+    AVG(e.salary) AS avg_salary
+FROM departments d
+LEFT JOIN employees e ON d.dept_id = e.dept_id
+GROUP BY d.department_name
+HAVING COUNT(e.emp_id) > 5
+ORDER BY avg_salary DESC;</code></pre>
+      
+      <h3>2. Window Functions</h3>
+      <p>Perform calculations across a set of table rows that are related to the current row without collapsing the output rows:</p>
+      <pre><code>SELECT 
+    user_id,
+    order_date,
+    amount,
+    SUM(amount) OVER (PARTITION BY user_id ORDER BY order_date) AS running_total,
+    RANK() OVER (ORDER BY amount DESC) AS spending_rank
+FROM orders;</code></pre>
+    `;
+  }
+
+  if (t.includes("pandas") || t.includes("numpy") || t.includes("wrangling") || t.includes("eda")) {
+    return `
+      <h2>Data Wrangling with Pandas & NumPy</h2>
+      <p>Pandas and NumPy form the bedrock of data ingestion, missing value imputation, grouping, and feature transformation in Python.</p>
+      
+      <h3>1. Vectorized Operations with NumPy</h3>
+      <pre><code>import numpy as np
+arr = np.array([10, 20, 30, 40])
+normalized = (arr - np.mean(arr)) / np.std(arr)</code></pre>
+      
+      <h3>2. Pandas DataFrame Manipulation</h3>
+      <pre><code>import pandas as pd
+df = pd.read_csv('dataset.csv')
+
+# Handle missing data & filter outliers
+df['age'].fillna(df['age'].median(), inplace=True)
+cleaned_df = df[df['salary'] > 0].groupby('category').agg({'revenue': 'sum'})</code></pre>
+    `;
+  }
+
+  if (t.includes("machine learning") || t.includes("scikit") || t.includes("regression") || t.includes("classification") || t.includes("xgboost")) {
+    return `
+      <h2>Supervised & Unsupervised Machine Learning</h2>
+      <p>Machine Learning enables algorithmic models to learn patterns from historical training data to make predictions or cluster unlabelled observations.</p>
+      
+      <h3>1. Supervised Learning Pipeline (Scikit-Learn)</h3>
+      <pre><code>from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, roc_auc_score
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = RandomForestClassifier(n_estimators=100, max_depth=10)
+model.fit(X_train, y_train)
+
+preds = model.predict(X_test)
+print(classification_report(y_test, preds))</code></pre>
+      
+      <h3>2. Model Evaluation Metrics</h3>
+      <ul>
+        <li><strong>Classification:</strong> Precision, Recall, F1-Score, ROC-AUC curve.</li>
+        <li><strong>Regression:</strong> RMSE (Root Mean Squared Error), MAE, R² score.</li>
+      </ul>
+    `;
+  }
+
+  if (t.includes("deep learning") || t.includes("pytorch") || t.includes("neural") || t.includes("nlp") || t.includes("transformer")) {
+    return `
+      <h2>Deep Learning & PyTorch Architectures</h2>
+      <p>Deep Learning utilizes multi-layered artificial neural networks capable of learning complex non-linear feature representations directly from raw text, images, or tabular data.</p>
+      
+      <h3>1. PyTorch Neural Network Module</h3>
+      <pre><code>import torch
+import torch.nn as nn
+
+class Classifier(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(hidden_dim, output_dim)
+        )
+        
+    def forward(self, x):
+        return self.net(x)</code></pre>
+      
+      <h3>2. Transformers & HuggingFace</h3>
+      <p>Attention mechanisms dynamically weight the importance of different tokens in sequential data, powering state-of-the-art LLMs (BERT, GPT, LLaMA).</p>
+    `;
+  }
+
   // Generic fallback topic
   return `
     <h2>Understanding ${title}</h2>
-    <p>This module provides a comprehensive introduction to <strong>${title}</strong>, outlining key principles, methods, and practical use cases designed to build your career competency.</p>
+    <p>This module provides a comprehensive technical introduction to <strong>${title}</strong>, outlining key principles, methods, and practical use cases designed to build your career competency.</p>
     
     <h3>1. Core Concepts</h3>
-    <p>To master this topic, you should focus on the underlying architecture, workflows, and standard industry tools. Review relevant guides and official documentation regularly to reinforce your foundation.</p>
+    <p>To master this topic, focus on the underlying architecture, workflows, and standard industry tools. Review relevant guides and official documentation regularly to reinforce your foundation.</p>
     
     <h3>2. Actionable Learning Checklist</h3>
     <ul>
@@ -1816,7 +1996,7 @@ window.retryQuizNotes = async function (taskTitle) {
 async function callAI(prompt, maxTokens = 800) {
   // 1. Try Groq (Ultra-fast)
   if (GROQ_API_KEY) {
-    const groqModels = ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'gemma2-9b-it', 'mixtral-8x7b-32768'];
+    const groqModels = ['llama3-8b-8192', 'llama3-70b-8192', 'llama-3.1-8b-instant', 'gemma2-9b-it'];
     for (const model of groqModels) {
       try {
         console.log(`[callAI] Attempting prompt with Groq model: ${model}...`);
@@ -1844,7 +2024,8 @@ async function callAI(prompt, maxTokens = 800) {
         } else {
           const errBody = await res.json().catch(() => ({}));
           console.warn(`[callAI] Groq (${model}) returned status:`, res.status, errBody);
-          if (res.status === 401) break;
+          if (res.status === 401 || res.status === 403) break;
+          if (res.status === 404) continue; // try next model
         }
       } catch (e) {
         console.error(`[callAI] Groq (${model}) call failed:`, e);
@@ -1854,7 +2035,7 @@ async function callAI(prompt, maxTokens = 800) {
 
   // 2. Try Gemini API
   if (GEMINI_KEY) {
-    const geminiModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
+    const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro', 'gemini-2.0-flash-exp'];
     for (const model of geminiModels) {
       try {
         console.log(`[callAI] Attempting prompt with Gemini model: ${model}...`);
@@ -2795,7 +2976,339 @@ async function updateStreakDisplay(userId) { const streak = await calculateStrea
 async function calculateStreak(userId) { const { data } = await supabase.from('user_activity').select('activity_date').eq('user_id', userId).order('activity_date', { ascending: false }); if (!data || data.length === 0) return 0; const todayStr = new Date().toISOString().split('T')[0]; const latestDate = data[0].activity_date; const dayDiff = Math.floor((new Date(todayStr) - new Date(latestDate)) / 86400000); if (dayDiff > 1) return 0; let streak = 0; const dateSet = new Set(data.map(d => d.activity_date)); let checkDate = new Date(latestDate); while (true) { const ds = checkDate.toISOString().split('T')[0]; if (dateSet.has(ds)) { streak++; checkDate.setDate(checkDate.getDate() - 1); } else break; } return streak; }
 
 
-function getSmartFallback(goal) { return { title: goal + " Roadmap", phases: [{ phase: "Phase 1", skills: ["Skill 1"], tasks: [{ title: "Task 1", difficulty: "Easy" }] }] }; }
+function getDomainRoadmapTemplate(goal) {
+  const g = String(goal || '').toLowerCase();
+  
+  if (g.includes('data') || g.includes('ai') || g.includes('machine learning') || g.includes('ml') || g.includes('analyst') || g.includes('scientist')) {
+    return {
+      title: "Data Scientist Roadmap",
+      totalWeeks: 16,
+      jobReadinessTarget: "4 months",
+      phases: [
+        {
+          phase: "Phase 1 • Python & Applied Statistics",
+          name: "Phase 1 • Python & Applied Statistics",
+          description: "Master Python programming fundamentals, data structures, and core statistical foundations required for data modeling.",
+          weeks: "Week 1-4",
+          skills: ["Python", "Statistics", "SQL", "Probability"],
+          project: "Exploratory Financial Market Data Analysis",
+          status: "current",
+          tasks: [
+            { title: "Python for Data Analysis: Data Structures & OOP", difficulty: "Easy", resource: "https://docs.python.org/3/tutorial/" },
+            { title: "Descriptive & Inferential Statistics", difficulty: "Easy", resource: "https://www.khanacademy.org/math/statistics-probability" },
+            { title: "Probability Distributions & Hypothesis Testing", difficulty: "Medium", resource: "https://online.stat.psu.edu/stat500/" },
+            { title: "SQL Mastery: Complex Joins, Aggregations & Window Functions", difficulty: "Medium", resource: "https://mode.com/sql-tutorial/" }
+          ]
+        },
+        {
+          phase: "Phase 2 • Data Wrangling & Feature Engineering",
+          name: "Phase 2 • Data Wrangling & Feature Engineering",
+          description: "Clean, manipulate, and explore real-world datasets with NumPy and Pandas, and engineer predictive features.",
+          weeks: "Week 5-8",
+          skills: ["Pandas", "NumPy", "EDA", "Feature Engineering"],
+          project: "Customer Churn Prediction & Feature Pipeline",
+          status: "locked",
+          tasks: [
+            { title: "Advanced Pandas: Data Cleaning & Transformations", difficulty: "Medium", resource: "https://pandas.pydata.org/docs/user_guide/" },
+            { title: "Matrix Computations & Vectorization with NumPy", difficulty: "Medium", resource: "https://numpy.org/doc/stable/user/absolute_beginners.html" },
+            { title: "Exploratory Data Analysis with Matplotlib & Seaborn", difficulty: "Medium", resource: "https://seaborn.pydata.org/tutorial.html" },
+            { title: "Feature Engineering & Dimensionality Reduction (PCA)", difficulty: "Hard", resource: "https://scikit-learn.org/stable/modules/preprocessing.html" }
+          ]
+        },
+        {
+          phase: "Phase 3 • Machine Learning Algorithms",
+          name: "Phase 3 • Machine Learning Algorithms",
+          description: "Implement supervised and unsupervised machine learning algorithms using Scikit-Learn with rigorous model validation.",
+          weeks: "Week 9-12",
+          skills: ["Scikit-Learn", "XGBoost", "Clustering", "Model Evaluation"],
+          project: "End-to-End Housing Price ML Predictor",
+          status: "locked",
+          tasks: [
+            { title: "Supervised Learning: Regression & Classification", difficulty: "Medium", resource: "https://scikit-learn.org/stable/supervised_learning.html" },
+            { title: "Ensemble Methods: Random Forests & XGBoost", difficulty: "Hard", resource: "https://xgboost.readthedocs.io/en/stable/" },
+            { title: "Unsupervised Learning: K-Means & Hierarchical Clustering", difficulty: "Medium", resource: "https://scikit-learn.org/stable/modules/clustering.html" },
+            { title: "Model Evaluation Metrics, ROC-AUC & Cross-Validation", difficulty: "Hard", resource: "https://scikit-learn.org/stable/modules/model_evaluation.html" }
+          ]
+        },
+        {
+          phase: "Phase 4 • Deep Learning, NLP & MLOps Deployment",
+          name: "Phase 4 • Deep Learning, NLP & MLOps Deployment",
+          description: "Build neural network architectures, apply transformer models, and deploy production machine learning inference APIs.",
+          weeks: "Week 13-16",
+          skills: ["PyTorch", "Transformers", "FastAPI", "MLOps"],
+          project: "Production AI Sentiment Analysis API with PyTorch",
+          status: "locked",
+          tasks: [
+            { title: "Neural Networks & PyTorch Fundamentals", difficulty: "Hard", resource: "https://pytorch.org/tutorials/beginner/basics/intro.html" },
+            { title: "Natural Language Processing with Transformers & HuggingFace", difficulty: "Hard", resource: "https://huggingface.co/docs/transformers/index" },
+            { title: "ML Model Deployment with FastAPI & Docker", difficulty: "Hard", resource: "https://fastapi.tiangolo.com/tutorial/" },
+            { title: "MLOps: Experiment Tracking with MLflow & CI/CD", difficulty: "Hard", resource: "https://mlflow.org/docs/latest/index.html" }
+          ]
+        }
+      ]
+    };
+  }
+
+  if (g.includes('design') || g.includes('ui') || g.includes('ux') || g.includes('product designer')) {
+    return {
+      title: "UI/UX & Product Design Roadmap",
+      totalWeeks: 16,
+      jobReadinessTarget: "4 months",
+      phases: [
+        {
+          phase: "Phase 1 • Design Fundamentals & Figma",
+          name: "Phase 1 • Design Fundamentals & Figma",
+          description: "Master visual hierarchy, typography, color theory, and Figma component architecture.",
+          weeks: "Week 1-4",
+          skills: ["Figma", "Auto-Layout", "Design Tokens", "Typography"],
+          project: "Comprehensive Design System & UI Kit in Figma",
+          status: "current",
+          tasks: [
+            { title: "Color Theory, Typography & Spacing Systems", difficulty: "Easy", resource: "https://www.figma.com/resource-library/" },
+            { title: "Figma Components, Auto-Layout & Design Tokens", difficulty: "Medium", resource: "https://help.figma.com/hc/en-us/articles/360040451373" },
+            { title: "Wireframing & Information Architecture", difficulty: "Easy", resource: "https://www.interaction-design.org/literature/topics/wireframing" },
+            { title: "WCAG AA Accessibility Standards & Usability Heuristics", difficulty: "Medium", resource: "https://www.w3.org/WAI/standards-guidelines/wcag/" }
+          ]
+        },
+        {
+          phase: "Phase 2 • User Research & Interaction Design",
+          name: "Phase 2 • User Research & Interaction Design",
+          description: "Conduct user discovery interviews, craft personas, and build interactive high-fidelity prototypes.",
+          weeks: "Week 5-8",
+          skills: ["User Research", "Journey Maps", "Prototyping", "User Testing"],
+          project: "End-to-End Fintech Mobile App UX Case Study",
+          status: "locked",
+          tasks: [
+            { title: "User Persona Creation & Journey Mapping", difficulty: "Medium", resource: "https://www.nngroup.com/articles/customer-journey-mapping/" },
+            { title: "Interactive High-Fidelity Prototyping & Smart Animate", difficulty: "Medium", resource: "https://help.figma.com/hc/en-us/articles/360040314193" },
+            { title: "Usability Testing & Feedback Synthesis", difficulty: "Medium", resource: "https://www.nngroup.com/articles/usability-testing-101/" },
+            { title: "Mobile-First Responsive Interface Patterns", difficulty: "Medium", resource: "https://material.io/design" }
+          ]
+        },
+        {
+          phase: "Phase 3 • Advanced Product Strategy & Handoff",
+          name: "Phase 3 • Advanced Product Strategy & Handoff",
+          description: "Design multi-brand design systems, micro-interactions, and developer handoff documentation.",
+          weeks: "Week 9-12",
+          skills: ["Design Systems", "Motion Design", "Data-Driven UX", "Handoff"],
+          project: "Enterprise SaaS Analytics Suite Case Study",
+          status: "locked",
+          tasks: [
+            { title: "Multi-Brand Design Tokens & Governance", difficulty: "Hard", resource: "https://designsystemsrepo.com/" },
+            { title: "Micro-Interactions & Motion Design in Prototyping", difficulty: "Hard", resource: "https://www.interaction-design.org/literature/topics/micro-interactions" },
+            { title: "Data-Driven Design & A/B Testing Analytics", difficulty: "Hard", resource: "https://www.optimizely.com/optimization-glossary/ab-testing/" },
+            { title: "Developer Handoff & Design QA Workflows", difficulty: "Medium", resource: "https://help.figma.com/hc/en-us/articles/1500004362141" }
+          ]
+        }
+      ]
+    };
+  }
+
+  // Default Software Development / Frontend / Full Stack
+  return {
+    title: "Software Development Roadmap",
+    totalWeeks: 16,
+    jobReadinessTarget: "4 months",
+    phases: [
+      {
+        phase: "Phase 1 • Modern JavaScript & Web Architecture",
+        name: "Phase 1 • Modern JavaScript & Web Architecture",
+        description: "Master modern ES6+ JavaScript, asynchronous workflows, DOM manipulation, and responsive web layouts.",
+        weeks: "Week 1-4",
+        skills: ["JavaScript", "Async/Await", "DOM", "CSS Grid"],
+        project: "Interactive Portfolio & Task Engine",
+        status: "current",
+        tasks: [
+          { title: "Modern JavaScript (ES6+), Closures & Prototypes", difficulty: "Easy", resource: "https://javascript.info/" },
+          { title: "DOM Manipulation & Async Event Loop", difficulty: "Easy", resource: "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model" },
+          { title: "Fetch API, REST Endpoints & Error Handling", difficulty: "Medium", resource: "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" },
+          { title: "Responsive CSS Grid & Flexbox Layouts", difficulty: "Easy", resource: "https://css-tricks.com/snippets/css/complete-guide-grid/" }
+        ]
+      },
+      {
+        phase: "Phase 2 • React Ecosystem & State Management",
+        name: "Phase 2 • React Ecosystem & State Management",
+        description: "Build robust single-page applications with React functional components, hooks, routing, and global state.",
+        weeks: "Week 5-8",
+        skills: ["React", "Custom Hooks", "Redux", "API Integration"],
+        project: "Full-Featured SaaS Dashboard Application",
+        status: "locked",
+        tasks: [
+          { title: "React Functional Components & Custom Hooks", difficulty: "Medium", resource: "https://react.dev/learn" },
+          { title: "Global State Management with Redux Toolkit / Zustand", difficulty: "Medium", resource: "https://redux-toolkit.js.org/" },
+          { title: "React Router & Protected Route Navigation", difficulty: "Medium", resource: "https://reactrouter.com/" },
+          { title: "Consuming REST & GraphQL APIs in React", difficulty: "Medium", resource: "https://react.dev/learn/synchronizing-with-effects" }
+        ]
+      },
+      {
+        phase: "Phase 3 • Backend Services & Database Design",
+        name: "Phase 3 • Backend Services & Database Design",
+        description: "Design and implement REST APIs, database schemas, authentication, and secure server-side logic.",
+        weeks: "Week 9-12",
+        skills: ["Node.js", "PostgreSQL", "Next.js", "JWT Auth"],
+        project: "Multi-User E-Commerce Platform with Auth & Payments",
+        status: "locked",
+        tasks: [
+          { title: "Node.js & Express.js REST API Architecture", difficulty: "Medium", resource: "https://expressjs.com/" },
+          { title: "Relational & NoSQL Database Schema Design (PostgreSQL / MongoDB)", difficulty: "Hard", resource: "https://www.postgresql.org/docs/" },
+          { title: "JWT Authentication, Authorization & Security Best Practices", difficulty: "Hard", resource: "https://jwt.io/introduction" },
+          { title: "Server-Side Rendering with Next.js App Router", difficulty: "Hard", resource: "https://nextjs.org/docs" }
+        ]
+      },
+      {
+        phase: "Phase 4 • Testing, Performance & Cloud Deployment",
+        name: "Phase 4 • Testing, Performance & Cloud Deployment",
+        description: "Write unit and integration test suites, containerize applications, and automate deployment pipelines.",
+        weeks: "Week 13-16",
+        skills: ["Docker", "CI/CD", "Testing", "Performance"],
+        project: "Production Microservice Web App with Automated CI/CD",
+        status: "locked",
+        tasks: [
+          { title: "Unit & Integration Testing with Jest & RTL", difficulty: "Hard", resource: "https://jestjs.io/" },
+          { title: "Frontend Performance Optimization & Web Vitals", difficulty: "Hard", resource: "https://web.dev/vitals/" },
+          { title: "Docker Containerization & Microservices Basics", difficulty: "Hard", resource: "https://docs.docker.com/" },
+          { title: "CI/CD Deployment Pipelines with GitHub Actions & AWS/Vercel", difficulty: "Hard", resource: "https://docs.github.com/en/actions" }
+        ]
+      }
+    ]
+  };
+}
+
+function getSmartFallback(goal) {
+  return getDomainRoadmapTemplate(goal);
+}
+
+async function resetUserProgressAndRegenerate(targetGoal) {
+  if (!supabase) initSupabase();
+  if (!supabase) return;
+  
+  if (!currentUserId) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      currentUserId = session.user.id;
+      window.currentUserId = session.user.id;
+    } else {
+      window.location.href = 'auth.html';
+      return;
+    }
+  }
+
+  // 1. Fetch current profile goal or use provided targetGoal
+  let goal = targetGoal;
+  if (!goal) {
+    const { data: p } = await supabase.from('profiles').select('goal').eq('id', currentUserId).single();
+    goal = getGoalText(p?.goal) || 'Data Scientist';
+  }
+
+  showToast(`Regenerating ${goal} roadmap and resetting progress...`, 'info');
+
+  // 2. Generate or obtain domain-specific technical roadmap
+  let roadmap = getDomainRoadmapTemplate(goal);
+
+  // Try calling AI for fresh custom roadmap if possible
+  try {
+    const prompt = `You are a Principal Technical Director. Create a strictly technical, 4-phase learning roadmap for: "${goal}".
+    CRITICAL:
+    - ONLY technical, domain-specific programming, algorithmic, mathematical, and engineering milestones.
+    - NO generic orientation, soft skills, or SWOT analysis.
+    - Each phase must contain 4 specific technical tasks with realistic difficulty levels (Easy/Medium/Hard) and 1 practical capstone project.
+    
+    Return ONLY valid JSON matching:
+    {"title":"${goal} Roadmap","totalWeeks":16,"jobReadinessTarget":"4 months","phases":[{"phase":"Phase 1 • Title","name":"Phase 1 • Title","description":"Description","weeks":"Week 1-4","skills":["Skill1","Skill2","Skill3","Skill4"],"project":"Project Title","status":"current","tasks":[{"title":"Task Title","difficulty":"Easy","resource":"https://developer.mozilla.org"}]}]}`;
+    
+    const aiRes = await callAI(prompt, 1800);
+    if (aiRes) {
+      const match = aiRes.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        if (parsed.phases && parsed.phases.length >= 3) {
+          roadmap = parsed;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("AI generation fallback to domain template:", e);
+  }
+
+  // 3. Reset database records
+  // Clear old tasks & insert new technical tasks
+  await supabase.from('tasks').delete().eq('user_id', currentUserId);
+  const tasksToInsert = [];
+  if (roadmap.phases) {
+    roadmap.phases.forEach((phase, pIdx) => {
+      (phase.tasks || []).forEach(task => {
+        tasksToInsert.push({
+          user_id: currentUserId,
+          title: task.title,
+          difficulty: task.difficulty || 'Medium',
+          resource_link: task.resource || '',
+          roadmap_phase: phase.phase || phase.name,
+          status: pIdx === 0 ? 'pending' : 'locked'
+        });
+      });
+    });
+  }
+  if (tasksToInsert.length > 0) {
+    await supabase.from('tasks').insert(tasksToInsert);
+  }
+
+  // Clear old projects & insert domain projects
+  await supabase.from('projects').delete().eq('user_id', currentUserId);
+  if (roadmap.phases) {
+    const projectsToInsert = roadmap.phases.map(p => ({
+      user_id: currentUserId,
+      name: p.project || 'Domain Capstone Project',
+      description: p.description || `Final project for ${p.phase}`,
+      status: 'Upcoming',
+      progress: 0,
+      roadmap_phase: p.phase || p.name,
+      tags: p.skills || []
+    }));
+    if (projectsToInsert.length > 0) {
+      await supabase.from('projects').insert(projectsToInsert);
+    }
+  }
+
+  // Clear placement attempts and reset placement progress
+  await supabase.from('placement_attempts').delete().eq('user_id', currentUserId);
+  if (typeof placementProgress !== 'undefined') {
+    placementProgress.resume = false;
+    placementProgress.r1 = false;
+    placementProgress.r2 = false;
+    placementProgress.r3 = false;
+    placementProgress.r1Score = 0;
+    placementProgress.r2Score = 0;
+    placementProgress.r3Score = 0;
+  }
+
+  // Update profile with 0% progress and clean history
+  await supabase.from('profiles').update({
+    goal: goal,
+    roadmap_data: roadmap,
+    progress_percent: 0,
+    skills_learned: 0,
+    level: 1,
+    xp: 0,
+    session_history: [],
+    notifications: [],
+    onboarding_completed: true
+  }).eq('id', currentUserId);
+
+  // 4. Reload all views and UI
+  const { data: updatedProfile } = await supabase.from('profiles').select('*').eq('id', currentUserId).single();
+  if (updatedProfile) {
+    updateProfileUI(updatedProfile, '');
+    if (typeof initDashboard === 'function') await initDashboard(updatedProfile);
+    if (typeof loadDashboardStats === 'function') await loadDashboardStats();
+    if (typeof loadRoadmapTab === 'function') await loadRoadmapTab();
+    if (typeof loadQuickTestTab === 'function') await loadQuickTestTab();
+    if (typeof initPlacementTab === 'function') await initPlacementTab();
+  }
+
+  showToast(`🎉 ${goal} roadmap & technical modules successfully regenerated! Progress reset to 0%.`, 'success');
+}
+window.resetUserProgressAndRegenerate = resetUserProgressAndRegenerate;
+window.getDomainRoadmapTemplate = getDomainRoadmapTemplate;
 
 const style = document.createElement('style');
 style.textContent = `
@@ -3397,66 +3910,159 @@ async function processAndAnalyzeResume() {
     </div>
   `;
 
-  const cleanText = (placementResumeText || '').replace(/[^\x20-\x7E\n\r\t]/g, ' ').trim();
-  const resumeSample = cleanText.length > 50 ? cleanText.substring(0, 3000) : `Candidate: ${currentUserName || 'Student'}, Goal: Software Engineer`;
+  const cleanText = (placementResumeText || '').replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s{3,}/g, '\n').trim();
+  const textLower = cleanText.toLowerCase();
+  const isRealResume = cleanText.length > 100;
+  console.log('[Resume Analysis] Text length:', cleanText.length);
 
-  // AI Analysis Prompt
-  const prompt = `You are a Senior Technical Recruiter and ATS Evaluation Engine.
-Analyze this candidate's resume and return a STRICT JSON object only (no markdown, no backticks, no markdown fence):
-{
-  "score": 84,
-  "strengths": [
-    "Strong foundational coursework and clear technical competency alignment",
-    "Hands-on project experience showcasing full-stack/data capabilities",
-    "Structured layout with clear sections for education and technical proficiencies"
-  ],
-  "improvements": [
-    "Quantify key project achievements with concrete business/performance metrics",
-    "Ensure clickable GitHub and live portfolio demo links are prominently featured",
-    "Add more industry-standard technical keywords to maximize automated ATS parsing match"
-  ]
-}
+  // ── Smart Local Resume Analyzer ──────────────────────────────────────────
+  function analyzeResumeLocally(text, lower) {
+    let score = 40; // base — everyone starts here
+    const strengths = [];
+    const improvements = [];
 
-Resume content to evaluate:
-${resumeSample}`;
+    // 1. Content Length (0–10 pts, proportional)
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    if (wordCount > 600) score += 10;
+    else if (wordCount > 400) score += 7;
+    else if (wordCount > 250) score += 4;
+    else if (wordCount > 100) score += 1;
+    else { score -= 5; improvements.push('Resume is very short — expand each section with more detail (aim for 400–600+ words).'); }
 
-  let score = 84;
-  let strengths = [];
-  let improvements = [];
+    // 2. Key Sections (up to 18 pts total, with graded penalties for missing)
+    const hasExperience = /experience|internship|work history|employment/i.test(text);
+    const hasEducation = /education|university|college|b\.tech|b\.e\.|bachelor|master|degree|gpa/i.test(text);
+    const hasProjects = /project|github\.com|portfolio/i.test(text);
+    const hasSkills = /skills|technologies|tools|frameworks|proficient/i.test(text);
+    const hasContact = /(linkedin\.com|github\.com|gmail\.com|@[\w]+\.com)/i.test(text);
+    const hasSummary = /summary|objective|about me|profile/i.test(text);
 
+    if (hasExperience) { score += 7; strengths.push('Work experience or internship section demonstrates real-world professional exposure.'); }
+    else { score -= 3; improvements.push('Add a Work Experience or Internships section — even short-term, freelance, or volunteer roles strengthen your profile.'); }
+
+    if (hasEducation) score += 4;
+    else { score -= 2; improvements.push('Add an Education section with degree, institution name, and expected graduation year.'); }
+
+    if (hasProjects) { score += 7; strengths.push('Projects section with GitHub links shows practical, hands-on technical initiative beyond coursework.'); }
+    else { score -= 3; improvements.push('Add a Projects section with 2–3 projects: describe the problem, tech stack used, and link to GitHub or live demo.'); }
+
+    if (hasSkills) score += 4;
+    else { score -= 2; improvements.push('Add a clearly labeled Technical Skills section grouping your languages, frameworks, tools, and databases.'); }
+
+    if (hasContact) { score += 4; strengths.push('LinkedIn and/or GitHub profile links are present — makes it easy for recruiters to verify work.'); }
+    else { score -= 2; improvements.push('Add LinkedIn profile URL and GitHub link to your header — most recruiters check these before interviews.'); }
+
+    if (hasSummary) score += 3;
+    else improvements.push("Add a 2–3 line Professional Summary at the top tailored to the role you're targeting.");
+
+    // 3. Technical Keyword Density (proportional, 0–15 pts)
+    const techKeywords = ['python','sql','machine learning','deep learning','tensorflow','pytorch','pandas','numpy',
+      'scikit-learn','scikit','data analysis','statistics','tableau','power bi','r programming',
+      'nlp','computer vision','llm','javascript','react','node.js','node','java','c++','c#',
+      'aws','gcp','azure','docker','kubernetes','git','api','rest','database','mysql','mongodb',
+      'postgresql','figma','ux','ui design','adobe','design system','user research','agile','ci/cd'];
+    const foundTech = techKeywords.filter(k => lower.includes(k));
+    const techScore = Math.min(15, foundTech.length * 1.5);
+    score += techScore;
+    if (foundTech.length >= 10) {
+      strengths.push(`Excellent technical keyword coverage — ${foundTech.length} skills detected (${foundTech.slice(0,5).join(', ')}, etc.) which maximizes ATS match rates.`);
+    } else if (foundTech.length >= 5) {
+      strengths.push(`Good technical breadth — ${foundTech.length} skills detected: ${foundTech.slice(0,4).join(', ')}.`);
+      improvements.push(`Expand technical keywords — only ${foundTech.length}/15+ detected. Add more frameworks/tools specific to your target role.`);
+    } else if (foundTech.length >= 2) {
+      improvements.push(`Only ${foundTech.length} tech keywords found (${foundTech.join(', ')}). ATS systems heavily filter by keyword density — list all relevant tools explicitly.`);
+    } else {
+      score -= 5;
+      improvements.push('Almost no technical keywords detected — this resume will likely be filtered out by ATS. Add Python, SQL, Git, and your core frameworks by name.');
+    }
+
+    // 4. Measurable Impact / Metrics (0–10 pts)
+    const metricMatches = (text.match(/\d+\s*%|\d+x\s|\$\s*\d+|\d+\s*(users|customers|million|k\b|projects|hours|days|seconds|ms)/gi) || []);
+    if (metricMatches.length >= 4) {
+      score += 10;
+      strengths.push(`Strong use of quantified achievements (${metricMatches.length} metrics found) — numbers like "${metricMatches[0]}" make bullet points stand out to hiring managers.`);
+    } else if (metricMatches.length >= 2) {
+      score += 5;
+      improvements.push(`Only ${metricMatches.length} quantified metrics found. Aim for 5+ — e.g., 'improved accuracy by 12%', 'processed 50K records/day', 'reduced latency by 30%'.`);
+    } else {
+      score -= 3;
+      improvements.push("No measurable impact found. Add numbers to every bullet point: percentages, user counts, time saved, data volume — this is the #1 differentiator.");
+    }
+
+    // 5. Action Verbs (0–5 pts)
+    const actionVerbs = ['developed','built','designed','implemented','created','led','managed','deployed',
+      'automated','optimized','researched','analyzed','engineered','trained','launched','collaborated',
+      'delivered','architected','integrated','scraped','modeled','predicted','visualized'];
+    const foundVerbs = actionVerbs.filter(v => lower.includes(v));
+    if (foundVerbs.length >= 6) score += 5;
+    else if (foundVerbs.length >= 3) score += 2;
+    else { improvements.push('Start every bullet point with a strong action verb: Developed, Implemented, Deployed, Automated, Engineered, etc.'); }
+
+    // 6. Formatting Quality (0–3 pts)
+    const hasBullets = /[•\-\*]/.test(text);
+    if (hasBullets) score += 2;
+    const lineCount = text.split('\n').filter(l => l.trim().length > 0).length;
+    if (lineCount > 20) score += 1;
+
+    // 7. Penalties for red flags
+    const hasResponsibleFor = /responsible for|worked on|helped with|assisted in/gi.test(text);
+    if (hasResponsibleFor) { score -= 3; improvements.push("Avoid weak phrases like 'responsible for' or 'worked on' — replace with action verbs showing ownership (e.g., 'Led', 'Delivered', 'Built')."); }
+
+    // Final cap: realistic range 45–95
+    score = Math.max(45, Math.min(95, Math.round(score)));
+
+    // Pad to exactly 3 items each
+    const strengthExtras = [
+      'Resume structure follows standard chronological format recognized by ATS systems.',
+      'Education credentials are clearly presented with institution and degree details.',
+      'Document appears formatted for clean PDF parsing by automated screening systems.'
+    ];
+    const improvementExtras = [
+      'Add certifications relevant to your field (e.g., Google Data Analytics, AWS Cloud Practitioner, Coursera specializations).',
+      "Tailor this resume's keywords to each specific job description — generic resumes get 60% fewer callbacks.",
+      'Consider adding a GitHub contribution graph screenshot or portfolio link to visually demonstrate coding activity.'
+    ];
+    while (strengths.length < 3) { const e = strengthExtras.find(x => !strengths.includes(x)); if (e) strengths.push(e); else break; }
+    while (improvements.length < 3) { const e = improvementExtras.find(x => !improvements.includes(x)); if (e) improvements.push(e); else break; }
+
+    return { score, strengths: strengths.slice(0,3), improvements: improvements.slice(0,3) };
+  }
+
+
+  // Run local analysis
+  const local = analyzeResumeLocally(cleanText, textLower);
+  let score = local.score;
+  let strengths = local.strengths;
+  let improvements = local.improvements;
+
+  // Try AI on top — if it works, override with AI result; if not, local result stands
   try {
-    const result = await callAI(prompt, 800);
+    const resumePrompt = `You are a resume evaluator. Analyze the resume below.
+Respond with ONLY a JSON object — no markdown, no explanation, no code fences.
+Format: {"score": <number 50-100>, "strengths": ["...", "...", "..."], "improvements": ["...", "...", "..."]}
+- score: realistic integer based on actual content quality
+- strengths: 3 SPECIFIC points about THIS resume (mention actual skills/projects/companies)
+- improvements: 3 SPECIFIC, actionable gaps in THIS resume
+
+Resume:
+${cleanText.substring(0, 1800)}`;
+
+    const result = await callAI(resumePrompt, 600);
     if (result) {
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      const cleaned = result.replace(/```json\s*/gi,'').replace(/```\s*/gi,'').replace(/^[\s\S]*?(?=\{)/,'').trim();
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        if (parsed.score && typeof parsed.score === 'number') {
-          score = Math.min(100, Math.max(50, Math.round(parsed.score)));
-        } else if (parsed.score && !isNaN(parseInt(parsed.score))) {
-          score = Math.min(100, Math.max(50, parseInt(parsed.score)));
-        }
-        if (Array.isArray(parsed.strengths) && parsed.strengths.length > 0) strengths = parsed.strengths;
-        if (Array.isArray(parsed.improvements) && parsed.improvements.length > 0) improvements = parsed.improvements;
+        if (!isNaN(Number(parsed.score))) score = Math.min(100, Math.max(50, Math.round(Number(parsed.score))));
+        if (Array.isArray(parsed.strengths) && parsed.strengths.length > 0) strengths = parsed.strengths.slice(0,3);
+        if (Array.isArray(parsed.improvements) && parsed.improvements.length > 0) improvements = parsed.improvements.slice(0,3);
+        console.log('[Resume Analysis] AI override applied — score:', score);
       }
     }
-  } catch (e) {
-    console.warn('Resume AI evaluation fallback:', e);
+  } catch(e) {
+    console.log('[Resume Analysis] AI unavailable, using local analysis (score:', score, ')');
   }
 
-  if (!strengths.length) {
-    strengths = [
-      "Demonstrates relevant core fundamentals and technical skillset alignment",
-      "Solid academic profile and problem-solving background",
-      "Active portfolio track record with practical hands-on projects"
-    ];
-  }
-  if (!improvements.length) {
-    improvements = [
-      "Quantify project achievements with measurable impact metrics (% improvement, user reach)",
-      "Highlight active open-source contributions and live deployment links",
-      "Tailor technical keywords specifically for automated ATS placement filters"
-    ];
-  }
 
   const scoreDisplay = `${score}/100`;
   const strengthsHTML = strengths.map(s => `<li style="margin-bottom:8px; line-height:1.5;">${s}</li>`).join('');

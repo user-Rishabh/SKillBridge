@@ -445,42 +445,26 @@ async function executeCareerTrackSwitch(roleName) {
   generateNewRoadmap();
 }
 
+function getRoadmapPrompt(goal) {
+  return `You are a Principal Software Engineer and Technical Director.
+Create a strictly sequential, technical learning roadmap for: "${goal}".
+CRITICAL RULES:
+1. ONLY technical, domain-specific programming, algorithmic, mathematical, and engineering milestones.
+2. ABSOLUTELY NO generic orientation, soft-skill, SWOT analysis, or generic goal-setting tasks.
+3. If the goal is Data Scientist / AI / ML, tasks MUST focus on Python, Statistics & Probability, NumPy/Pandas, SQL for Analytics, Exploratory Data Analysis, Scikit-Learn Machine Learning, PyTorch Deep Learning, and MLOps deployment.
+4. Each phase must contain exactly 4 technical tasks with real documentation URLs and 1 practical capstone project.
+
+Return ONLY this exact JSON structure:
+{"title":"${goal} Roadmap","totalWeeks":16,"jobReadinessTarget":"4 months","phases":[{"phase":"Phase 1 • Title","name":"Phase 1 • Title","description":"Description","weeks":"Week 1-4","skills":["Skill1","Skill2","Skill3","Skill4"],"project":"Project Name","status":"current","tasks":[{"title":"Task Title","difficulty":"Easy","resource":"https://developer.mozilla.org"}]}]}`;
+}
+window.getRoadmapPrompt = getRoadmapPrompt;
+
 async function generateNewRoadmap() {
   const goalInput = document.getElementById('roadmap-goal-input');
-  const goal = goalInput?.value || "Frontend Developer";
-  if (!goal) {
-    if (typeof showToast === 'function') showToast("Please enter a career goal first", "error");
+  const goal = goalInput?.value || "Data Scientist";
+  if (typeof resetUserProgressAndRegenerate === 'function') {
+    await resetUserProgressAndRegenerate(goal);
     return;
-  }
-  const status = document.getElementById('roadmap-gen-status');
-  const display = document.getElementById('full-roadmap-display');
-  const btn = document.getElementById('generate-roadmap-btn');
-  if (status) status.style.display = 'block';
-  if (display) display.style.display = 'none';
-  if (btn) btn.disabled = true;
-
-  try {
-    const prompt = typeof getRoadmapPrompt === 'function' ? getRoadmapPrompt(goal) : `Generate a structured career roadmap for ${goal}`;
-    const response = await callAI(prompt, 2000);
-    if (!response) throw new Error("AI returned empty or invalid response");
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not parse JSON from AI response");
-    const roadmap = JSON.parse(jsonMatch[0]);
-
-    await supabase.from('profiles').update({ goal: goal, roadmap_data: roadmap }).eq('id', window.currentUserId);
-    if (typeof saveTasksFromRoadmap === 'function') {
-      await saveTasksFromRoadmap(roadmap, window.currentUserId);
-    }
-    await renderFullRoadmap(roadmap);
-    loadShortRoadmap(roadmap);
-    if (typeof showToast === 'function') showToast("✨ Roadmap generated successfully!", "success");
-  } catch (err) {
-    console.error("Roadmap Gen Error:", err);
-    if (typeof showToast === 'function') showToast("Failed to generate roadmap. Try again.", "error");
-  } finally {
-    if (status) status.style.display = 'none';
-    if (display) display.style.display = 'block';
-    if (btn) btn.disabled = false;
   }
 }
 
