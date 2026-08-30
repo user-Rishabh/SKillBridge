@@ -1836,8 +1836,9 @@ button { font-family: inherit; border: none; background: none; }
 }
 
 .step-card.step-active .step-tag {
-  background: var(--fuchsia);
-  color: #fff;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 .step-num-badge {

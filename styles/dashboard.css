@@ -983,22 +983,43 @@ button {
   to { transform: scale(1); opacity: 1; }
 }
 
-/* ── Form Inputs ── */
-input[type="text"], input[type="email"], input[type="password"], textarea, select {
+/* ── Form Controls & Base Inputs ── */
+label, .form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], textarea, select, .form-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
   background: var(--bg-secondary);
   border: 1.5px solid var(--border-strong);
-  border-radius: 9px;
+  border-radius: 10px;
   color: var(--text-primary);
   font-family: inherit;
+  font-size: 13.5px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  width: 100%;
 }
 
 input::placeholder, textarea::placeholder {
   color: var(--text-muted);
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus, textarea:focus, select:focus, .form-input:focus {
   border-color: var(--accent-primary) !important;
   box-shadow: 0 0 0 3px rgba(232, 148, 106, 0.18);
 }
