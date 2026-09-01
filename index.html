@@ -17,18 +17,19 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.5/dist/umd/supabase.js"></script>
   <script src="scripts/config.js"></script>
+  <script src="scripts/theme.js"></script>
   <script src="scripts/auth.js" defer></script>
 
   <style>
     /* ─── NOMU-INSPIRED WARM LIVELY COLOR SYSTEM ─── */
-    :root {
+    :root, [data-theme="light"], [data-theme="day"] {
       --bg-primary: #FDF8F3;        /* warm cream background (like Nomu's #FFF9F6) */
       --bg-secondary: #FFFFFF;      /* cards — pure white for contrast */
       --bg-tertiary: #F5EDE4;       /* subtle sections, hover states */
 
       --text-primary: #1A1512;      /* near-black, for headline chip + strong text */
-      --text-secondary: #6B5D52;    /* body text */
-      --text-muted: #A69A8D;        /* captions, labels */
+      --text-secondary: #5C4D42;    /* body text */
+      --text-muted: #8C7C6F;        /* captions, labels */
 
       --accent-primary: #E8946A;    /* peach/terracotta — main CTAs */
       --accent-hover: #D67D52;      /* deeper peach on hover */
@@ -51,6 +52,33 @@
       --shadow-card: 0 4px 20px rgba(26, 21, 18, 0.05);
       --shadow-elevated: 0 18px 45px rgba(26, 21, 18, 0.08), 0 2px 8px rgba(26, 21, 18, 0.04);
       --shadow-floating-nav: 0 12px 36px rgba(26, 21, 18, 0.08), 0 2px 8px rgba(26, 21, 18, 0.04);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #141210;
+      --bg-secondary: #1C1916;
+      --bg-tertiary: #26221E;
+
+      --text-primary: #F7EFE9;
+      --text-secondary: #C8BAAF;
+      --text-muted: #8C7E74;
+
+      --accent-primary: #F09B74;
+      --accent-hover: #F7AD89;
+      --accent-soft: #382A22;
+
+      --pill-green: #4ADE80;
+      --pill-blue: #60A5FA;
+      --pill-purple: #A78BFA;
+      --pill-lime: #A3E635;
+
+      --success: #4ADE80;
+      --warning: #FBBF24;
+      --border: #2E2721;
+
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+      --shadow-elevated: 0 18px 45px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-floating-nav: 0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
     }
 
     * {
@@ -313,25 +341,34 @@
       align-items: center;
       gap: 6px;
       background: var(--accent-soft) !important;
-      color: var(--accent-hover) !important;
-      border: 1px solid rgba(232, 148, 106, 0.35) !important;
-      padding: 4px 12px;
+      color: #9C4119 !important;
+      border: 1.5px solid rgba(232, 148, 106, 0.5) !important;
+      padding: 5px 14px;
       border-radius: 100px;
-      font-size: 0.76rem;
-      font-weight: 700;
+      font-size: 0.78rem;
+      font-weight: 800;
       letter-spacing: 0.04em;
+    }
+
+    [data-theme="dark"] .pill-accent,
+    [data-theme="dark"] .section-pill {
+      background: #382A22 !important;
+      color: #F09B74 !important;
+      border: 1.5px solid rgba(240, 155, 116, 0.45) !important;
     }
 
     .text-accent {
       color: var(--accent-primary) !important;
     }
 
-    /* ═══════════════════════════════════ HERO SECTION (Clean, Decluttered, Editorial) */
+    /* ═══════════════════════════════════ HERO SECTION (Solid Reliable CSS Background + High Contrast) */
     .hero {
-      padding: 130px 0 45px !important;
-      background: transparent !important;
+      padding: 140px 0 50px !important;
+      background-color: var(--bg-primary) !important;
+      background-image: radial-gradient(circle at 50% 12%, var(--accent-soft) 0%, var(--bg-primary) 70%) !important;
       position: relative;
       z-index: 1;
+      overflow: hidden;
     }
 
     .hero-inner {
@@ -348,7 +385,7 @@
       padding-top: 14px;
     }
 
-    /* Nomu-Style Floating Pill Tags (EXACTLY 2 Pills Total, No Collision, Left Column Only) */
+    /* Floating Pill Tags (High Contrast, Bold Solid Colors) */
     .hero-floating-pills {
       position: absolute;
       inset: 0;
@@ -362,35 +399,38 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 14px;
+      padding: 7px 16px;
       border-radius: 100px;
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       font-weight: 800;
-      color: #FFFFFF;
-      box-shadow: 0 4px 14px rgba(26, 21, 18, 0.12);
+      color: #FFFFFF !important;
+      box-shadow: 0 4px 14px rgba(26, 21, 18, 0.16);
       cursor: default;
       transition: transform 0.25s ease, box-shadow 0.25s ease;
       white-space: nowrap;
+      border: 1px solid rgba(255, 255, 255, 0.25);
     }
     .float-tag:hover {
       animation-play-state: paused !important;
       transform: scale(1.05) !important;
-      box-shadow: 0 8px 22px rgba(26, 21, 18, 0.18);
+      box-shadow: 0 8px 22px rgba(26, 21, 18, 0.22);
       z-index: 10;
     }
 
-    /* Pill 1: Top-Right of Left Column (Clear of AI badge) */
+    /* Pill 1: Top-Right of Left Column */
     .tag-green {
-      background: var(--pill-green);
+      background: #1B6344 !important;
+      color: #FFFFFF !important;
       top: -24px;
       right: 28px;
       transform: rotate(-4deg);
       animation: floatTag1 4.8s ease-in-out infinite alternate;
     }
 
-    /* Pill 2: Bottom-Right of Left Column (Clear of CTAs) */
+    /* Pill 2: Bottom-Right of Left Column */
     .tag-purple {
-      background: var(--pill-purple);
+      background: #6D28D9 !important;
+      color: #FFFFFF !important;
       bottom: 2px;
       right: 12px;
       transform: rotate(-3deg);
@@ -406,13 +446,13 @@
       100% { transform: rotate(-1deg) translateY(-6px); }
     }
 
-    /* Oversized Headline with Solid Rounded Dark Pill */
+    /* Oversized Headline with Solid High-Contrast Pill */
     .hero-heading {
       font-size: clamp(34px, 4.8vw, 60px);
       font-weight: 850;
       line-height: 1.12;
       letter-spacing: -0.04em;
-      color: var(--text-primary);
+      color: var(--text-primary) !important;
       margin: 16px 0 24px;
       max-width: 620px;
       position: relative;
@@ -423,11 +463,12 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: var(--text-primary);
-      color: #FFFFFF;
+      background: #1A1512 !important;
+      color: #FFFFFF !important;
       padding: 6px 28px 8px;
       border-radius: 50px;
-      box-shadow: 0 8px 24px rgba(26, 21, 18, 0.22);
+      border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
+      box-shadow: 0 8px 24px rgba(26, 21, 18, 0.25);
       font-size: clamp(26px, 3.6vw, 44px);
       font-weight: 800;
       white-space: nowrap;
@@ -437,10 +478,18 @@
       letter-spacing: -0.02em;
       vertical-align: middle;
     }
+
+    [data-theme="dark"] .headline-pill {
+      background: #26201B !important;
+      color: #F7EFE9 !important;
+      border: 1.5px solid #4A3E34 !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+    }
+
     .headline-pill .sparkle-icon {
-      color: var(--accent-primary);
+      color: var(--accent-primary) !important;
       font-size: 0.75em;
-      opacity: 0.9;
+      opacity: 1 !important;
     }
 
     /* Single Hand-Drawn Hero Headline Accent */
@@ -463,7 +512,7 @@
     }
     .scribble-path {
       fill: none;
-      stroke: var(--accent-primary);
+      stroke: var(--accent-primary) !important;
       stroke-width: 4.5px;
       stroke-linecap: round;
       stroke-linejoin: round;
@@ -479,10 +528,11 @@
 
     .hero-sub {
       font-size: 1.05rem;
-      color: var(--text-secondary);
+      color: var(--text-secondary) !important;
       line-height: 1.65;
       margin-bottom: 26px;
       max-width: 500px;
+      font-weight: 500;
     }
 
     .hero-ctas {
@@ -495,16 +545,20 @@
       z-index: 3;
     }
 
-    /* Playful Rotating Micro-Copy */
+    /* Playful Rotating Micro-Copy (High-Contrast Solid Pill) */
     .hero-microcopy-wrap {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      font-weight: 500;
+      font-size: 0.84rem;
+      color: var(--text-secondary) !important;
+      background: var(--bg-tertiary) !important;
+      border: 1px solid var(--border) !important;
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-weight: 600;
       margin-bottom: 20px;
-      min-height: 22px;
+      min-height: 24px;
       transition: opacity 0.25s ease, transform 0.25s ease;
     }
     .hero-microcopy-wrap.fade-out {
@@ -512,10 +566,16 @@
       transform: translateY(-4px);
     }
     .microcopy-icon {
-      color: var(--accent-primary);
-      font-size: 0.9rem;
+      color: var(--accent-primary) !important;
+      font-size: 0.95rem;
+      font-weight: 800;
       display: inline-block;
       animation: spinSlow 6s linear infinite;
+    }
+    .microcopy-text {
+      font-style: italic;
+      color: var(--text-secondary) !important;
+      font-weight: 600;
     }
     @keyframes spinSlow {
       from { transform: rotate(0deg); }
@@ -525,12 +585,12 @@
     .hero-trust {
       display: flex;
       gap: 20px;
-      color: var(--text-muted);
-      font-size: 0.82rem;
-      font-weight: 500;
+      color: var(--text-secondary) !important;
+      font-size: 0.84rem;
+      font-weight: 600;
     }
 
-    /* Dashboard Preview Card Ambient Floating Motion (Right Column - Fully Contained) */
+    /* Dashboard Preview Card Ambient Floating Motion */
     .hero-card-wrap {
       perspective: 1000px;
       position: relative;
@@ -545,19 +605,26 @@
       top: 0;
       left: 20px;
       z-index: 5;
-      background: var(--bg-secondary);
-      color: var(--success);
-      border: 1px solid rgba(127, 169, 138, 0.45);
-      font-size: 0.74rem;
-      font-weight: 700;
+      background: var(--bg-secondary) !important;
+      color: #166534 !important;
+      border: 1.5px solid #86EFAC !important;
+      font-size: 0.76rem;
+      font-weight: 800 !important;
       padding: 5px 14px;
       border-radius: 100px;
-      box-shadow: 0 4px 12px rgba(26, 21, 18, 0.07);
+      box-shadow: 0 4px 14px rgba(26, 21, 18, 0.08);
+    }
+
+    [data-theme="dark"] .hero-weekly-badge {
+      background: #1C1916 !important;
+      color: #4ADE80 !important;
+      border: 1.5px solid rgba(74, 222, 128, 0.4) !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
     }
 
     .hero-dashboard-card {
       background: var(--bg-secondary) !important;
-      border: 1px solid var(--border) !important;
+      border: 1.5px solid var(--border) !important;
       border-radius: 18px !important;
       padding: 24px;
       box-shadow: var(--shadow-elevated) !important;

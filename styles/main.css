@@ -368,7 +368,8 @@ button { font-family: inherit; border: none; background: none; }
 
 /* ── HERO ─────────────────────────────────────────────────── */
 .hero {
-  background: var(--cream);
+  background-color: var(--bg-primary, #FDF8F3);
+  background-image: radial-gradient(circle at 50% 10%, var(--accent-soft, #F3D9C4) 0%, var(--bg-primary, #FDF8F3) 70%);
   padding: 160px 0 100px;
   position: relative;
   overflow: hidden;

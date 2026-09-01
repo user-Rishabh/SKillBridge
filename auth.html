@@ -25,14 +25,14 @@
 
   <style>
     /* ─── SKILLBRIDGE WARM THEME DESIGN SYSTEM ─── */
-    :root {
+    :root, [data-theme="light"], [data-theme="day"] {
       --bg-primary: #FDF8F3;        /* warm cream background */
       --bg-secondary: #FFFFFF;      /* cards, form panel */
       --bg-tertiary: #F5EDE4;       /* subtle sections, hover states */
 
       --text-primary: #1A1512;      /* near-black headings */
-      --text-secondary: #6B5D52;    /* body text */
-      --text-muted: #A69A8D;        /* captions, placeholders */
+      --text-secondary: #5C4D42;    /* body text */
+      --text-muted: #8C7C6F;        /* captions, placeholders */
 
       --accent-primary: #E8946A;    /* peach/terracotta — primary CTAs */
       --accent-hover: #D67D52;
@@ -56,6 +56,34 @@
       --shadow-card: 0 4px 20px rgba(26, 21, 18, 0.05);
       --shadow-elevated: 0 16px 36px rgba(26, 21, 18, 0.08);
       --shadow-hover: 0 20px 40px rgba(26, 21, 18, 0.12);
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #141210;
+      --bg-secondary: #1C1916;
+      --bg-tertiary: #26221E;
+
+      --text-primary: #F7EFE9;
+      --text-secondary: #C8BAAF;
+      --text-muted: #8C7E74;
+
+      --accent-primary: #F09B74;
+      --accent-hover: #F7AD89;
+      --accent-soft: #382A22;
+
+      --pill-green: #4ADE80;
+      --pill-blue: #60A5FA;
+      --pill-purple: #A78BFA;
+      --pill-lime: #A3E635;
+
+      --success: #4ADE80;
+      --warning: #FBBF24;
+      --border: #2E2721;
+      --border-focus: rgba(240, 155, 116, 0.4);
+
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+      --shadow-elevated: 0 16px 36px rgba(0, 0, 0, 0.5);
+      --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
     }
 
     *, *::before, *::after {

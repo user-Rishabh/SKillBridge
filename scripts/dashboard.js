@@ -2381,9 +2381,54 @@ async function generateAIResume() {
 }
 
 function exportJSONResume() {
-  const json = { basics: {}, skills: [], experience: [], education: [], projects: [] };
+  const name = document.getElementById('res-name')?.value?.trim() || currentUserName || 'Student';
+  const email = document.getElementById('res-email')?.value?.trim() || '';
+  const phone = document.getElementById('res-phone')?.value?.trim() || '';
+  const location = document.getElementById('res-location')?.value?.trim() || '';
+  const summary = document.getElementById('res-summary')?.value?.trim() || '';
+  const rawSkills = document.getElementById('res-skills-input')?.value || '';
+  const skills = rawSkills.split(',').map(s => s.trim()).filter(Boolean);
+
+  const experience = Array.from(document.querySelectorAll('#experience-list .resume-item-card')).map(card => {
+    const inputs = card.querySelectorAll('input, textarea');
+    return {
+      company: inputs[0]?.value || '',
+      role: inputs[1]?.value || '',
+      years: inputs[2]?.value || '',
+      description: inputs[3]?.value || ''
+    };
+  });
+
+  const education = Array.from(document.querySelectorAll('#education-list .resume-item-card')).map(card => {
+    const inputs = card.querySelectorAll('input');
+    return {
+      institution: inputs[0]?.value || '',
+      degree: inputs[1]?.value || '',
+      year: inputs[2]?.value || ''
+    };
+  });
+
+  const projects = Array.from(document.querySelectorAll('#projects-list .resume-item-card')).map(card => {
+    const inputs = card.querySelectorAll('input, textarea');
+    return {
+      title: inputs[0]?.value || '',
+      description: inputs[1]?.value || ''
+    };
+  });
+
+  const json = {
+    basics: { name, email, phone, location, summary },
+    skills,
+    experience,
+    education,
+    projects
+  };
+
   const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'resume.json'; a.click();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_resume.json`;
+  a.click();
 }
 
 function analyzeResume(input) {
@@ -3650,7 +3695,7 @@ async function initPlacementTab() {
   }
 }
 
-function animateNumberCountUp(el, targetVal, durationMs = 1000, suffix = '%') {
+function animateNumberCountUp(el, targetVal, durationMs = 250, suffix = '%') {
   if (!el) return;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReducedMotion) {
@@ -3694,10 +3739,12 @@ function triggerPlacementEntranceAnimation() {
 
 function updatePlacementDashboardStats(attempts) {
   const readinessStat = document.getElementById('placement-readiness-stat');
+  const ringContainer = document.getElementById('placement-ring-container');
   const ringFill = document.getElementById('placement-ring-fill');
   const roundsStat = document.getElementById('placement-rounds-stat');
   const stageStat = document.getElementById('placement-stage-stat');
-  const stageSub = document.getElementById('placement-stage-sub');
+  const stageSubText = document.getElementById('placement-stage-sub-text');
+  const stageDot = document.getElementById('stage-pulse-dot');
   const bestScoreEl = document.getElementById('placement-best-score');
   const lastDateEl = document.getElementById('placement-last-date');
   const ringSpark = document.getElementById('placement-ring-spark');
@@ -3706,9 +3753,9 @@ function updatePlacementDashboardStats(attempts) {
 
   if (!attempts || attempts.length === 0) {
     if (readinessStat) {
-      readinessStat.textContent = 'Not Assessed';
-      readinessStat.style.color = 'var(--text-muted)';
+      readinessStat.innerHTML = '<span class="placement-unassessed-pill">Not Assessed</span>';
     }
+    if (ringContainer) ringContainer.classList.add('pulsing');
     if (ringFill) ringFill.style.strokeDashoffset = circumference;
     if (ringSpark) ringSpark.style.display = 'none';
     if (roundsStat) roundsStat.textContent = '0 / 3';
@@ -3716,7 +3763,8 @@ function updatePlacementDashboardStats(attempts) {
       stageStat.textContent = 'Round 1';
       stageStat.style.color = 'var(--accent-primary)';
     }
-    if (stageSub) stageSub.textContent = 'In Progress';
+    if (stageSubText) stageSubText.textContent = 'In Progress';
+    if (stageDot) stageDot.style.display = 'inline-block';
     if (bestScoreEl) {
       bestScoreEl.textContent = 'N/A';
       bestScoreEl.style.color = 'var(--text-muted)';
@@ -3756,9 +3804,11 @@ function updatePlacementDashboardStats(attempts) {
   if (scoresToAverage.length > 0) {
     const avg = Math.round(scoresToAverage.reduce((a, b) => a + b, 0) / scoresToAverage.length);
     if (readinessStat) {
-      readinessStat.style.color = 'var(--text-primary)';
-      animateNumberCountUp(readinessStat, avg, 1000, '%');
+      readinessStat.innerHTML = `<span class="placement-headline-val" id="placement-readiness-number">${avg}%</span>`;
+      const numEl = document.getElementById('placement-readiness-number');
+      if (numEl) animateNumberCountUp(numEl, avg, 250, '%');
     }
+    if (ringContainer) ringContainer.classList.remove('pulsing');
     if (ringFill) {
       const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const targetOffset = circumference * (1 - avg / 100);
@@ -3768,15 +3818,15 @@ function updatePlacementDashboardStats(attempts) {
         ringFill.style.strokeDashoffset = circumference;
         setTimeout(() => {
           ringFill.style.strokeDashoffset = targetOffset;
-        }, 50);
+        }, 30);
       }
     }
     if (ringSpark) ringSpark.style.display = 'inline';
   } else {
     if (readinessStat) {
-      readinessStat.textContent = 'Not Assessed';
-      readinessStat.style.color = 'var(--text-muted)';
+      readinessStat.innerHTML = '<span class="placement-unassessed-pill">Not Assessed</span>';
     }
+    if (ringContainer) ringContainer.classList.add('pulsing');
     if (ringFill) ringFill.style.strokeDashoffset = circumference;
     if (ringSpark) ringSpark.style.display = 'none';
   }
@@ -3785,7 +3835,7 @@ function updatePlacementDashboardStats(attempts) {
   attempts.forEach(att => {
     if (att.passed) passedRounds.add(att.round);
   });
-  document.getElementById('placement-rounds-stat').textContent = `${passedRounds.size} / 3`;
+  if (roundsStat) roundsStat.textContent = `${passedRounds.size} / 3`;
 
   let currentStage = 'Round 1';
   if (!placementProgress.resume) {
@@ -3803,11 +3853,13 @@ function updatePlacementDashboardStats(attempts) {
     if (currentStage === 'Placement Ready!') {
       stageStat.style.color = 'var(--pill-green)';
       stageStat.textContent = 'Placement Ready! 🎉';
-      if (stageSub) stageSub.textContent = 'All 3 Rounds Cleared';
+      if (stageSubText) stageSubText.textContent = 'All 3 Rounds Cleared';
+      if (stageDot) stageDot.style.display = 'none';
     } else {
       stageStat.style.color = 'var(--accent-primary)';
       stageStat.textContent = currentStage;
-      if (stageSub) stageSub.textContent = 'In Progress';
+      if (stageSubText) stageSubText.textContent = 'In Progress';
+      if (stageDot) stageDot.style.display = 'inline-block';
     }
   }
 
@@ -3815,7 +3867,9 @@ function updatePlacementDashboardStats(attempts) {
     bestScoreEl.textContent = bestScore > 0 ? `${bestScore}%` : 'N/A';
     bestScoreEl.style.color = bestScore > 0 ? 'var(--text-primary)' : 'var(--text-muted)';
   }
-  document.getElementById('placement-last-date').textContent = lastAttemptDate || 'Never';
+  if (lastDateEl) {
+    lastDateEl.textContent = lastAttemptDate || 'Never';
+  }
 }
 
 // ── Resume Helpers ───────────────────────
@@ -6000,12 +6054,11 @@ async function geminiCall(prompt) {
 function updatePlacementProgress() {
   const { resume, r1, r2, r3, r1Score, r2Score, r3Score } = placementProgress;
 
-  // 1. Calculate and update progress line width
+  // 1. Calculate and update progress line width progressively across 3 segments
   let width = 0;
-  if (resume) width = 25;
-  if (r1) width = 50;
-  if (r2) width = 75;
-  if (r3) width = 100;
+  if (resume) width = 33.33;
+  if (r1) width = 66.66;
+  if (r2 || r3) width = 100;
   const progressLine = document.getElementById('progress-line');
   if (progressLine) {
     progressLine.style.width = width + '%';
@@ -6037,48 +6090,89 @@ function updatePlacementProgress() {
   setCircleState('step-r2-circle', r2, activeStep === 'r2');
   setCircleState('step-r3-circle', r3, activeStep === 'r3');
 
-  // Sub-captions update
-  const resumeSub = document.getElementById('step-resume-sub');
-  if (resumeSub) {
-    if (resume) {
-      resumeSub.textContent = 'Uploaded ✅';
-      resumeSub.classList.add('highlight');
+  // Sub-captions helper with animated Next Up badge
+  function updateStepCaption(subEl, isCompleted, isActive, completedText, defaultText) {
+    if (!subEl) return;
+    subEl.classList.remove('highlight', 'placement-step-nextup');
+    if (isCompleted) {
+      subEl.textContent = completedText;
+      subEl.classList.add('highlight');
+    } else if (isActive) {
+      subEl.innerHTML = 'Next Up <span class="nextup-arrow">→</span>';
+      subEl.classList.add('placement-step-nextup');
     } else {
-      resumeSub.textContent = activeStep === 'resume' ? 'Next Up 🎯' : 'Always Open';
-      resumeSub.classList.remove('highlight');
+      subEl.textContent = defaultText;
     }
   }
 
-  const r1Sub = document.getElementById('step-r1-sub');
-  if (r1Sub) {
+  updateStepCaption(
+    document.getElementById('step-resume-sub'),
+    resume,
+    activeStep === 'resume',
+    'Uploaded ✅',
+    'Always Open'
+  );
+
+  updateStepCaption(
+    document.getElementById('step-r1-sub'),
+    r1,
+    activeStep === 'r1',
+    (r1Score > 0 ? `${r1Score}% Score` : 'Passed') + ' ✅',
+    'Aptitude & MCQs'
+  );
+
+  updateStepCaption(
+    document.getElementById('step-r2-sub'),
+    r2,
+    activeStep === 'r2',
+    (r2Score > 0 ? `${r2Score}% Score` : 'Passed') + ' ✅',
+    'Coding Challenge'
+  );
+
+  updateStepCaption(
+    document.getElementById('step-r3-sub'),
+    r3,
+    activeStep === 'r3',
+    (r3Score > 0 ? `${r3Score}% Score` : 'Passed') + ' ✅',
+    'AI Mock Interview'
+  );
+
+  // Dynamic Stepper Tooltips for Locked & Active Steps
+  const resumeTooltip = document.getElementById('step-resume-tooltip');
+  if (resumeTooltip) {
+    resumeTooltip.textContent = resume ? 'Resume uploaded & analyzed ✅' : 'Upload and analyze resume to begin';
+  }
+
+  const r1Tooltip = document.getElementById('step-r1-tooltip');
+  if (r1Tooltip) {
     if (r1) {
-      r1Sub.textContent = (r1Score > 0 ? `${r1Score}% Score` : 'Passed') + ' ✅';
-      r1Sub.classList.add('highlight');
+      r1Tooltip.textContent = 'Round 1 Completed ✅';
+    } else if (resume) {
+      r1Tooltip.textContent = 'Ready: Aptitude & Technical MCQs';
     } else {
-      r1Sub.textContent = activeStep === 'r1' ? 'Next Up 🎯' : 'Aptitude & MCQs';
-      r1Sub.classList.remove('highlight');
+      r1Tooltip.textContent = 'Complete Resume review to unlock Round 1';
     }
   }
 
-  const r2Sub = document.getElementById('step-r2-sub');
-  if (r2Sub) {
+  const r2Tooltip = document.getElementById('step-r2-tooltip');
+  if (r2Tooltip) {
     if (r2) {
-      r2Sub.textContent = (r2Score > 0 ? `${r2Score}% Score` : 'Passed') + ' ✅';
-      r2Sub.classList.add('highlight');
+      r2Tooltip.textContent = 'Round 2 Completed ✅';
+    } else if (r1) {
+      r2Tooltip.textContent = 'Ready: Coding Challenge & DSA';
     } else {
-      r2Sub.textContent = activeStep === 'r2' ? 'Next Up 🎯' : 'Coding Challenge';
-      r2Sub.classList.remove('highlight');
+      r2Tooltip.textContent = 'Pass Round 1 to unlock Round 2';
     }
   }
 
-  const r3Sub = document.getElementById('step-r3-sub');
-  if (r3Sub) {
+  const r3Tooltip = document.getElementById('step-r3-tooltip');
+  if (r3Tooltip) {
     if (r3) {
-      r3Sub.textContent = (r3Score > 0 ? `${r3Score}% Score` : 'Passed') + ' ✅';
-      r3Sub.classList.add('highlight');
+      r3Tooltip.textContent = 'All Placement Milestones Cleared! 🎉';
+    } else if (r2) {
+      r3Tooltip.textContent = 'Ready: AI Mock Interview';
     } else {
-      r3Sub.textContent = activeStep === 'r3' ? 'Next Up 🎯' : 'AI Mock Interview';
-      r3Sub.classList.remove('highlight');
+      r3Tooltip.textContent = 'Pass Round 2 to unlock Round 3';
     }
   }
 
@@ -6989,11 +7083,11 @@ function addMentorMessage(role, text) {
       max-width:75%;padding:12px 18px;
       border-radius:16px;
       border-${isAI ? 'bottom-left' : 'bottom-right'}-radius:4px;
-      background:${isAI ? '#FFFFFF' : 'var(--accent-primary)'};
+      background:${isAI ? 'var(--bg-secondary)' : 'var(--accent-primary)'};
       color:${isAI ? 'var(--text-primary)' : '#FFFFFF'};
       font-size:14px;line-height:1.6;
       border:${isAI ? '1.5px solid var(--border-strong)' : 'none'};
-      box-shadow:${isAI ? '0 1px 3px rgba(43,36,32,0.04)' : 'none'};
+      box-shadow:${isAI ? 'var(--shadow-card)' : 'none'};
     ">${formatted}</div>
     ${!isAI ? `
       <div style="width:32px;height:32px;

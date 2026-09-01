@@ -4,7 +4,7 @@
    Palette: #FDF8F3 | #FFFFFF | #F5EDE4 | #1A1512 | #6B5D52 | #A69A8D | #E8946A | #D67D52 | #F3D9C4
 */
 
-:root, [data-theme="light"], [data-theme="day"], [data-theme="dark"] {
+:root, [data-theme="light"], [data-theme="day"] {
     /* PRIMARY PALETTE */
     --ivory:                #F5EDE4;
     --powder-blue:          #F3D9C4;
@@ -44,10 +44,10 @@
 
     /* TEXT */
     --text-primary:         #1A1512;
-    --text-secondary:       #6B5D52;
-    --text-muted:           #A69A8D;
+    --text-secondary:       #5C4D42;
+    --text-muted:           #8C7C6F;
     --text-subtle:          #C2B8AD;
-    --text-light:           #6B5D52;
+    --text-light:           #5C4D42;
     --text-white:           #FFFFFF;
 
     /* PRIMARY ACCENT & BRAND */
@@ -61,7 +61,7 @@
     --action:               #E8946A;
     --color-primary:        #E8946A;
     --color-primary-light:  #F3D9C4;
-    --color-secondary:      #6B5D52;
+    --color-secondary:      #5C4D42;
     --color-deep:           #1A1512;
     --color-neutral:        #FDF8F3;
 
@@ -105,6 +105,122 @@
     --shadow-medium:        0 8px 24px rgba(26, 21, 18, 0.06);
     --shadow-elevated:      0 12px 32px rgba(26, 21, 18, 0.08);
     --shadow-ambient:       0 0 20px rgba(232, 148, 106, 0.12);
+    
+    /* BORDER RADIUS */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 14px;
+    --radius-full: 9999px;
+
+    /* SPACING */
+    --space-xs: 0.5rem;
+    --space-sm: 1rem;
+    --space-md: 1.5rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+}
+
+[data-theme="dark"] {
+    /* PRIMARY PALETTE */
+    --ivory:                #26221E;
+    --powder-blue:          #382A22;
+
+    /* DARK CONTRAST */
+    --navy:                 #F7EFE9;
+    --navy-soft:            #C8BAAF;
+
+    /* SURFACES */
+    --background:           #141210;
+    --surface:              #1C1916;
+    --surface-warm:         #26221E;
+    --surface-blue:         #26221E;
+    --surface-blue-strong:  #382A22;
+
+    /* APPLICATION SURFACES */
+    --bg-primary:           #141210;
+    --bg-sidebar:           #181512;
+    --bg-secondary:         #1C1916;
+    --bg-tertiary:          #26221E;
+    --bg-card:              #1C1916;
+    --bg-card-hover:        #231F1B;
+    --bg-elevated:          #26221E;
+
+    /* BACKWARD COMPATIBILITY ALIASES */
+    --bg-base:              #141210;
+    --bg-surface:           #1C1916;
+    --bg-surface-elevated:  #26221E;
+
+    /* BORDERS */
+    --border:               #2E2721;
+    --border-strong:        #3D342C;
+    --border-hover:         #5A4E43;
+    --border-blue:          #2E2721;
+    --border-primary:       #F09B74;
+    --border-active:        #F09B74;
+
+    /* TEXT */
+    --text-primary:         #F7EFE9;
+    --text-secondary:       #C8BAAF;
+    --text-muted:           #8C7E74;
+    --text-subtle:          #685E56;
+    --text-light:           #C8BAAF;
+    --text-white:           #FFFFFF;
+
+    /* PRIMARY ACCENT & BRAND */
+    --accent-primary:       #F09B74;
+    --accent-hover:         #F7AD89;
+    --accent-soft:          #382A22;
+    --primary:              #F09B74;
+    --primary-dark:         #F7AD89;
+    --brand:                #F09B74;
+    --brand-light:          #382A22;
+    --action:               #F09B74;
+    --color-primary:        #F09B74;
+    --color-primary-light:  #382A22;
+    --color-secondary:      #C8BAAF;
+    --color-deep:           #F7EFE9;
+    --color-neutral:        #141210;
+
+    /* PILLS & BADGES */
+    --pill-green:           #4ADE80;
+    --pill-blue:            #60A5FA;
+    --pill-purple:          #A78BFA;
+    --pill-lime:            #A3E635;
+
+    /* SEMANTIC */
+    --success:              #4ADE80;
+    --success-light:        #1F2E24;
+    --warning:              #FBBF24;
+    --danger:               #FB7185;
+    --info:                 #60A5FA;
+
+    /* LEGACY ALIASES */
+    --emerald:              var(--pill-green);
+    --emerald-dark:         #22C55E;
+    --emerald-light:        #1F2E24;
+    --emerald-glow:         rgba(74, 222, 128, 0.15);
+    --mint:                 #A3E635;
+    --fuchsia:              var(--accent-primary);
+    --amber:                var(--warning);
+    --rose:                 var(--danger);
+
+    /* GRADIENTS */
+    --grad-primary:         linear-gradient(135deg, #F09B74, #382A22);
+    --grad-hero:            linear-gradient(135deg, #26221E 0%, #1C1916 100%);
+    --grad-brand:           linear-gradient(135deg, #F09B74 0%, #E88252 100%);
+    --grad-ivory:           linear-gradient(135deg, #1C1916 0%, #26221E 100%);
+
+    /* TYPOGRAPHY */
+    --font-family:          'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-heading:         'Plus Jakarta Sans', var(--font-family);
+    --font-logo:            'Fredoka', 'Plus Jakarta Sans', sans-serif;
+    --font-mono:            'JetBrains Mono', 'Fira Code', monospace;
+    
+    /* SHADOWS & EFFECTS */
+    --shadow-soft:          0 4px 20px rgba(0, 0, 0, 0.35);
+    --shadow-medium:        0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-elevated:      0 16px 40px rgba(0, 0, 0, 0.6);
+    --shadow-ambient:       0 0 20px rgba(240, 155, 116, 0.2);
     
     /* BORDER RADIUS */
     --radius-sm: 8px;

@@ -136,17 +136,6 @@ async function addNotification(title, message) {
   if (typeof showToast === 'function') showToast(`${title}: ${message}`);
 }
 
-// ── Theme Management ─────────────────────────────────────────
-function toggleTheme() {
-  // Theme is locked to dark mode.
-}
-
-function initTheme() {
-  if (typeof updateThemeIcons === 'function') {
-    updateThemeIcons();
-  }
-}
-
 // ── XP & Progression ─────────────────────────────────────────
 function loadXPDisplay(profile) {
   const xp = profile?.xp || 0;
@@ -1102,8 +1091,6 @@ window.loadNotifications = loadNotifications;
 window.clearNotifications = clearNotifications;
 window.requestNotificationPermission = requestNotificationPermission;
 window.addNotification = addNotification;
-window.toggleTheme = toggleTheme;
-window.initTheme = initTheme;
 window.loadXPDisplay = loadXPDisplay;
 window.showXPDetails = showXPDetails;
 window.startNewSession = startNewSession;
