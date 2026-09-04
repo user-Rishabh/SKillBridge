@@ -103,6 +103,9 @@ function renderRoadmap(role) {
         el.style.left = `${node.x}px`;
         el.textContent = node.title;
         el.onclick = () => {
+            if (typeof generateCourseNotes === 'function') {
+                generateCourseNotes(`flow-${node.id}`, node.title);
+            }
             if (node.status === 'active') {
                 node.status = 'completed';
                 if (data[index + 1]) data[index + 1].status = 'active';

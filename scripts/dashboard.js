@@ -932,8 +932,32 @@ async function adaptRoadmapForWeakSkill(weakSkill) {
   }
 }
 
-async function startRecommendedLearning() {
+async function startRecommendedLearning(targetTopic) {
+  if (!targetTopic || typeof targetTopic !== 'string') {
+    const recTitle = document.getElementById('qt-recommendation-title')?.textContent?.trim();
+    const successGap = document.getElementById('qt-success-gap')?.textContent?.trim();
+    targetTopic = recTitle || successGap || '';
+  }
+
   const { data: dbTasks } = await supabase.from('tasks').select('*').eq('user_id', currentUserId);
+  
+  if (targetTopic && targetTopic !== '') {
+    // 1. Check if user already has a task matching this topic
+    const matchedTask = dbTasks?.find(t => 
+      (t.title && t.title.toLowerCase().includes(targetTopic.toLowerCase())) ||
+      (t.roadmap_phase && t.roadmap_phase.toLowerCase().includes(targetTopic.toLowerCase()))
+    );
+
+    if (matchedTask) {
+      openTaskDetail(matchedTask.id);
+      return;
+    }
+
+    // 2. If no matching task in DB, directly open the high-fidelity course notes generator for this topic!
+    generateCourseNotes(`rec-${Date.now()}`, targetTopic);
+    return;
+  }
+
   if (!dbTasks || dbTasks.length === 0) {
     switchTab('roadmap');
     return;
@@ -1564,30 +1588,116 @@ print(classification_report(y_test, preds))</code></pre>
     `;
   }
 
-  if (t.includes("deep learning") || t.includes("pytorch") || t.includes("neural") || t.includes("nlp") || t.includes("transformer")) {
+  if (t.includes("deep learning") || t.includes("pytorch") || t.includes("neural") || t.includes("perceptron") || t.includes("cnn") || t.includes("rnn")) {
     return `
-      <h2>Deep Learning & PyTorch Architectures</h2>
-      <p>Deep Learning utilizes multi-layered artificial neural networks capable of learning complex non-linear feature representations directly from raw text, images, or tabular data.</p>
+      <h2>Neural Networks & Deep Learning Architectures</h2>
+      <p>Artificial Neural Networks (ANNs) form the backbone of modern AI. They consist of layered interconnected neurons (nodes) that transform input features into high-level predictions through weighted sums, non-linear activation functions, and backpropagation.</p>
       
-      <h3>1. PyTorch Neural Network Module</h3>
+      <h3>1. Core Neural Network Mechanics</h3>
+      <ul>
+        <li><strong>Perceptron / Artificial Neuron:</strong> Computes $z = \\sum (w_i \\cdot x_i) + b$, passed through an activation function $\\sigma(z)$.</li>
+        <li><strong>Activation Functions:</strong> 
+          <ul>
+            <li><code>ReLU (Rectified Linear Unit)</code>: $\\max(0, x)$ — standard for hidden layers to prevent vanishing gradients.</li>
+            <li><code>Sigmoid</code>: $\\frac{1}{1 + e^{-x}}$ — maps outputs to $(0, 1)$ for binary classification.</li>
+            <li><code>Softmax</code>: Normalizes logit vectors into probability distributions for multi-class classification.</li>
+          </ul>
+        </li>
+        <li><strong>Loss Functions & Backpropagation:</strong> Uses gradient descent (e.g., Adam, SGD) and chain-rule calculus to update weights and minimize loss (Cross-Entropy, MSE).</li>
+      </ul>
+
+      <h3>2. PyTorch Neural Network Implementation</h3>
       <pre><code>import torch
 import torch.nn as nn
+import torch.optim as optim
 
-class Classifier(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
+class NeuralNetwork(nn.Module):
+    def __init__(self, input_features=784, hidden_units=128, num_classes=10):
+        super(NeuralNetwork, self).__init__()
+        self.network = nn.Sequential(
+            nn.Linear(input_features, hidden_units),
             nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(hidden_dim, output_dim)
+            nn.Dropout(0.25),
+            nn.Linear(hidden_units, 64),
+            nn.ReLU(),
+            nn.Linear(64, num_classes)
         )
         
     def forward(self, x):
-        return self.net(x)</code></pre>
+        return self.network(x)
+
+# Instantiate model, loss function, and Adam optimizer
+model = NeuralNetwork()
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)</code></pre>
       
-      <h3>2. Transformers & HuggingFace</h3>
-      <p>Attention mechanisms dynamically weight the importance of different tokens in sequential data, powering state-of-the-art LLMs (BERT, GPT, LLaMA).</p>
+      <h3>3. Key Optimization Best Practices</h3>
+      <ul>
+        <li><strong>Batch Normalization:</strong> Accelerates training and stabilizes deep architectures.</li>
+        <li><strong>Dropout:</strong> Randomly deactivates neurons during training to prevent overfitting.</li>
+        <li><strong>Learning Rate Schedulers:</strong> Decays learning rate over epochs for fine-grained convergence.</li>
+      </ul>
+    `;
+  }
+
+  if (t.includes("conference") || t.includes("speaking") || t.includes("communication") || t.includes("presentation") || t.includes("soft skill") || t.includes("industry event")) {
+    return `
+      <h2>Technical Public Speaking & Industry Presentations</h2>
+      <p>Communicating complex engineering and scientific concepts at industry conferences, meetups, and team tech-talks is a superpower for accelerating career leadership and impact.</p>
+      
+      <h3>1. Structuring an Engaging Tech Talk</h3>
+      <ul>
+        <li><strong>The Hook (First 2 Mins):</strong> Clearly state the real-world problem, failure mode, or latency issue you set out to solve.</li>
+        <li><strong>The Architecture & Journey:</strong> Share the trade-offs, dead-ends, and key architectural decisions that made your solution work.</li>
+        <li><strong>Live Demo / Code Walkthrough:</strong> Keep code snippets concise (max 10-15 lines per slide) and highlight only key logic.</li>
+        <li><strong>Actionable Takeaways:</strong> Summarize 3 key insights the audience can apply to their own repositories tomorrow.</li>
+      </ul>
+
+      <h3>2. Delivery & Presentation Best Practices</h3>
+      <ul>
+        <li><strong>Pacing & Vocal Variety:</strong> Speak at an intentional tempo (~130-150 wpm) and use pauses for dramatic emphasis on key statistics.</li>
+        <li><strong>Handling Audience Q&A:</strong> Always repeat the question before answering. If you don't know the answer, say <em>"Great question — here's how I'd approach testing that, let's connect offline!"</em>.</li>
+        <li><strong>Slide Design:</strong> Prioritize clear diagrams and high-contrast visuals over dense bulleted walls of text.</li>
+      </ul>
+    `;
+  }
+
+  if (t.includes("api") || t.includes("rest") || t.includes("integration") || t.includes("endpoint") || t.includes("http")) {
+    return `
+      <h2>RESTful API Design & Fullstack Integration</h2>
+      <p>APIs (Application Programming Interfaces) bridge the communication between client applications, external services, and database backends using standardized HTTP methods and JSON payloads.</p>
+      
+      <h3>1. REST Architectural Principles</h3>
+      <ul>
+        <li><code>GET /api/resources</code>: Retrieve data (Idempotent & Safe).</li>
+        <li><code>POST /api/resources</code>: Create a new resource.</li>
+        <li><code>PUT /api/resources/:id</code>: Replace an entire resource.</li>
+        <li><code>PATCH /api/resources/:id</code>: Partially modify specific fields.</li>
+        <li><code>DELETE /api/resources/:id</code>: Remove a resource.</li>
+      </ul>
+
+      <h3>2. Production Fetch with Async/Await & Error Handling</h3>
+      <pre><code>async function fetchUserProfile(userId) {
+  try {
+    const response = await fetch(\`/api/users/\${userId}\`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': \`Bearer \${localStorage.getItem('token')}\`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(\`HTTP error! status: \${response.status}\`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('API Request failed:', error);
+    throw error;
+  }
+}</code></pre>
     `;
   }
 
@@ -1611,6 +1721,27 @@ class Classifier(nn.Module):
 
 function getFallbackVideoUrl(title) {
   const t = title.toLowerCase();
+  if (t.includes('neural') || t.includes('deep learning') || t.includes('perceptron') || t.includes('cnn') || t.includes('rnn')) {
+    return 'https://www.youtube.com/embed/aircAruvnKk'; // 3Blue1Brown Neural Networks
+  }
+  if (t.includes('machine learning') || t.includes('scikit') || t.includes('regression') || t.includes('classification')) {
+    return 'https://www.youtube.com/embed/i_LwzRVP7bg'; // freeCodeCamp Machine Learning
+  }
+  if (t.includes('generative ai') || t.includes('genai') || t.includes('llm') || t.includes('transformer') || t.includes('gpt')) {
+    return 'https://www.youtube.com/embed/zjkBMFhNj_g'; // Intro to Large Language Models - Karpathy
+  }
+  if (t.includes('math') || t.includes('linear algebra') || t.includes('calculus')) {
+    return 'https://www.youtube.com/embed/fNk_zzaMoSs'; // 3Blue1Brown Linear Algebra
+  }
+  if (t.includes('conference') || t.includes('speaking') || t.includes('presentation') || t.includes('communication') || t.includes('speech')) {
+    return 'https://www.youtube.com/embed/i5mYphUo680'; // Julian Treasure TED Talk
+  }
+  if (t.includes('interview') || t.includes('resume') || t.includes('career') || t.includes('soft skill')) {
+    return 'https://www.youtube.com/embed/1mHjMNZZvFo';
+  }
+  if (t.includes('api') || t.includes('rest') || t.includes('endpoint') || t.includes('postman')) {
+    return 'https://www.youtube.com/embed/0sOvCWFmrtA'; // APIs for Beginners
+  }
   if (t.includes('swot')) {
     return 'https://www.youtube.com/embed/JXXHqM-m1tU';
   }
@@ -1658,6 +1789,12 @@ function getFallbackVideoUrl(title) {
   }
   if (t.includes('node') || t.includes('express') || t.includes('backend')) {
     return 'https://www.youtube.com/embed/Oe421EPjeBE';
+  }
+  if (t.includes('docker') || t.includes('kubernetes') || t.includes('devops')) {
+    return 'https://www.youtube.com/embed/fqMOX6JJhGo';
+  }
+  if (t.includes('next') || t.includes('ssr')) {
+    return 'https://www.youtube.com/embed/843nec-IvW0';
   }
   if (t.includes('typescript') || t.includes('ts')) {
     return 'https://www.youtube.com/embed/d56mG7DezGs';
